@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	helpers "turbine-backend-api-contract/halpers"
+	helpers "turbine-api/helpers"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"

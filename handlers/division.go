@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	helpers "turbine-backend-api-contract/halpers"
+	helpers "turbine-api/helpers"
 
 	"github.com/labstack/echo/v4"
 	"github.com/oklog/ulid/v2"

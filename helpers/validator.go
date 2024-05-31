@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -8,7 +9,8 @@ import (
 )
 
 func GenerateValidationErrorMessage(err error) string {
-	castedObject, _ := err.(validator.ValidationErrors)
+	var castedObject validator.ValidationErrors
+	errors.As(err, &castedObject)
 	messageSlice := make([]string, 0)
 
 	/*
