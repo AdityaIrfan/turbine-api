@@ -18,7 +18,7 @@ func main() {
 
 	fmt.Println("This server is running on port", strconv.Itoa(port))
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%v", port), routes.NewApi().Init()); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%v", port), routes.NewApi().Init(nil)); err != nil {
 		log.Println("FAILED TO RUN SERVER : " + err.Error())
 	}
 }

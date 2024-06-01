@@ -48,6 +48,21 @@ func GenerateCursorPaginationByEcho(c echo.Context) (*Cursor, error) {
 		limit = 10
 	}
 
+	if sortByParams != "" {
+		switch strings.ToLower(sortByParams) {
+		case "name":
+			sortByParams = "Name"
+		case "createdat":
+			sortByParams = "CreatedAt"
+		case "username":
+			sortByParams = "Username"
+		default:
+			sortByParams = "CreatedAt"
+		}
+	} else {
+		sortByParams = "CreatedAt"
+	}
+
 	if sortOrderParam != "asc" && sortOrderParam != "desc" {
 		sortOrderParam = "asc"
 	}
@@ -92,7 +107,7 @@ type Cursor struct {
 	Action      CursorAction    `json:"Action"`
 }
 
-func (c *Cursor) GeneratePager(totalData int64) CursorPagination {
+func (c *Cursor) GeneratePager(totalData int64) *CursorPagination {
 	if c.Action == NEXT {
 		totalPage := totalData / int64(c.PerPage)
 		if totalPage%int64(c.PerPage) > 0 {
@@ -102,7 +117,7 @@ func (c *Cursor) GeneratePager(totalData int64) CursorPagination {
 		if totalPage <= int64(c.CurrentPage) {
 			c.Action = PREV
 			c.CurrentPage--
-			return CursorPagination{
+			return &CursorPagination{
 				NextCursor: "",
 				PrevCursor: encodeCursor(c),
 			}
@@ -115,14 +130,14 @@ func (c *Cursor) GeneratePager(totalData int64) CursorPagination {
 		nextCursor.CurrentPage++
 		prevCursor.CurrentPage--
 
-		return CursorPagination{
+		return &CursorPagination{
 			NextCursor: encodeCursor(nextCursor),
 			PrevCursor: encodeCursor(prevCursor),
 		}
 	} else if c.Action == PREV {
 		if c.CurrentPage == 1 {
 			c.CurrentPage++
-			return CursorPagination{
+			return &CursorPagination{
 				NextCursor: encodeCursor(c),
 				PrevCursor: "",
 			}
@@ -135,7 +150,7 @@ func (c *Cursor) GeneratePager(totalData int64) CursorPagination {
 		nextCursor.CurrentPage++
 		prevCursor.CurrentPage--
 
-		return CursorPagination{
+		return &CursorPagination{
 			NextCursor: encodeCursor(nextCursor),
 			PrevCursor: encodeCursor(prevCursor),
 		}
@@ -143,7 +158,7 @@ func (c *Cursor) GeneratePager(totalData int64) CursorPagination {
 
 	c.Action = NEXT
 	c.CurrentPage++
-	return CursorPagination{
+	return &CursorPagination{
 		NextCursor: encodeCursor(c),
 		PrevCursor: "",
 	}

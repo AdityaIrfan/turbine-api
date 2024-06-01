@@ -1,6 +1,8 @@
-package handlers
+package helpers
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,6 +17,8 @@ type response struct {
 
 func Response(c echo.Context, statusCode int32, message string, ins ...interface{}) error {
 	var data, meta interface{}
+	var status bool
+
 	for index, in := range ins {
 		if index == 0 {
 			data = in
@@ -25,8 +29,12 @@ func Response(c echo.Context, statusCode int32, message string, ins ...interface
 		}
 	}
 
+	if statusCode == http.StatusOK {
+		status = true
+	}
+
 	res := &response{
-		Success:    true,
+		Success:    status,
 		StatusCode: statusCode,
 		Message:    message,
 		Data:       data,

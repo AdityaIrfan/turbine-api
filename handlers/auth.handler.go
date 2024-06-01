@@ -29,7 +29,7 @@ func NewAuthHandler() *authHandler {
 
 func (a *authHandler) Register(c echo.Context) error {
 	if len(Users) == 3 {
-		return Response(c, http.StatusBadRequest, "this is just mock api, do not try too much")
+		return helpers.Response(c, http.StatusBadRequest, "this is just mock api, do not try too much")
 	}
 
 	type registerPayload struct {
@@ -43,17 +43,17 @@ func (a *authHandler) Register(c echo.Context) error {
 	var payload = new(registerPayload)
 
 	if err := c.Bind(payload); err != nil {
-		return Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
 	}
 
 	if err := c.Validate(payload); err != nil {
 		errMessage := helpers.GenerateValidationErrorMessage(err)
-		return Response(c, http.StatusBadRequest, errMessage)
+		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
 	for _, u := range Users {
 		if strings.EqualFold(u.Username, payload.Username) {
-			return Response(c, http.StatusBadRequest, "username already in use")
+			return helpers.Response(c, http.StatusBadRequest, "username already in use")
 		}
 	}
 
@@ -67,7 +67,7 @@ func (a *authHandler) Register(c echo.Context) error {
 	}
 
 	if !isDivisionExist {
-		return Response(c, http.StatusBadRequest, "division not found")
+		return helpers.Response(c, http.StatusBadRequest, "division not found")
 	}
 
 	if payload.RoleId != "" {
@@ -80,7 +80,7 @@ func (a *authHandler) Register(c echo.Context) error {
 		}
 
 		if payload.RoleId == "" {
-			return Response(c, http.StatusBadRequest, "role not found")
+			return helpers.Response(c, http.StatusBadRequest, "role not found")
 		}
 	} else {
 	loopRoles2:
@@ -104,13 +104,13 @@ func (a *authHandler) Register(c echo.Context) error {
 	token, timeRefreshTokenActive, err := helpers.GenerateToken(user.Id)
 	if err != nil {
 		log.Println("FAILED TO GENERATE TOKEN : ", err.Error())
-		return Response(c, http.StatusUnprocessableEntity, "register failed")
+		return helpers.Response(c, http.StatusUnprocessableEntity, "register failed")
 	}
 
 	refreshToken, err := helpers.GenerateRefreshToken(user.Id)
 	if err != nil {
 		log.Println("FAILED TO GENERATE REFRESH TOKEN : ", err.Error())
-		return Response(c, http.StatusUnprocessableEntity, "register failed")
+		return helpers.Response(c, http.StatusUnprocessableEntity, "register failed")
 	}
 
 	RefreshTokenMap[user.Id] = map[string]interface{}{
@@ -120,7 +120,7 @@ func (a *authHandler) Register(c echo.Context) error {
 
 	Users = append(Users, user)
 
-	return Response(c, http.StatusOK, "success register", map[string]interface{}{
+	return helpers.Response(c, http.StatusOK, "success register", map[string]interface{}{
 		"Name":         user.Name,
 		"Division":     divisionName,
 		"Token":        token,
@@ -137,12 +137,12 @@ func (a *authHandler) Login(c echo.Context) error {
 	var payload = new(loginPayload)
 
 	if err := c.Bind(payload); err != nil {
-		return Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
 	}
 
 	if err := c.Validate(payload); err != nil {
 		errMessage := helpers.GenerateValidationErrorMessage(err)
-		return Response(c, http.StatusBadRequest, errMessage)
+		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
 	for _, u := range Users {
@@ -158,13 +158,13 @@ func (a *authHandler) Login(c echo.Context) error {
 			token, timeRefreshTokenActive, err := helpers.GenerateToken(u.Id)
 			if err != nil {
 				log.Println("FAILED TO GENERATE TOKEN : ", err.Error())
-				return Response(c, http.StatusUnprocessableEntity, "login failed")
+				return helpers.Response(c, http.StatusUnprocessableEntity, "login failed")
 			}
 
 			refreshToken, err := helpers.GenerateRefreshToken(u.Id)
 			if err != nil {
 				log.Println("FAILED TO GENERATE REFRESH TOKEN : ", err.Error())
-				return Response(c, http.StatusUnprocessableEntity, "login failed")
+				return helpers.Response(c, http.StatusUnprocessableEntity, "login failed")
 			}
 
 			RefreshTokenMap[u.Id] = map[string]interface{}{
@@ -172,7 +172,7 @@ func (a *authHandler) Login(c echo.Context) error {
 				"StartActive":  timeRefreshTokenActive,
 			}
 
-			return Response(c, http.StatusOK, "success login", map[string]interface{}{
+			return helpers.Response(c, http.StatusOK, "success login", map[string]interface{}{
 				"Name":         u.Name,
 				"Division":     division,
 				"Token":        token,
@@ -181,7 +181,7 @@ func (a *authHandler) Login(c echo.Context) error {
 		}
 	}
 
-	return Response(c, http.StatusBadRequest, "credential not found")
+	return helpers.Response(c, http.StatusBadRequest, "credential not found")
 }
 
 func (authHandler) RefreshToken(c echo.Context) error {
@@ -192,26 +192,26 @@ func (authHandler) RefreshToken(c echo.Context) error {
 	var payload = new(refreshTokenPayload)
 
 	if err := c.Bind(payload); err != nil {
-		return Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
 	}
 
 	if err := c.Validate(payload); err != nil {
 		errMessage := helpers.GenerateValidationErrorMessage(err)
-		return Response(c, http.StatusBadRequest, errMessage)
+		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
 	token, err := helpers.VerifyRefreshToken(payload.RefreshToken)
 	if err != nil {
-		return Response(c, http.StatusBadRequest, "invalid refresh token")
+		return helpers.Response(c, http.StatusBadRequest, "invalid refresh token")
 	} else if !token.Valid {
-		return Response(c, http.StatusBadRequest, "invalid refresh token")
+		return helpers.Response(c, http.StatusBadRequest, "invalid refresh token")
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
 	userId, ok := claims["UserId"].(string)
 	if !ok {
 		log.Println("ERROR : THERE'S NO USER ID ON CLAIMS ")
-		return Response(c, http.StatusBadRequest, "invalid refresh token")
+		return helpers.Response(c, http.StatusBadRequest, "invalid refresh token")
 	}
 
 	var user User
@@ -235,28 +235,28 @@ loopUser:
 	if helpers.IsTokenExpired(token) {
 		delete(RefreshTokenMap, userId)
 
-		return Response(c, http.StatusBadRequest, "refresh token expired")
+		return helpers.Response(c, http.StatusBadRequest, "refresh token expired")
 	}
 
 	if refresh, ok := RefreshTokenMap[userId]; ok {
 		if time.Now().Before(time.Unix(refresh.(map[string]interface{})["StartActive"].(int64), 0)) {
-			return Response(c, http.StatusBadRequest, "token still active")
+			return helpers.Response(c, http.StatusBadRequest, "token still active")
 		}
 	} else {
 		log.Println("ERROR : REFRESH TOKEN DATA IS NOT STORED ON RefreshTokenMap")
-		return Response(c, http.StatusBadRequest, "invalid refresh token")
+		return helpers.Response(c, http.StatusBadRequest, "invalid refresh token")
 	}
 
 	newToken, timeRefreshTokenActive, err := helpers.GenerateToken(userId)
 	if err != nil {
 		log.Println("FAILED TO GENERATE TOKEN : ", err.Error())
-		return Response(c, http.StatusUnprocessableEntity, "login failed")
+		return helpers.Response(c, http.StatusUnprocessableEntity, "login failed")
 	}
 
 	newRefreshToken, err := helpers.GenerateRefreshToken(userId)
 	if err != nil {
 		log.Println("FAILED TO GENERATE REFRESH TOKEN : ", err.Error())
-		return Response(c, http.StatusUnprocessableEntity, "login failed")
+		return helpers.Response(c, http.StatusUnprocessableEntity, "login failed")
 	}
 
 	RefreshTokenMap[userId] = map[string]interface{}{
@@ -264,7 +264,7 @@ loopUser:
 		"StartActive":  timeRefreshTokenActive,
 	}
 
-	return Response(c, http.StatusOK, "success refresh token", map[string]interface{}{
+	return helpers.Response(c, http.StatusOK, "success refresh token", map[string]interface{}{
 		"Name":         user.Name,
 		"Division":     division.Name,
 		"Token":        newToken,
@@ -278,5 +278,5 @@ func (authHandler) ResetAll(c echo.Context) error {
 	InitRefreshToken()
 	InitUsers()
 	fmt.Println("===== RESET ALL ======")
-	return Response(c, http.StatusOK, "success reset all data")
+	return helpers.Response(c, http.StatusOK, "success reset all data")
 }
