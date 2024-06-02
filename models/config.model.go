@@ -17,6 +17,10 @@ type Config struct {
 	Data map[string]interface{} `gorm:"serializer:json"`
 }
 
+func (c *Config) IsEmpty() bool {
+	return c == nil
+}
+
 func (c *Config) ToConfigRootLocation() *ConfigRootLocation {
 	var long, lat, coverageArea float64
 	var coverageType CoverageAreaType
@@ -60,16 +64,12 @@ const (
 )
 
 type ConfigRootLocation struct {
-	Long             float64          `gorm:"column:long"`
-	Lat              float64          `gorm:"column:lat"`
-	CoverageArea     float64          `gorm:"coverage_area"`
-	CoverageAreaType CoverageAreaType `gorm:"coverage_area_type"`
+	Long             float64          `gorm:"column:long" json:"Long"`
+	Lat              float64          `gorm:"column:lat" json:"Lat"`
+	CoverageArea     float64          `gorm:"column:coverage_area" json:"CoverageArea"`
+	CoverageAreaType CoverageAreaType `gorm:"column:coverage_area_type" json:"CoverageAreaType"`
 }
 
-func NewConfigRootLocation() *ConfigRootLocation {
-	return &ConfigRootLocation{}
-}
-
-func (c *ConfigRootLocation) GetRedisKey() string {
-	return "config_root-location"
+func (c *ConfigRootLocation) IsEmpty() bool {
+	return c == nil
 }

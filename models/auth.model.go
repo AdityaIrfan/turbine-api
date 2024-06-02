@@ -1,6 +1,11 @@
 package models
 
-import "github.com/oklog/ulid/v2"
+import (
+	"time"
+	"turbine-api/helpers"
+
+	"github.com/oklog/ulid/v2"
+)
 
 type Register struct {
 	Name                 string `json:"Name" validate:"required"`
@@ -10,8 +15,13 @@ type Register struct {
 	PasswordConfirmation string `json:"PasswordConfirmation" validate:"required,eqfield:Password"`
 }
 
-func (r *Register) ToModel() *User {
+func (r *Register) ToModel() (*User, error) {
 	id := ulid.Make().String()
+
+	salt, hash, err := helpers.GenerateHashAndSalt(r.Password)
+	if err != nil {
+		return nil, err
+	}
 
 	return &User{
 		Id:           id,
@@ -20,9 +30,9 @@ func (r *Register) ToModel() *User {
 		DivisionId:   r.DivisionId,
 		Role:         UserRole_User,
 		Status:       UserStatus_InActive,
-		PasswordHash: r.Password,
-		PasswordSalt: r.Password,
-	}
+		PasswordHash: hash,
+		PasswordSalt: salt,
+	}, nil
 }
 
 type Login struct {
@@ -39,4 +49,13 @@ type AuthResponse struct {
 
 type RefreshToken struct {
 	RefreshToken string `json:"RefreshToken" vaidate:"required"`
+}
+
+type RefreshTokenRedis struct {
+	RefreshToken string `json:"refresh_token"`
+	Exp          int64  `json:"exp"`
+}
+
+func (r *RefreshTokenRedis) IsActive() bool {
+	return time.Now().After(time.Unix(r.Exp, 0))
 }

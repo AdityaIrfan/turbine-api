@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"turbine-api/config"
 	"turbine-api/routes"
 )
 
@@ -16,9 +17,14 @@ func main() {
 		}
 	}()
 
+	postgres := config.InitPostgres()
+	redis := config.InitRedis()
+
+	apis := routes.NewApi().Init(postgres, redis)
+
 	fmt.Println("This server is running on port", strconv.Itoa(port))
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%v", port), routes.NewApi().Init(nil)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%v", port), apis); err != nil {
 		log.Println("FAILED TO RUN SERVER : " + err.Error())
 	}
 }

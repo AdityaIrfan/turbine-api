@@ -2,6 +2,7 @@ package models
 
 import (
 	"time"
+	"turbine-api/helpers"
 
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -11,9 +12,10 @@ type UserStatus uint8
 type UserRole uint8
 
 const (
-	UserStatus_InActive UserStatus = 0
-	UserStatus_Active   UserStatus = 1
-	UserStatus_Block    UserStatus = 2
+	UserStatus_InActive       UserStatus = 0
+	UserStatus_Active         UserStatus = 1
+	UserStatus_Block          UserStatus = 2
+	UserStatus_BlockedByAdmin UserStatus = 3
 
 	UserRole_Admin UserRole = 1
 	UserRole_User  UserRole = 2
@@ -40,10 +42,56 @@ type User struct {
 	Division *Division `gorm:"foreignKey:DivisionId;references:Id"`
 }
 
+func (u *User) IsEmpty() bool {
+	return u == nil
+}
+
+func (u *User) ToResponse() *UserResponse {
+	res := &UserResponse{
+		Name:      u.Name,
+		Username:  u.Username,
+		Division:  string(u.Division.Type),
+		Role:      u.GetUserRoleInString(),
+		Status:    u.GetUserStatusInString(),
+		CreatedAt: u.CreatedAt.Format(helpers.DefaultTimeFormat),
+	}
+
+	if u.UpdatedAt != nil {
+		res.UpdatedAt = u.UpdatedAt.Format(helpers.DefaultTimeFormat)
+	}
+
+	return res
+}
+
+type UserResponse struct {
+	Name      string `json:"Name"`
+	Username  string `json:"Username"`
+	Division  string `json:"Division"`
+	Role      string `json:"Role"`
+	Status    string `json:"Status"`
+	CreatedAt string `json:"CreatedAt"`
+	UpdatedAt string `json:"UpdatedAt"`
+}
+
+func (u *User) ToResponseList() *UserListResponse {
+	return &UserListResponse{
+		Name:     u.Name,
+		Division: string(u.Division.Type),
+		Status:   u.GetUserStatusInString(),
+	}
+}
+
+type UserListResponse struct {
+	Name     string `json:"Name"`
+	Division string `json:"Division"`
+	Status   string `json:"Status"`
+}
+
 type UserAdminCreateByAdminRequest struct {
 	Name       string `json:"Name"`
 	Username   string `json:"useranme"`
 	DivisionId string `json:"DivisionId"`
+	AdminId    string
 }
 
 func (u *UserAdminCreateByAdminRequest) ToModel() *User {
@@ -63,23 +111,81 @@ func (u *UserAdminCreateByAdminRequest) ToModel() *User {
 
 type UserUpdateByAdminRequest struct {
 	Id         string
-	Role       *UserRole `json:"Role"`
-	DivisionId *string   `json:"DivisionId"`
+	Role       *UserRole   `json:"Role"`
+	DivisionId *string     `json:"DivisionId"`
+	Status     *UserStatus `json:"UserStatus"`
 	AdminId    string
 }
 
 type UserUpdateRequest struct {
 	Id       string
-	Name     string `json:"Name"`
-	Username string `json:"Username"`
+	Name     *string `json:"Name"`
+	Username *string `json:"Username"`
 }
 
-type UserChangePassword struct {
+type UserChangePasswordRequest struct {
+	Id                   string
 	Password             string `json:"Password" validate:"required"`
 	PasswordConfirmation string `json:"PasswordConfirmation" validate:"required,eqfield:Password"`
 }
 
+type GeneratePasswordByAdmin struct {
+	Id      string
+	AdminId string
+}
+
 type UserDeleteByAdminRequest struct {
+	Id      string
+	AdminId string
+}
+
+func IsUserRoleAvailable(userRole UserRole) bool {
+	switch userRole {
+	case UserRole_Admin:
+		return true
+	case UserRole_User:
+		return true
+	default:
+		return false
+	}
+}
+
+func IsUserStatusExist(userStatus UserStatus) bool {
+	switch userStatus {
+	case UserStatus_Active:
+		return true
+	case UserStatus_InActive:
+		return true
+	default:
+		return false
+	}
+}
+
+func (u *User) GetUserRoleInString() string {
+	switch u.Role {
+	case UserRole_Admin:
+		return "admin"
+	case UserRole_User:
+		return "user"
+	default:
+		return ""
+	}
+}
+
+func (u *User) GetUserStatusInString() string {
+	switch u.Status {
+	case UserStatus_Active:
+		return "active"
+	case UserStatus_InActive:
+		return "inactive"
+	case UserStatus_Block:
+		return "blocked"
+	default:
+		return ""
+	}
+}
+
+type UserGetDetailRequest struct {
 	Id      string
 	AdminId string
 }

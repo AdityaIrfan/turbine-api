@@ -23,8 +23,14 @@ func NewUserRepository(db *gorm.DB) contract.IUserRepository {
 	}
 }
 
-func (u *userRepository) Create(user *models.User) error {
-	if err := u.db.Create(&user).Clauses(clause.Returning{}).Error; err != nil {
+func (u *userRepository) Create(user *models.User, preloads ...string) error {
+	db := u.db
+
+	for _, p := range preloads {
+		db = db.Preload(p)
+	}
+
+	if err := db.Create(&user).Clauses(clause.Returning{}).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY USER CREATE : " + err.Error()))
 		return err
 	}
@@ -32,8 +38,14 @@ func (u *userRepository) Create(user *models.User) error {
 	return nil
 }
 
-func (u *userRepository) Update(user *models.User) error {
-	if err := u.db.Updates(&user).Error; err != nil {
+func (u *userRepository) Update(user *models.User, preloads ...string) error {
+
+	db := u.db
+
+	for _, p := range preloads {
+		db = db.Preload(p)
+	}
+	if err := db.Updates(&user).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY USER UPDATE : " + err.Error()))
 		return err
 	}
@@ -55,14 +67,54 @@ func (u *userRepository) IsUsernameExist(username string) (bool, error) {
 	return true, nil
 }
 
-func (u *userRepository) GetById(id string) (*models.User, error) {
+func (u *userRepository) GetById(id string, preloads ...string) (*models.User, error) {
+	var user *models.User
+
+	db := u.db
+
+	for _, p := range preloads {
+		db = db.Preload(p)
+	}
+
+	if err := db.Where("id = ?", id).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		log.Error().Err(errors.New("ERROR QUERY USER BY ID : " + err.Error()))
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (u *userRepository) GetByIdWithSelectedFields(id string, selectedFields string) (*models.User, error) {
 	var user *models.User
 
 	if err := u.db.Where("id = ?", id).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY USER BY ID : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USER BY ID WITH SELECTED FIELDS: " + err.Error()))
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (u *userRepository) GetByUsernameWithSelectedFields(username string, selectedFields string, preloads ...string) (*models.User, error) {
+	var user *models.User
+
+	db := u.db
+
+	for _, p := range preloads {
+		db = db.Preload(p)
+	}
+
+	if err := db.Where("username = ?", username).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		log.Error().Err(errors.New("ERROR QUERY USER BY USERNAME WITH SELECTED FIELDS : " + err.Error()))
 		return nil, err
 	}
 
@@ -107,4 +159,13 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 	cursorPagination := cursor.GeneratePager(total)
 
 	return users, cursorPagination, nil
+}
+
+func (u *userRepository) Delete(user *models.User) error {
+	if err := u.db.Delete(&user).Error; err != nil {
+		log.Error().Err(errors.New("ERROR QUERY USER DELETE : " + err.Error()))
+		return err
+	}
+
+	return nil
 }

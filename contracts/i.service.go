@@ -25,16 +25,22 @@ type IUserService interface {
 	CreateUserAdminByAdmin(c echo.Context, in *models.UserAdminCreateByAdminRequest) error
 	UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdminRequest) error
 	Update(c echo.Context, in *models.UserUpdateRequest) error
-	GetDetail(c echo.Context, id string) error
+	GetDetailByAdmin(c echo.Context, in *models.UserGetDetailRequest) error
+	GetMyProfile(c echo.Context, id string) error
 	DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error
-	GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error
-	ChangePassword(c echo.Context, in *models.UserChangePassword) error
+	GetListWithPaginateByAdmin(c echo.Context, adminId string, cursor *helpers.Cursor) error
+	ChangePassword(c echo.Context, in *models.UserChangePasswordRequest) error
+	GeneratePasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error
 }
 
 type IAuthService interface {
 	Register(c echo.Context, in *models.Register) error
 	Login(c echo.Context, in *models.Login) error
 	RefreshToken(c echo.Context, in *models.RefreshToken) error
+}
+
+type IConfigService interface {
+	GetRootLocation(c echo.Context) error
 }
 
 type ITurbineService interface{}

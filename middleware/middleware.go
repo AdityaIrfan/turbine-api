@@ -113,3 +113,54 @@ func (middleware) AllAuth(next echo.HandlerFunc) echo.HandlerFunc {
 		return helpers.Response(c, http.StatusUnauthorized, "unauthorized")
 	}
 }
+
+func (middleware) AuthUser(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if c.Request().Header.Get("Authorization") == "" {
+			return helpers.Response(c, http.StatusBadRequest, "missing authorization header")
+		}
+
+		tokens := strings.Split(c.Request().Header.Get("Authorization"), " ")
+		if len(tokens) != 2 {
+			return helpers.Response(c, http.StatusUnauthorized, "invalid token")
+		} else if tokens[0] != "Bearer" {
+			return helpers.Response(c, http.StatusUnauthorized, "invalid token")
+		}
+
+		// token, err := helpers.VerifyToken(tokens[1])
+		// if err != nil {
+		// 	log.Println("ERROR VERIFY TOKEN : " + err.Error())
+		// 	return helpers.Response(c, http.StatusUnauthorized, "invalid token")
+		// }
+
+		// claims := token.Claims.(jwt.MapClaims)
+
+		// // userId, ok := claims["UserId"].(string)
+		// // if !ok {
+		// // 	log.Println("ERROR MISSING STRING USER ID")
+		// // 	return helpers.Response(c, http.StatusUnauthorized, "invalid token")
+		// // }
+
+		// // for _, u := range handlers.Users {
+		// // 	if u.Id == userId {
+		// // 		for _, r := range handlers.Roles {
+		// // 			if r.Id == u.RoleId {
+		// // 				c.Set("claims", claims)
+
+		// // 				return next(c)
+		// // 			} else {
+		// // 				return helpers.Response(c, http.StatusUnauthorized, "unauthorized")
+		// // 			}
+		// // 		}
+		// // 	}
+		// // }
+
+		return helpers.Response(c, http.StatusUnauthorized, "unauthorized")
+	}
+}
+
+func (middleware) Signature(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return next(c)
+	}
+}

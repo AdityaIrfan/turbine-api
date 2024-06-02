@@ -1,6 +1,7 @@
 package contract
 
 import (
+	"time"
 	"turbine-api/helpers"
 	"turbine-api/models"
 )
@@ -28,11 +29,31 @@ type IDivisionRepository interface {
 }
 
 type IUserRepository interface {
-	Create(user *models.User) error
-	Update(user *models.User) error
+	Create(user *models.User, preloads ...string) error
+	Update(user *models.User, preloads ...string) error
 	IsUsernameExist(username string) (bool, error)
-	GetById(id string) (*models.User, error)
+	GetById(id string, preloads ...string) (*models.User, error)
+	GetByIdWithSelectedFields(id string, selectedFields string) (*models.User, error)
+	GetByUsernameWithSelectedFields(username string, selectedFields string, preloads ...string) (*models.User, error)
 	GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.User, *helpers.CursorPagination, error)
+	Delete(user *models.User) error
+}
+
+type IAuthRedisRepository interface {
+	SaveRefreshToken(id string, refreshToken *models.RefreshTokenRedis, ttl time.Duration)
+	GetRefreshToken(id string) (*models.RefreshTokenRedis, error)
+	DeleteRefreshToken(id string)
+	IncLoginFailedCounter(id string)
+	IsLoginBlocked(id string) (bool, error)
+}
+
+type IConfigRepository interface {
+	GetByType(configType models.ConfigType) (*models.Config, error)
+}
+
+type IConfigRedisRepository interface {
+	SaveRootLocation(rootLocation *models.ConfigRootLocation)
+	GetRootLocation() (*models.ConfigRootLocation, error)
 }
 
 type ITurbineRepository interface{}
