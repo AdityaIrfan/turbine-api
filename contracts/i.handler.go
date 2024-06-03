@@ -15,6 +15,7 @@ type IDivisionHandler interface {
 	Create(c echo.Context) error
 	Update(c echo.Context) error
 	GetListMaster(c echo.Context) error
+	GetListWithPaginate(c echo.Context) error
 	Delete(c echo.Context) error
 }
 

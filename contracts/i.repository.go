@@ -26,6 +26,7 @@ type IDivisionRepository interface {
 	GetByTypeWithSelectedFields(divisionTYpe models.DivisionType, selectedFields string) (*models.Division, error)
 	IsEqualTypeExist(divisionType models.DivisionType) (bool, error)
 	Delete(role *models.Division) error
+	GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.Division, *helpers.CursorPagination, error)
 }
 
 type IUserRepository interface {
@@ -33,7 +34,7 @@ type IUserRepository interface {
 	Update(user *models.User, preloads ...string) error
 	IsUsernameExist(username string) (bool, error)
 	GetById(id string, preloads ...string) (*models.User, error)
-	GetByIdWithSelectedFields(id string, selectedFields string) (*models.User, error)
+	GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByUsernameWithSelectedFields(username string, selectedFields string, preloads ...string) (*models.User, error)
 	GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.User, *helpers.CursorPagination, error)
 	Delete(user *models.User) error

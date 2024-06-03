@@ -12,7 +12,7 @@ type Register struct {
 	Username             string `json:"Username" validation:"required"`
 	DivisionId           string `json:"DivisionId" validate:"required"`
 	Password             string `json:"Password" validation:"required"`
-	PasswordConfirmation string `json:"PasswordConfirmation" validate:"required,eqfield:Password"`
+	PasswordConfirmation string `json:"PasswordConfirmation" validate:"required,eqfield=Password"`
 }
 
 func (r *Register) ToModel() (*User, error) {
@@ -47,15 +47,16 @@ type AuthResponse struct {
 	RefreshToken string `json:"RefreshToken"`
 }
 
-type RefreshToken struct {
-	RefreshToken string `json:"RefreshToken" vaidate:"required"`
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"RefreshToken" validate:"required"`
 }
 
 type RefreshTokenRedis struct {
 	RefreshToken string `json:"refresh_token"`
 	Exp          int64  `json:"exp"`
+	Active       int64  `json:"active"`
 }
 
 func (r *RefreshTokenRedis) IsActive() bool {
-	return time.Now().After(time.Unix(r.Exp, 0))
+	return time.Now().After(time.Unix(r.Active, 0))
 }

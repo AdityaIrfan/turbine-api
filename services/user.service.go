@@ -26,15 +26,15 @@ func NewUserService(userRepo contract.IUserRepository, divisionRepo contract.IDi
 func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdminCreateByAdminRequest) error {
 	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if userAdmin.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	// check existing username
 	exist, err := u.userRepo.IsUsernameExist(in.Username)
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
 		return helpers.Response(c, http.StatusBadRequest, "username already in use")
 	}
@@ -42,14 +42,14 @@ func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdmi
 	// check division by id
 	division, err := u.divisionRepo.GetByIdWithSelectedFields(in.DivisionId, "id")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if division.IsEmpty() {
 		return helpers.Response(c, http.StatusBadRequest, "division not found")
 	}
 
 	user := in.ToModel()
 	if err := u.userRepo.Create(user); err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	}
 
 	return helpers.Response(c, http.StatusOK, "success create user")
@@ -58,14 +58,14 @@ func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdmi
 func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdminRequest) error {
 	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if userAdmin.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	user, err := u.userRepo.GetById(in.Id, "Division")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
 		return helpers.Response(c, http.StatusBadRequest, "user not found")
 	}
@@ -93,7 +93,7 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 	if in.DivisionId != nil && user.DivisionId != *in.DivisionId {
 		division, err := u.divisionRepo.GetByIdWithSelectedFields(*in.DivisionId, "id")
 		if err != nil {
-			return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+			return helpers.ResponseUnprocessableEntity(c)
 		} else if division.IsEmpty() {
 			return helpers.Response(c, http.StatusBadRequest, "division not found")
 		}
@@ -104,7 +104,7 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 
 	if anyUpdated {
 		if err := u.userRepo.Update(user, "Division"); err != nil {
-			return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+			return helpers.ResponseUnprocessableEntity(c)
 		}
 	}
 
@@ -114,7 +114,7 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error {
 	user, err := u.userRepo.GetById(in.Id, "Division")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
 		return helpers.Response(c, http.StatusBadRequest, "user not found")
 	}
@@ -124,7 +124,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 	if in.Username != nil && user.Username != *in.Username {
 		userByUsername, err := u.userRepo.GetByUsernameWithSelectedFields(*in.Username, "id")
 		if err != nil {
-			return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+			return helpers.ResponseUnprocessableEntity(c)
 		} else if !userByUsername.IsEmpty() && userByUsername.Id != user.Id {
 			return helpers.Response(c, http.StatusBadRequest, "username already in use")
 		}
@@ -140,7 +140,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 
 	if !anyUpdated {
 		if err := u.userRepo.Update(user, "Division"); err != nil {
-			return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+			return helpers.ResponseUnprocessableEntity(c)
 		}
 	}
 
@@ -150,14 +150,14 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 func (u *userService) GetDetailByAdmin(c echo.Context, in *models.UserGetDetailRequest) error {
 	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if userAdmin.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	user, err := u.userRepo.GetById(in.Id, "Division")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
 		return helpers.Response(c, http.StatusNotFound, "user not found")
 	}
@@ -168,7 +168,7 @@ func (u *userService) GetDetailByAdmin(c echo.Context, in *models.UserGetDetailR
 func (u *userService) GetMyProfile(c echo.Context, id string) error {
 	user, err := u.userRepo.GetById(id, "Division")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
 		return helpers.Response(c, http.StatusNotFound, "user not found")
 	}
@@ -179,36 +179,36 @@ func (u *userService) GetMyProfile(c echo.Context, id string) error {
 func (u *userService) DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error {
 	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if userAdmin.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	user, err := u.userRepo.GetByIdWithSelectedFields(in.Id, "id")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	if err := u.userRepo.Delete(user); err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	}
 
 	return helpers.Response(c, http.StatusOK, "success delete user")
 }
 
-func (u *userService) GetListWithPaginateByAdmin(c echo.Context, adminId string, cursor *helpers.Cursor) error {
+func (u *userService) GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor, adminId string) error {
 	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(adminId, "id")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if userAdmin.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	users, pagination, err := u.userRepo.GetAllWithPaginate(cursor)
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	}
 
 	var userRes []*models.UserListResponse
@@ -222,21 +222,21 @@ func (u *userService) GetListWithPaginateByAdmin(c echo.Context, adminId string,
 func (u *userService) ChangePassword(c echo.Context, in *models.UserChangePasswordRequest) error {
 	user, err := u.userRepo.GetById(in.Id)
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	salt, hash, err := helpers.GenerateHashAndSalt(in.Password)
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	}
 
 	user.PasswordSalt = salt
 	user.PasswordHash = hash
 
 	if err := u.userRepo.Update(user); err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	}
 
 	return helpers.Response(c, http.StatusOK, "success change password")
@@ -245,29 +245,29 @@ func (u *userService) ChangePassword(c echo.Context, in *models.UserChangePasswo
 func (u *userService) GeneratePasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
 	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if userAdmin.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	user, err := u.userRepo.GetById(in.Id)
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "who are you? you do not have permission for this access")
+		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
 	password := helpers.GenerateRandomString(10)
 	salt, hash, err := helpers.GenerateHashAndSalt(password)
 	if err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	}
 
 	user.PasswordSalt = salt
 	user.PasswordHash = hash
 
 	if err := u.userRepo.Update(user); err != nil {
-		return helpers.Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+		return helpers.ResponseUnprocessableEntity(c)
 	}
 
 	return helpers.Response(c, http.StatusOK, "success generate password", map[string]interface{}{

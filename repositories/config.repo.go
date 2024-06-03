@@ -26,7 +26,7 @@ func (c *configRepository) GetByType(configType models.ConfigType) (*models.Conf
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY CONFIG BY TYPE : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY CONFIG BY TYPE : " + err.Error())).Msg("")
 		return nil, err
 	}
 

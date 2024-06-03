@@ -10,10 +10,10 @@ import (
 )
 
 func InitPostgres() *gorm.DB {
-	dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := "host=103.59.94.19 user=postgres password=Jbsd8she2j3neoads231j@*7jn dbname=turbine-app port=5432 TimeZone=Asia/Jakarta"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Error().Err(errors.New("=== ERROR DATABASE CONNECTION : " + err.Error()))
+		log.Error().Err(errors.New("=== ERROR DATABASE CONNECTION : " + err.Error())).Msg("")
 		os.Exit(1)
 	}
 

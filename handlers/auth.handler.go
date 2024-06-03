@@ -59,7 +59,7 @@ func (a *authHandler) Login(c echo.Context) error {
 }
 
 func (a *authHandler) RefreshToken(c echo.Context) error {
-	payload := new(models.RefreshToken)
+	payload := new(models.RefreshTokenRequest)
 
 	if err := c.Bind(payload); err != nil {
 		return helpers.Response(c, http.StatusBadRequest, "error binding body request")

@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	mathRand "math/rand"
-	"os"
 
 	"github.com/phuslu/log"
 	"golang.org/x/crypto/bcrypt"
@@ -28,8 +27,11 @@ func RandomByte(n int) string {
 }
 
 func Encrypt(plainText string) string {
-	key, _ := hex.DecodeString(os.Getenv("APP_KEY"))
-	block, _ := aes.NewCipher(key)
+	key, _ := hex.DecodeString("751dc352fcd484748c31b7d8562cf9778843492ebffa26de11e59883865bba82")
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		fmt.Println(err)
+	}
 	aesGCM, _ := cipher.NewGCM(block)
 	nonce := make([]byte, aesGCM.NonceSize())
 	_, _ = io.ReadFull(rand.Reader, nonce)
@@ -39,11 +41,11 @@ func Encrypt(plainText string) string {
 
 // return salt, hash, error
 func GenerateHashAndSalt(key string) (string, string, error) {
-	salt := RandomByte(RandomInt(1024, 2048))
+	salt := RandomByte(RandomInt(32, 64))
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(key+salt), 7)
 	if err != nil {
-		log.Error().Err(errors.New("ERROR PASSWORD GENERATE HASH AND SALT : " + err.Error()))
+		log.Error().Err(errors.New("ERROR PASSWORD GENERATE HASH AND SALT : " + err.Error())).Msg("")
 		return "", "", err
 	}
 
@@ -58,4 +60,37 @@ func GenerateRandomString(n int) string {
 		b[i] = letters[mathRand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+// Decrypt is function to decrypt chiper text
+func Decrypt(encryptedString string) (string, error) {
+	key, err := hex.DecodeString("751dc352fcd484748c31b7d8562cf9778843492ebffa26de11e59883865bba82")
+	if err != nil {
+		return "", err
+	}
+
+	enc, err := hex.DecodeString(encryptedString)
+	if err != nil {
+		return "", err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	nonceSize := aesGCM.NonceSize()
+	nonce, cipherText := enc[:nonceSize], enc[nonceSize:]
+
+	plainText, err := aesGCM.Open(nil, nonce, cipherText, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return string(plainText), nil
 }

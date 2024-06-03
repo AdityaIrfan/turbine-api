@@ -17,19 +17,19 @@ var refreshPublicKey = []byte("-----BEGIN PUBLIC KEY-----\nMIGeMA0GCSqGSIb3DQEBA
 func GenerateToken(userId string, expiration time.Time) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256,
 		jwt.MapClaims{
-			"UserId": userId,
-			"Exp":    expiration.Unix(),
+			"Id":  userId,
+			"Exp": expiration.Unix(),
 		})
 
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(tokenPrivateKey)
 	if err != nil {
-		log.Error().Err(errors.New("ERROR PARSING PRIVATE KEY TOKEN FROM PEM : " + err.Error()))
+		log.Error().Err(errors.New("ERROR PARSING PRIVATE KEY TOKEN FROM PEM : " + err.Error())).Msg("")
 		return "", err
 	}
 
 	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
-		log.Error().Err(errors.New("ERROR SIGNED STRING TOKEN : " + err.Error()))
+		log.Error().Err(errors.New("ERROR SIGNED STRING TOKEN : " + err.Error())).Msg("")
 		return "", err
 	}
 
@@ -49,19 +49,19 @@ func VerifyToken(tokenString string) (*jwt.Token, error) {
 func GenerateRefreshToken(userId string, expiration time.Time) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256,
 		jwt.MapClaims{
-			"UserId": userId,
-			"Exp":    expiration.Unix(),
+			"Id":  userId,
+			"Exp": expiration.Unix(),
 		})
 
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(refreshPrivateKey)
 	if err != nil {
-		log.Error().Err(errors.New("ERROR PARSING PRIVATE KEY REFRESH TOKEN FROM PEM : " + err.Error()))
+		log.Error().Err(errors.New("ERROR PARSING PRIVATE KEY REFRESH TOKEN FROM PEM : " + err.Error())).Msg("")
 		return "", err
 	}
 
 	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
-		log.Error().Err(errors.New("ERROR SIGNED STRING REFRESH TOKEN : " + err.Error()))
+		log.Error().Err(errors.New("ERROR SIGNED STRING REFRESH TOKEN : " + err.Error())).Msg("")
 		return "", err
 	}
 
@@ -82,13 +82,20 @@ func IsTokenExpired(token *jwt.Token) bool {
 	claims := token.Claims.(jwt.MapClaims)
 	expired, ok := claims["Exp"].(float64)
 	if !ok {
-		log.Error().Err(errors.New("EROR GETTING EXPIRATION VALUE FROM TOKEN : CLAIMS IS NOT EXIST OR VALUE IS NOT int64"))
+		log.Error().Err(errors.New("EROR GETTING EXPIRATION VALUE FROM TOKEN : CLAIMS IS NOT EXIST OR VALUE IS NOT int64")).Msg("")
 		return true
 	}
 
-	if time.Now().After(time.Unix(int64(expired), 0)) {
+	return time.Now().After(time.Unix(int64(expired), 0))
+}
+
+func IsRefreshTokenActive(token *jwt.Token) bool {
+	claims := token.Claims.(jwt.MapClaims)
+	expired, ok := claims["Active"].(float64)
+	if !ok {
+		log.Error().Err(errors.New("EROR GETTING ACTIVE VALUE FROM TOKEN : CLAIMS IS NOT EXIST OR VALUE IS NOT int64")).Msg("")
 		return true
 	}
 
-	return false
+	return time.Now().After(time.Unix(int64(expired), 0))
 }

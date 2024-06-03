@@ -31,7 +31,7 @@ func (u *userRepository) Create(user *models.User, preloads ...string) error {
 	}
 
 	if err := db.Create(&user).Clauses(clause.Returning{}).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY USER CREATE : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USER CREATE : " + err.Error())).Msg("")
 		return err
 	}
 
@@ -46,7 +46,7 @@ func (u *userRepository) Update(user *models.User, preloads ...string) error {
 		db = db.Preload(p)
 	}
 	if err := db.Updates(&user).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY USER UPDATE : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USER UPDATE : " + err.Error())).Msg("")
 		return err
 	}
 
@@ -60,7 +60,7 @@ func (u *userRepository) IsUsernameExist(username string) (bool, error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY IsUsernameExist : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY IsUsernameExist : " + err.Error())).Msg("")
 		return false, err
 	}
 
@@ -80,21 +80,27 @@ func (u *userRepository) GetById(id string, preloads ...string) (*models.User, e
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY USER BY ID : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USER BY ID : " + err.Error())).Msg("")
 		return nil, err
 	}
 
 	return user, nil
 }
 
-func (u *userRepository) GetByIdWithSelectedFields(id string, selectedFields string) (*models.User, error) {
+func (u *userRepository) GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.User, error) {
 	var user *models.User
 
-	if err := u.db.Where("id = ?", id).First(&user).Error; err != nil {
+	db := u.db
+
+	for _, p := range preloads {
+		db = db.Preload(p)
+	}
+
+	if err := db.Where("id = ?", id).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY USER BY ID WITH SELECTED FIELDS: " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USER BY ID WITH SELECTED FIELDS: " + err.Error())).Msg("")
 		return nil, err
 	}
 
@@ -114,7 +120,7 @@ func (u *userRepository) GetByUsernameWithSelectedFields(username string, select
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY USER BY USERNAME WITH SELECTED FIELDS : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USER BY USERNAME WITH SELECTED FIELDS : " + err.Error())).Msg("")
 		return nil, err
 	}
 
@@ -130,7 +136,7 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 
 	var total int64
 	if err := db.Table("users").Count(&total).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY USERS TOTAL : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USERS TOTAL : " + err.Error())).Msg("")
 		return nil, nil, err
 	}
 
@@ -152,7 +158,7 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 		Limit(cursor.PerPage).
 		Order(fmt.Sprintf("%v %v", sortBy, cursor.SortOrder)).
 		Find(&users).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY USERS LIST WITH PAGINATE : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USERS LIST WITH PAGINATE : " + err.Error())).Msg("")
 		return nil, nil, err
 	}
 
@@ -163,7 +169,7 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 
 func (u *userRepository) Delete(user *models.User) error {
 	if err := u.db.Delete(&user).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY USER DELETE : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY USER DELETE : " + err.Error())).Msg("")
 		return err
 	}
 

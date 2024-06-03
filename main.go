@@ -1,30 +1,35 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
-	"strconv"
+	"os"
 	"turbine-api/config"
 	"turbine-api/routes"
+
+	"github.com/phuslu/log"
 )
 
 func main() {
 	port := 8081
 	defer func() {
 		if err := recover(); err != nil {
-			log.Fatal("Panic Detected : " + fmt.Sprint(err))
+			log.Error().Err(fmt.Errorf("FAILED RECOVER : %v", err)).Msg("")
+			os.Exit(1)
 		}
 	}()
 
+	config.InitLogger()
 	postgres := config.InitPostgres()
 	redis := config.InitRedis()
 
 	apis := routes.NewApi().Init(postgres, redis)
 
-	fmt.Println("This server is running on port", strconv.Itoa(port))
+	log.Info().Msg(fmt.Sprintf("This server is running on port %d", port))
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", port), apis); err != nil {
-		log.Println("FAILED TO RUN SERVER : " + err.Error())
+		log.Error().Err(errors.New("FAILED TO RUN SERVER : " + err.Error())).Msg("")
+		os.Exit(1)
 	}
 }

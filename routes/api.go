@@ -30,7 +30,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 
 func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	route := echo.New()
-	route.Validator = &CustomValidator{Validator: validator.New()}
+	route.Validator = &CustomValidator{Validator: validator.New(validator.WithRequiredStructEnabled())}
 
 	// // init middleware
 	middleware := middleware.NewMiddleware()
@@ -38,7 +38,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	authAdmin := middleware.AuthAdmin
 	authUser := middleware.AuthUser
 	// allAuth := middleware.AllAuth
-	signature := middleware.Signature
+	// signature := middleware.Signature
 
 	// Repositories
 	roleRepository := repositories.NewRoleRepository(db)
@@ -50,10 +50,10 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 
 	// Services
 	// roleService := services.NewRoleService(roleRepository)
-	divisionService := services.NewDivisionService(divisionRepository)
+	divisionService := services.NewDivisionService(divisionRepository, userRepository)
 	userService := services.NewUserService(userRepository, divisionRepository, roleRepository)
-	authService := services.NewAuthService(userRepository, authRedisRepository)
-	configService := services.NewConfigService(configRepository, configRedisRepository)
+	authService := services.NewAuthService(userRepository, authRedisRepository, divisionRepository)
+	configService := services.NewConfigService(configRepository, configRedisRepository, userRepository)
 
 	// Handlers
 	// roleHandler := handlers.NewRoleHandler(roleService)
@@ -70,9 +70,10 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	})
 
 	divisionRouting := route.Group("divisions")
-	divisionRouting.GET("/", divisionHandler.GetListMaster)
-	divisionRouting.POST("", divisionHandler.Create, applicationJson, authAdmin, applicationJson)
-	divisionRouting.PUT("/:id", divisionHandler.Update, applicationJson, authAdmin, applicationJson)
+	divisionRouting.GET("/master", divisionHandler.GetListMaster)
+	divisionRouting.GET("", divisionHandler.GetListWithPaginate, authAdmin)
+	divisionRouting.POST("", divisionHandler.Create, applicationJson, authAdmin)
+	divisionRouting.PUT("/:id", divisionHandler.Update, applicationJson, authAdmin)
 	divisionRouting.DELETE("/:id", divisionHandler.Delete, authAdmin)
 
 	authRouting := route.Group("auth")
@@ -90,7 +91,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 
 	userRouting := route.Group("/my")
 	userRouting.PUT("/:id", userHandler.Update, authUser)
-	userRouting.GET("/", userHandler.GetMyProfile, authUser)
+	userRouting.GET("", userHandler.GetMyProfile, authUser)
 	userRouting.POST("/change-password", userHandler.ChangePassword, authUser, applicationJson)
 
 	// roleRouting := route.Group("/roles", authAdmin)
@@ -100,7 +101,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	// roleRouting.DELETE("/:id", roleHandler.Delete)
 
 	configRouting := route.Group("/config")
-	configRouting.GET("/root-location", configHandler.GetRootLocation, signature)
+	configRouting.GET("/root-location", configHandler.GetRootLocation, authAdmin)
 
 	return route
 }

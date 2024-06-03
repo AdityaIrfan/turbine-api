@@ -23,7 +23,7 @@ func GenerateCursorPaginationByEcho(c echo.Context) (*Cursor, error) {
 	if cursorNextParam != "" {
 		cursor, err := decodeCursor(cursorNextParam)
 		if err != nil {
-			log.Error().Str("ERROR ENCODE CURSOR NEXT", err.Error())
+			log.Error().Str("ERROR ENCODE CURSOR NEXT", err.Error()).Msg("")
 			return nil, errors.New(http.StatusText(http.StatusUnprocessableEntity))
 		}
 		return cursor, nil
@@ -32,7 +32,7 @@ func GenerateCursorPaginationByEcho(c echo.Context) (*Cursor, error) {
 	if cursorPrevParam != "" {
 		cursor, err := decodeCursor(cursorPrevParam)
 		if err != nil {
-			log.Error().Str("ERROR ENCODE CURSOR NEXT", err.Error())
+			log.Error().Str("ERROR ENCODE CURSOR NEXT", err.Error()).Msg("")
 			return nil, errors.New(http.StatusText(http.StatusUnprocessableEntity))
 		}
 		return cursor, nil
@@ -40,7 +40,7 @@ func GenerateCursorPaginationByEcho(c echo.Context) (*Cursor, error) {
 
 	limitParam := c.QueryParam("PerPage")
 	sortOrderParam := strings.ToLower(c.QueryParam("SortOrder"))
-	sortByParams := c.QueryParam("SortBy")
+	sortByParams := strings.ToLower(c.QueryParam("SortBy"))
 	searchParam := c.QueryParam("Search")
 
 	limit, _ := strconv.Atoi(limitParam)
@@ -68,9 +68,10 @@ func GenerateCursorPaginationByEcho(c echo.Context) (*Cursor, error) {
 	}
 
 	return &Cursor{
+		Action:      NEXT,
 		PerPage:     limit,
 		CurrentPage: 1,
-		SortOrder:   CursorSortOrder(sortByParams),
+		SortOrder:   CursorSortOrder(sortOrderParam),
 		SortBy:      sortByParams,
 		Search:      searchParam,
 	}, nil
@@ -108,10 +109,27 @@ type Cursor struct {
 }
 
 func (c *Cursor) GeneratePager(totalData int64) *CursorPagination {
+	if totalData < int64(c.PerPage) {
+		return &CursorPagination{
+			NextCursor: "",
+			PrevCursor: "",
+		}
+	}
+
 	if c.Action == NEXT {
 		totalPage := totalData / int64(c.PerPage)
 		if totalPage%int64(c.PerPage) > 0 {
 			totalPage++
+		}
+
+		if c.CurrentPage == 1 {
+			nextCursor := c
+			nextCursor.Action = NEXT
+			nextCursor.CurrentPage++
+			return &CursorPagination{
+				NextCursor: encodeCursor(nextCursor),
+				PrevCursor: "",
+			}
 		}
 
 		if totalPage <= int64(c.CurrentPage) {

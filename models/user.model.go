@@ -14,8 +14,7 @@ type UserRole uint8
 const (
 	UserStatus_InActive       UserStatus = 0
 	UserStatus_Active         UserStatus = 1
-	UserStatus_Block          UserStatus = 2
-	UserStatus_BlockedByAdmin UserStatus = 3
+	UserStatus_BlockedByAdmin UserStatus = 2
 
 	UserRole_Admin UserRole = 1
 	UserRole_User  UserRole = 2
@@ -44,6 +43,22 @@ type User struct {
 
 func (u *User) IsEmpty() bool {
 	return u == nil
+}
+
+func (u *User) IsActive() bool {
+	return u.Status == UserStatus_Active
+}
+
+func (u *User) IsInActive() bool {
+	return u.Status == UserStatus_InActive
+}
+
+func (u *User) IsBlockedByAdmin() bool {
+	return u.Status == UserStatus_BlockedByAdmin
+}
+
+func (u *User) IsAdmin() bool {
+	return u.Role == UserRole_Admin
 }
 
 func (u *User) ToResponse() *UserResponse {
@@ -178,8 +193,8 @@ func (u *User) GetUserStatusInString() string {
 		return "active"
 	case UserStatus_InActive:
 		return "inactive"
-	case UserStatus_Block:
-		return "blocked"
+	case UserStatus_BlockedByAdmin:
+		return "blocked by admin"
 	default:
 		return ""
 	}

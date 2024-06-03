@@ -26,11 +26,11 @@ func (r *roleRepository) GetAll(search string) ([]*models.Role, error) {
 
 	db := r.db
 	if search != "" {
-		db = db.Where("LOWER(type) LIKES ?", "'%"+strings.ToLower(search)+"%'")
+		db = db.Where("LOWER(type) LIKE ?", "%"+strings.ToLower(search)+"%")
 	}
 
 	if err := db.Find(&roles).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY ALL ROLES : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY ALL ROLES : " + err.Error())).Msg("")
 		return nil, err
 	}
 	return roles, nil
@@ -44,7 +44,7 @@ func (r *roleRepository) GetById(id string) (*models.Role, error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY ROLE BY ID : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY ROLE BY ID : " + err.Error())).Msg("")
 		return nil, err
 	}
 
@@ -59,7 +59,7 @@ func (r *roleRepository) GetByIdWithSelectedFields(id string, selectedFields str
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY ROLE BY ID WITH SELECTED FIELDS : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY ROLE BY ID WITH SELECTED FIELDS : " + err.Error())).Msg("")
 		return nil, err
 	}
 
@@ -74,7 +74,7 @@ func (r *roleRepository) GetByTypeWithSelectedFields(roleType models.RoleType, s
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY ROLE BY TYPE WITH SELECTED FIELDS : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY ROLE BY TYPE WITH SELECTED FIELDS : " + err.Error())).Msg("")
 		return nil, err
 	}
 
@@ -86,12 +86,12 @@ func (r *roleRepository) IsEqualTypeExist(roleType models.RoleType) (bool, error
 
 	db := r.db
 
-	err := db.Where("LOWER(type) LIKES ?", "'%"+strings.ToLower(string(roleType))+"%'").First(&role).Error
+	err := db.Where("LOWER(type) LIKE ?", "%"+strings.ToLower(string(roleType))+"%").First(&role).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
-		log.Error().Err(errors.New("ERROR QUERY ROLE IsEqualTypeExist : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY ROLE IsEqualTypeExist : " + err.Error())).Msg("")
 		return false, err
 	}
 
@@ -100,7 +100,7 @@ func (r *roleRepository) IsEqualTypeExist(roleType models.RoleType) (bool, error
 
 func (r *roleRepository) Create(role *models.Role) error {
 	if err := r.db.Create(&role).Clauses(clause.Returning{}).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY ROLE INSERT : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY ROLE INSERT : " + err.Error())).Msg("")
 		return err
 	}
 
@@ -109,7 +109,7 @@ func (r *roleRepository) Create(role *models.Role) error {
 
 func (r *roleRepository) Update(role *models.Role) error {
 	if err := r.db.Updates(&role).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY ROLE UPDATE : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY ROLE UPDATE : " + err.Error())).Msg("")
 		return err
 	}
 
@@ -118,7 +118,7 @@ func (r *roleRepository) Update(role *models.Role) error {
 
 func (r *roleRepository) Delete(role *models.Role) error {
 	if err := r.db.Delete(&role).Error; err != nil {
-		log.Error().Err(errors.New("ERROR QUERY ROLE DELETE : " + err.Error()))
+		log.Error().Err(errors.New("ERROR QUERY ROLE DELETE : " + err.Error())).Msg("")
 		return err
 	}
 

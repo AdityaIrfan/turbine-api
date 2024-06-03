@@ -28,12 +28,12 @@ func (a *configRedisRepository) SaveRootLocation(rootLocation *models.ConfigRoot
 
 	json, err := json.Marshal(rootLocation)
 	if err != nil {
-		log.Error().Err(errors.New("ERROR MARSHAL ROOT LOCATION : " + err.Error()))
+		log.Error().Err(errors.New("ERROR MARSHAL ROOT LOCATION : " + err.Error())).Msg("")
 		return
 	}
 
 	if err := a.client.Set(context.Background(), key, json, helpers.RootLocationRedisExpiration).Err(); err != nil {
-		log.Error().Err(errors.New("ERROR SAVING ROOT LOCATION ON REDIS : " + err.Error()))
+		log.Error().Err(errors.New("ERROR SAVING ROOT LOCATION ON REDIS : " + err.Error())).Msg("")
 	}
 }
 
@@ -42,18 +42,18 @@ func (a *configRedisRepository) GetRootLocation() (*models.ConfigRootLocation, e
 
 	val, err := a.client.Get(context.Background(), key).Result()
 	if err != nil {
-		log.Error().Err(errors.New("ERROR GETTING ROOT LOCATION ON REDIS : " + err.Error()))
+		log.Error().Err(errors.New("ERROR GETTING ROOT LOCATION ON REDIS : " + err.Error())).Msg("")
 		return nil, nil
 	}
 
 	if val == "" {
-		log.Error().Err(fmt.Errorf("ERROR REDIS KEY %s : DATA IS EMPTY", key))
+		log.Error().Err(fmt.Errorf("ERROR REDIS KEY %s : DATA IS EMPTY", key)).Msg("")
 		return nil, nil
 	}
 
 	var refreshtoken *models.ConfigRootLocation
 	if err := json.Unmarshal([]byte(val), &refreshtoken); err != nil {
-		log.Error().Err(fmt.Errorf("ERROR UNMARSHAL ROOT LOCATION REDIS THAT HAVING KEY %s : %s", key, err.Error()))
+		log.Error().Err(fmt.Errorf("ERROR UNMARSHAL ROOT LOCATION REDIS THAT HAVING KEY %s : %s", key, err.Error())).Msg("")
 		return nil, err
 	}
 

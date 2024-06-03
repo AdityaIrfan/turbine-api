@@ -43,9 +43,17 @@ func (d *Division) ToResponse() *DivisionResponse {
 	return res
 }
 
+func (d *Division) ToMasterResponse() *DivisionMasterResponse {
+	return &DivisionMasterResponse{
+		Id:   d.Id,
+		Type: d.Type,
+	}
+}
+
 type DivisionWriteRequest struct {
-	Id   string
-	Type DivisionType `json:"Type"`
+	Id      string
+	Type    DivisionType `json:"Type" validate:"required"`
+	AdminId string
 }
 
 func (d *DivisionWriteRequest) ToModelCreate() *Division {
@@ -69,4 +77,9 @@ type DivisionResponse struct {
 	// CreatedBy string       `json:"CreatedBy"`
 	UpdatedAt string `json:"UpdatedAt"`
 	// UpdatedBy *string      `json:"UpdatedBy"`
+}
+
+type DivisionMasterResponse struct {
+	Id   string       `json:"Id"`
+	Type DivisionType `json:"Type"`
 }

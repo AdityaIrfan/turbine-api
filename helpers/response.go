@@ -43,3 +43,11 @@ func Response(c echo.Context, statusCode int32, message string, ins ...interface
 
 	return c.JSON(int(statusCode), res)
 }
+
+func ResponseUnprocessableEntity(c echo.Context) error {
+	return Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+}
+
+func ResponseNonAdminForbiddenAccess(c echo.Context) error {
+	return Response(c, http.StatusUnauthorized, "who are you? you do not have permission for this access")
+}
