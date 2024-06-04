@@ -21,13 +21,6 @@ func NewUserHandler(userService contract.IUserService) contract.IUserHandler {
 }
 
 func (u *userHandler) CreateUserAdminByAdmin(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	payload := new(models.UserAdminCreateByAdminRequest)
 
 	if err := c.Bind(payload); err != nil {
@@ -39,19 +32,10 @@ func (u *userHandler) CreateUserAdminByAdmin(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
-	payload.AdminId = adminId
-
 	return u.userService.CreateUserAdminByAdmin(c, payload)
 }
 
 func (u *userHandler) UpdateByAdmin(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	payload := new(models.UserUpdateByAdminRequest)
 
 	if err := c.Bind(payload); err != nil {
@@ -62,8 +46,6 @@ func (u *userHandler) UpdateByAdmin(c echo.Context) error {
 		errMessage := helpers.GenerateValidationErrorMessage(err)
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
-
-	payload.AdminId = adminId
 
 	return u.userService.UpdateByAdmin(c, payload)
 }
@@ -86,16 +68,8 @@ func (u *userHandler) Update(c echo.Context) error {
 }
 
 func (u *userHandler) GetDetailByAdmin(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	payload := &models.UserGetDetailRequest{
-		Id:      c.Param("id"),
-		AdminId: adminId,
+		Id: c.Param("id"),
 	}
 	return u.userService.GetDetailByAdmin(c, payload)
 }
@@ -105,35 +79,21 @@ func (u *userHandler) GetMyProfile(c echo.Context) error {
 }
 
 func (u *userHandler) DeleteByAdmin(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	payload := &models.UserDeleteByAdminRequest{
 		Id:      c.Param("id"),
-		AdminId: adminId,
+		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
 	}
 
 	return u.userService.DeleteByAdmin(c, payload)
 }
 
 func (u *userHandler) GetListWithPaginateByAdmin(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	cursor, err := helpers.GenerateCursorPaginationByEcho(c)
 	if err != nil {
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}
 
-	return u.userService.GetListWithPaginateByAdmin(c, cursor, adminId)
+	return u.userService.GetListWithPaginateByAdmin(c, cursor)
 }
 
 func (u *userHandler) ChangePassword(c echo.Context) error {
@@ -154,16 +114,9 @@ func (u *userHandler) ChangePassword(c echo.Context) error {
 }
 
 func (u *userHandler) GeneratePasswordByAdmin(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	payload := &models.GeneratePasswordByAdmin{
 		Id:      c.Param("id"),
-		AdminId: adminId,
+		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
 	}
 
 	return u.userService.GeneratePasswordByAdmin(c, payload)

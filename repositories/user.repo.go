@@ -67,6 +67,20 @@ func (u *userRepository) IsUsernameExist(username string) (bool, error) {
 	return true, nil
 }
 
+func (u *userRepository) IsEmailExist(email string) (bool, error) {
+	var user *models.User
+
+	if err := u.db.Select("email").Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		log.Error().Err(errors.New("ERROR QUERY IsEmailExist : " + err.Error())).Msg("")
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (u *userRepository) GetById(id string, preloads ...string) (*models.User, error) {
 	var user *models.User
 
@@ -121,6 +135,26 @@ func (u *userRepository) GetByUsernameWithSelectedFields(username string, select
 			return nil, nil
 		}
 		log.Error().Err(errors.New("ERROR QUERY USER BY USERNAME WITH SELECTED FIELDS : " + err.Error())).Msg("")
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (u *userRepository) GetByEmailWithSelectedFields(email string, selectedFields string, preloads ...string) (*models.User, error) {
+	var user *models.User
+
+	db := u.db
+
+	for _, p := range preloads {
+		db = db.Preload(p)
+	}
+
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		log.Error().Err(errors.New("ERROR QUERY USER BY EMAIL WITH SELECTED FIELDS : " + err.Error())).Msg("")
 		return nil, err
 	}
 

@@ -51,9 +51,8 @@ func (d *Division) ToMasterResponse() *DivisionMasterResponse {
 }
 
 type DivisionWriteRequest struct {
-	Id      string
-	Type    DivisionType `json:"Type" validate:"required"`
-	AdminId string
+	Id   string
+	Type DivisionType `json:"Type" validate:"required"`
 }
 
 func (d *DivisionWriteRequest) ToModelCreate() *Division {

@@ -22,13 +22,6 @@ func NewDivisionService(divisionRepo contract.IDivisionRepository, userRepo cont
 }
 
 func (d *divisionService) Create(c echo.Context, in *models.DivisionWriteRequest) error {
-	userAdmin, err := d.userRepo.GetByIdWithSelectedFields(in.AdminId, "id, status, role")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() || !userAdmin.IsActive() || !userAdmin.IsAdmin() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
 	exist, err := d.divisionRepo.IsEqualTypeExist(in.Type)
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -45,13 +38,6 @@ func (d *divisionService) Create(c echo.Context, in *models.DivisionWriteRequest
 }
 
 func (d *divisionService) Update(c echo.Context, in *models.DivisionWriteRequest) error {
-	userAdmin, err := d.userRepo.GetByIdWithSelectedFields(in.AdminId, "id, status, role")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() || !userAdmin.IsActive() || !userAdmin.IsAdmin() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
 	division, err := d.divisionRepo.GetByIdWithSelectedFields(in.Id, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -88,14 +74,7 @@ func (d *divisionService) GetListMaster(c echo.Context, search string) error {
 	return helpers.Response(c, http.StatusOK, "success get all divisions", res)
 }
 
-func (d *divisionService) GetListWithPaginate(c echo.Context, cursor *helpers.Cursor, adminId string) error {
-	userAdmin, err := d.userRepo.GetByIdWithSelectedFields(adminId, "id, status, role")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() || !userAdmin.IsActive() || !userAdmin.IsAdmin() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
+func (d *divisionService) GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error {
 	divisions, pagination, err := d.divisionRepo.GetAllWithPaginate(cursor)
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -110,13 +89,6 @@ func (d *divisionService) GetListWithPaginate(c echo.Context, cursor *helpers.Cu
 }
 
 func (d *divisionService) Delete(c echo.Context, in *models.DivisionWriteRequest) error {
-	userAdmin, err := d.userRepo.GetByIdWithSelectedFields(in.AdminId, "id, status, role")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() || !userAdmin.IsActive() || !userAdmin.IsAdmin() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
 	division, err := d.divisionRepo.GetByIdWithSelectedFields(in.Id, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)

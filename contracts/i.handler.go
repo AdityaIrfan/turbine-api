@@ -35,9 +35,11 @@ type IAuthHandler interface {
 	Register(c echo.Context) error
 	Login(c echo.Context) error
 	RefreshToken(c echo.Context) error
+	Logout(c echo.Context) error
 }
 
 type IConfigHandler interface {
+	SaveOrUpdate(c echo.Context) error
 	GetRootLocation(c echo.Context) error
 }
 

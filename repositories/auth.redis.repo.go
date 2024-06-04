@@ -123,3 +123,41 @@ func (a *authRedisRepository) IsLoginBlocked(id string) (bool, error) {
 
 	return false, nil
 }
+
+func (a *authRedisRepository) SaveToken(id string, token string, ttl time.Duration) error {
+	key := fmt.Sprintf("%v_token", id)
+
+	if err := a.client.Set(context.Background(), key, token, ttl).Err(); err != nil {
+		log.Error().Err(errors.New("ERROR SAVE TOKEN : " + err.Error())).Msg("")
+		return err
+	}
+
+	log.Info().Msg(fmt.Sprintf("SUCCESS SAVE TOKEN KEY %v", key))
+	return nil
+}
+
+func (a *authRedisRepository) GetToken(id string) (string, error) {
+	key := fmt.Sprintf("%v_token", id)
+
+	val, err := a.client.Get(context.Background(), key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return "", nil
+		}
+		log.Error().Err(errors.New("ERROR GETTING TOKEN REDIS : " + err.Error())).Msg("")
+		return "", err
+	}
+
+	return val, nil
+}
+
+func (a *authRedisRepository) DeleteToken(id string) {
+	key := fmt.Sprintf("%v_token", id)
+
+	if err := a.client.Del(context.Background(), key).Err(); err != nil {
+		log.Error().Err(errors.New("ERROR DELETE TOKEN REDIS : " + err.Error()))
+		return
+	}
+
+	log.Info().Msg(fmt.Sprintf("SUCCESS DELETE TOKEN KEY %v", key))
+}

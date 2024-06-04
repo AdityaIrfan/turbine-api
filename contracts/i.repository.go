@@ -33,9 +33,11 @@ type IUserRepository interface {
 	Create(user *models.User, preloads ...string) error
 	Update(user *models.User, preloads ...string) error
 	IsUsernameExist(username string) (bool, error)
+	IsEmailExist(email string) (bool, error)
 	GetById(id string, preloads ...string) (*models.User, error)
 	GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByUsernameWithSelectedFields(username string, selectedFields string, preloads ...string) (*models.User, error)
+	GetByEmailWithSelectedFields(email string, selectedFields string, preloads ...string) (*models.User, error)
 	GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.User, *helpers.CursorPagination, error)
 	Delete(user *models.User) error
 }
@@ -46,9 +48,13 @@ type IAuthRedisRepository interface {
 	DeleteRefreshToken(id string)
 	IncLoginFailedCounter(id string)
 	IsLoginBlocked(id string) (bool, error)
+	SaveToken(id string, token string, ttl time.Duration) error
+	GetToken(id string) (string, error)
+	DeleteToken(id string)
 }
 
 type IConfigRepository interface {
+	SaveOrUpdateRootLocation(rootLocation *models.ConfigRootLocation) error
 	GetByType(configType models.ConfigType) (*models.Config, error)
 }
 

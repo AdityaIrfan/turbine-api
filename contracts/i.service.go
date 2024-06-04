@@ -18,7 +18,7 @@ type IDivisionService interface {
 	Create(c echo.Context, in *models.DivisionWriteRequest) error
 	Update(c echo.Context, in *models.DivisionWriteRequest) error
 	GetListMaster(c echo.Context, search string) error
-	GetListWithPaginate(c echo.Context, cursor *helpers.Cursor, adminId string) error
+	GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error
 	Delete(c echo.Context, in *models.DivisionWriteRequest) error
 }
 
@@ -29,7 +29,7 @@ type IUserService interface {
 	GetDetailByAdmin(c echo.Context, in *models.UserGetDetailRequest) error
 	GetMyProfile(c echo.Context, id string) error
 	DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error
-	GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor, adminId string) error
+	GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error
 	ChangePassword(c echo.Context, in *models.UserChangePasswordRequest) error
 	GeneratePasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error
 }
@@ -38,10 +38,12 @@ type IAuthService interface {
 	Register(c echo.Context, in *models.Register) error
 	Login(c echo.Context, in *models.Login) error
 	RefreshToken(c echo.Context, in *models.RefreshTokenRequest) error
+	Logout(c echo.Context, token string) error
 }
 
 type IConfigService interface {
-	GetRootLocation(c echo.Context, adminId string) error
+	SaveOrUpdate(c echo.Context, in *models.ConfigRootLocation) error
+	GetRootLocation(c echo.Context) error
 }
 
 type ITurbineService interface{}

@@ -32,14 +32,6 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	route := echo.New()
 	route.Validator = &CustomValidator{Validator: validator.New(validator.WithRequiredStructEnabled())}
 
-	// // init middleware
-	middleware := middleware.NewMiddleware()
-	applicationJson := middleware.ApplicationJson
-	authAdmin := middleware.AuthAdmin
-	authUser := middleware.AuthUser
-	// allAuth := middleware.AllAuth
-	// signature := middleware.Signature
-
 	// Repositories
 	roleRepository := repositories.NewRoleRepository(db)
 	divisionRepository := repositories.NewDivisionRepository(db)
@@ -62,6 +54,14 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	authHandler := handlers.NewAuthHandler(authService)
 	configHandler := handlers.NewConfigHandler(configService)
 
+	// Middleware
+	middleware := middleware.NewMiddleware(authRedisRepository, userRepository)
+	applicationJson := middleware.ApplicationJson
+	authAdmin := middleware.AuthAdmin
+	authUser := middleware.AuthUser
+	allAuth := middleware.Auth
+	// signature := middleware.Signature
+
 	route.GET("/", func(c echo.Context) error {
 		return helpers.Response(c, http.StatusOK, "hello")
 	})
@@ -80,6 +80,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	authRouting.POST("/register", authHandler.Register, applicationJson)
 	authRouting.POST("/login", authHandler.Login, applicationJson)
 	authRouting.POST("/refresh-token", authHandler.RefreshToken, applicationJson)
+	authRouting.POST("/logout", authHandler.Logout, allAuth)
 
 	userRoutingByAdmin := route.Group("/admin/users")
 	userRoutingByAdmin.POST("/", userHandler.CreateUserAdminByAdmin, authAdmin, applicationJson)
@@ -101,6 +102,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	// roleRouting.DELETE("/:id", roleHandler.Delete)
 
 	configRouting := route.Group("/config")
+	configRouting.POST("/root-location", configHandler.SaveOrUpdate, authAdmin, applicationJson)
 	configRouting.GET("/root-location", configHandler.GetRootLocation, authAdmin)
 
 	return route

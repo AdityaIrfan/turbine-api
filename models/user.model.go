@@ -16,14 +16,16 @@ const (
 	UserStatus_Active         UserStatus = 1
 	UserStatus_BlockedByAdmin UserStatus = 2
 
-	UserRole_Admin UserRole = 1
-	UserRole_User  UserRole = 2
+	UserRole_SuperAdmin UserRole = 1
+	UserRole_Admin      UserRole = 2
+	UserRole_User       UserRole = 3
 )
 
 type User struct {
 	Id         string `gorm:"column:id"`
 	Name       string `gorm:"column:name"`
 	Username   string `gorm:"column:username"`
+	Email      string `gorm:"column:email"`
 	DivisionId string `gorm:"column:division_id"`
 	// RoleId       string          `gorm:"column:role_id"`
 	Role         UserRole   `gorm:"column:role"`
@@ -61,10 +63,15 @@ func (u *User) IsAdmin() bool {
 	return u.Role == UserRole_Admin
 }
 
+func (u *User) IsSuperAdmin() bool {
+	return u.Role == UserRole_SuperAdmin
+}
+
 func (u *User) ToResponse() *UserResponse {
 	res := &UserResponse{
 		Name:      u.Name,
 		Username:  u.Username,
+		Email:     u.Email,
 		Division:  string(u.Division.Type),
 		Role:      u.GetUserRoleInString(),
 		Status:    u.GetUserStatusInString(),
@@ -81,6 +88,7 @@ func (u *User) ToResponse() *UserResponse {
 type UserResponse struct {
 	Name      string `json:"Name"`
 	Username  string `json:"Username"`
+	Email     string `json:"Email"`
 	Division  string `json:"Division"`
 	Role      string `json:"Role"`
 	Status    string `json:"Status"`
@@ -105,8 +113,8 @@ type UserListResponse struct {
 type UserAdminCreateByAdminRequest struct {
 	Name       string `json:"Name"`
 	Username   string `json:"useranme"`
+	Email      string `json:"Email"`
 	DivisionId string `json:"DivisionId"`
-	AdminId    string
 }
 
 func (u *UserAdminCreateByAdminRequest) ToModel() *User {
@@ -129,13 +137,13 @@ type UserUpdateByAdminRequest struct {
 	Role       *UserRole   `json:"Role"`
 	DivisionId *string     `json:"DivisionId"`
 	Status     *UserStatus `json:"UserStatus"`
-	AdminId    string
 }
 
 type UserUpdateRequest struct {
 	Id       string
 	Name     *string `json:"Name"`
 	Username *string `json:"Username"`
+	Email    *string `json:"Email"`
 }
 
 type UserChangePasswordRequest struct {
@@ -178,6 +186,8 @@ func IsUserStatusExist(userStatus UserStatus) bool {
 
 func (u *User) GetUserRoleInString() string {
 	switch u.Role {
+	case UserRole_SuperAdmin:
+		return "super admin"
 	case UserRole_Admin:
 		return "admin"
 	case UserRole_User:
@@ -201,6 +211,5 @@ func (u *User) GetUserStatusInString() string {
 }
 
 type UserGetDetailRequest struct {
-	Id      string
-	AdminId string
+	Id string
 }

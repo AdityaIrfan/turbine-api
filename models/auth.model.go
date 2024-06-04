@@ -60,3 +60,7 @@ type RefreshTokenRedis struct {
 func (r *RefreshTokenRedis) IsActive() bool {
 	return time.Now().After(time.Unix(r.Active, 0))
 }
+
+type Logout struct {
+	Token string `json:"Token" validate:"required"`
+}

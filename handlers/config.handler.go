@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"net/http"
 	contract "turbine-api/contracts"
 	helpers "turbine-api/helpers"
+	"turbine-api/models"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,13 +19,21 @@ func NewConfigHandler(configService contract.IConfigService) contract.IConfigHan
 	}
 }
 
-func (ch *configHandler) GetRootLocation(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
+func (ch *configHandler) SaveOrUpdate(c echo.Context) error {
+	payload := new(models.ConfigRootLocation)
+
+	if err := c.Bind(payload); err != nil {
+		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
 	}
 
-	return ch.configService.GetRootLocation(c, adminId)
+	if err := c.Validate(payload); err != nil {
+		errMessage := helpers.GenerateValidationErrorMessage(err)
+		return helpers.Response(c, http.StatusBadRequest, errMessage)
+	}
+
+	return ch.configService.SaveOrUpdate(c, payload)
+}
+
+func (ch *configHandler) GetRootLocation(c echo.Context) error {
+	return ch.configService.GetRootLocation(c)
 }

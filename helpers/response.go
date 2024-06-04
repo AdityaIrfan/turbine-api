@@ -48,6 +48,6 @@ func ResponseUnprocessableEntity(c echo.Context) error {
 	return Response(c, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
 }
 
-func ResponseNonAdminForbiddenAccess(c echo.Context) error {
+func ResponseForbiddenAccess(c echo.Context) error {
 	return Response(c, http.StatusUnauthorized, "who are you? you do not have permission for this access")
 }

@@ -6,7 +6,6 @@ import (
 	helpers "turbine-api/helpers"
 	"turbine-api/models"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,13 +20,6 @@ func NewDivisionHandler(divisionService contract.IDivisionService) contract.IDiv
 }
 
 func (d *divisionHandler) Create(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	payload := new(models.DivisionWriteRequest)
 
 	if err := c.Bind(payload); err != nil {
@@ -39,18 +31,9 @@ func (d *divisionHandler) Create(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
-	payload.AdminId = adminId
-
 	return d.divisionService.Create(c, payload)
 }
 func (d *divisionHandler) Update(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	payload := new(models.DivisionWriteRequest)
 
 	if err := c.Bind(payload); err != nil {
@@ -63,7 +46,6 @@ func (d *divisionHandler) Update(c echo.Context) error {
 	}
 
 	payload.Id = c.Param("id")
-	payload.AdminId = adminId
 
 	return d.divisionService.Update(c, payload)
 }
@@ -73,32 +55,17 @@ func (d *divisionHandler) GetListMaster(c echo.Context) error {
 }
 
 func (d *divisionHandler) GetListWithPaginate(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	cursor, err := helpers.GenerateCursorPaginationByEcho(c)
 	if err != nil {
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}
 
-	return d.divisionService.GetListWithPaginate(c, cursor, adminId)
+	return d.divisionService.GetListWithPaginate(c, cursor)
 }
 
 func (d *divisionHandler) Delete(c echo.Context) error {
-	var adminId string
-	if value, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string); !ok {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	} else {
-		adminId = value
-	}
-
 	payload := &models.DivisionWriteRequest{
-		Id:      c.Param("id"),
-		AdminId: adminId,
+		Id: c.Param("id"),
 	}
 	return d.divisionService.Delete(c, payload)
 }

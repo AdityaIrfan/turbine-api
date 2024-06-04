@@ -24,19 +24,18 @@ func NewUserService(userRepo contract.IUserRepository, divisionRepo contract.IDi
 }
 
 func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdminCreateByAdminRequest) error {
-	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
 	// check existing username
-	exist, err := u.userRepo.IsUsernameExist(in.Username)
-	if err != nil {
+	if exist, err := u.userRepo.IsUsernameExist(in.Username); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
 		return helpers.Response(c, http.StatusBadRequest, "username already in use")
+	}
+
+	// check existing email
+	if exist, err := u.userRepo.IsEmailExist(in.Email); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if exist {
+		return helpers.Response(c, http.StatusBadRequest, "email already in use")
 	}
 
 	// check division by id
@@ -52,17 +51,10 @@ func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdmi
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success create user")
+	return helpers.Response(c, http.StatusOK, "success create user", user.ToResponse())
 }
 
 func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdminRequest) error {
-	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
 	user, err := u.userRepo.GetById(in.Id, "Division")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -133,6 +125,18 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 		user.Username = *in.Username
 	}
 
+	if in.Email != nil && user.Email != *in.Email {
+		userByEmail, err := u.userRepo.GetByEmailWithSelectedFields(*in.Email, "id")
+		if err != nil {
+			return helpers.ResponseUnprocessableEntity(c)
+		} else if !userByEmail.IsEmpty() && userByEmail.Id != user.Id {
+			return helpers.Response(c, http.StatusBadRequest, "email already in use")
+		}
+
+		anyUpdated = true
+		user.Email = *in.Email
+	}
+
 	if in.Name != nil && user.Name != *in.Name {
 		anyUpdated = true
 		user.Name = *in.Name
@@ -148,13 +152,6 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 }
 
 func (u *userService) GetDetailByAdmin(c echo.Context, in *models.UserGetDetailRequest) error {
-	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
 	user, err := u.userRepo.GetById(in.Id, "Division")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -177,18 +174,11 @@ func (u *userService) GetMyProfile(c echo.Context, id string) error {
 }
 
 func (u *userService) DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error {
-	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
 	user, err := u.userRepo.GetByIdWithSelectedFields(in.Id, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
+		return helpers.ResponseForbiddenAccess(c)
 	}
 
 	if err := u.userRepo.Delete(user); err != nil {
@@ -198,14 +188,7 @@ func (u *userService) DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdmin
 	return helpers.Response(c, http.StatusOK, "success delete user")
 }
 
-func (u *userService) GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor, adminId string) error {
-	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(adminId, "id")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
+func (u *userService) GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error {
 	users, pagination, err := u.userRepo.GetAllWithPaginate(cursor)
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -224,7 +207,7 @@ func (u *userService) ChangePassword(c echo.Context, in *models.UserChangePasswo
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
+		return helpers.ResponseForbiddenAccess(c)
 	}
 
 	salt, hash, err := helpers.GenerateHashAndSalt(in.Password)
@@ -243,18 +226,11 @@ func (u *userService) ChangePassword(c echo.Context, in *models.UserChangePasswo
 }
 
 func (u *userService) GeneratePasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
-	userAdmin, err := u.userRepo.GetByIdWithSelectedFields(in.AdminId, "id")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
-	}
-
 	user, err := u.userRepo.GetById(in.Id)
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
+		return helpers.ResponseForbiddenAccess(c)
 	}
 
 	password := helpers.GenerateRandomString(10)

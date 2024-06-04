@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	contract "turbine-api/contracts"
 	helpers "turbine-api/helpers"
 	"turbine-api/models"
@@ -71,4 +72,10 @@ func (a *authHandler) RefreshToken(c echo.Context) error {
 	}
 
 	return a.authService.RefreshToken(c, payload)
+}
+
+func (a *authHandler) Logout(c echo.Context) error {
+	tokens := strings.Split(c.Request().Header.Get("Authorization"), " ")
+
+	return a.authService.Logout(c, tokens[1])
 }

@@ -99,6 +99,8 @@ func (a *authService) Login(c echo.Context, in *models.Login) error {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
+	go a.authRedisRepo.SaveToken(user.Id, token, helpers.LoginExpiration)
+
 	go a.authRedisRepo.SaveRefreshToken(user.Id, &models.RefreshTokenRedis{
 		RefreshToken: refreshToken,
 		Exp:          refreshTokenExpiration.Unix(),
@@ -171,6 +173,8 @@ func (a *authService) RefreshToken(c echo.Context, in *models.RefreshTokenReques
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
+	go a.authRedisRepo.SaveToken(user.Id, token, helpers.LoginExpiration)
+
 	go a.authRedisRepo.SaveRefreshToken(user.Id, &models.RefreshTokenRedis{
 		RefreshToken: refreshToken,
 		Exp:          refreshTokenExpiration.Unix(),
@@ -185,4 +189,29 @@ func (a *authService) RefreshToken(c echo.Context, in *models.RefreshTokenReques
 	}
 
 	return helpers.Response(c, http.StatusOK, "refresh token success", response)
+}
+
+func (a *authService) Logout(c echo.Context, token string) error {
+	userId, ok := c.Get("claims").(jwt.MapClaims)["Id"].(string)
+	if !ok {
+		return helpers.ResponseForbiddenAccess(c)
+	}
+
+	user, err := a.userRepo.GetByIdWithSelectedFields(userId, "id")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
+	}
+
+	existingToken, err := a.authRedisRepo.GetToken(userId)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if existingToken == "" || existingToken != token {
+		return helpers.Response(c, http.StatusBadRequest, "invalid token")
+	}
+
+	go a.authRedisRepo.DeleteToken(userId)
+
+	return helpers.Response(c, http.StatusOK, "success logout")
 }

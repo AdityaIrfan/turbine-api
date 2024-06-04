@@ -24,40 +24,6 @@ func (c *Config) IsEmpty() bool {
 }
 
 func (c *Config) ToConfigRootLocation() *ConfigRootLocation {
-	// var long, lat, coverageArea float64
-	// var coverageType CoverageAreaType
-
-	// if value, ok := c.Data["long"].(float64); !ok {
-	// 	log.Error().Err(errors.New("CONFIG DATA long IS EMPTY OR IS NOT FLOAT64, CEK AGAIN ON CONFIG ROOT LOCATION DATABASE")).Msg("")
-	// } else {
-	// 	long = value
-	// }
-
-	// if value, ok := c.Data["lat"].(float64); !ok {
-	// 	log.Error().Err(errors.New("CONFIG DATA lat IS EMPTY OR IS NOT FLOAT64, CEK AGAIN ON CONFIG ROOT LOCATION DATABASE")).Msg("")
-	// } else {
-	// 	lat = value
-	// }
-
-	// if value, ok := c.Data["coverage_area"].(float64); !ok {
-	// 	log.Error().Err(errors.New("CONFIG DATA coverage_area IS EMPTY OR IS NOT FLOAT64, CEK AGAIN ON CONFIG ROOT LOCATION DATABASE")).Msg("")
-	// } else {
-	// 	coverageArea = value
-	// }
-
-	// if value, ok := c.Data["coverage_area_type"].(string); !ok {
-	// 	log.Error().Err(errors.New("CONFIG DATA coverage_area_type IS EMPTY OR IS NOT FLOAT64, CEK AGAIN ON CONFIG ROOT LOCATION DATABASE")).Msg("")
-	// } else {
-	// 	coverageType = CoverageAreaType(value)
-	// }
-
-	// return &ConfigRootLocation{
-	// 	Long:             long,
-	// 	Lat:              lat,
-	// 	CoverageArea:     coverageArea,
-	// 	CoverageAreaType: coverageType,
-	// }
-
 	var rootLocation *ConfigRootLocation
 
 	if err := json.Unmarshal(c.Data, &rootLocation); err != nil {
@@ -75,12 +41,28 @@ const (
 )
 
 type ConfigRootLocation struct {
-	Long             float64          `gorm:"column:long" json:"Long"`
-	Lat              float64          `gorm:"column:lat" json:"Lat"`
-	CoverageArea     float64          `gorm:"column:coverage_area" json:"CoverageArea"`
-	CoverageAreaType CoverageAreaType `gorm:"column:coverage_area_type" json:"CoverageAreaType"`
+	Long             float64          `gorm:"column:long" json:"Long" validate:"required"`
+	Lat              float64          `gorm:"column:lat" json:"Lat" validate:"required"`
+	CoverageArea     float64          `gorm:"column:coverage_area" json:"CoverageArea" validate:"required"`
+	CoverageAreaType CoverageAreaType `gorm:"column:coverage_area_type" json:"CoverageAreaType" validate:"required"`
 }
 
 func (c *ConfigRootLocation) IsEmpty() bool {
 	return c == nil
+}
+
+func (c *ConfigRootLocation) ToConfigModel() *Config {
+	resJson, err := json.Marshal(c)
+	if err != nil {
+		log.Error().Err(errors.New("ERROR MARSHAL CONFIG ROOT LOCATION : " + err.Error())).Msg("")
+		return &Config{
+			Type: ConfigType_RootLocation,
+			Data: datatypes.JSON{},
+		}
+	}
+
+	return &Config{
+		Type: ConfigType_RootLocation,
+		Data: resJson,
+	}
 }

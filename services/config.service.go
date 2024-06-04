@@ -28,14 +28,16 @@ func NewConfigService(
 	}
 }
 
-func (cs *configService) GetRootLocation(c echo.Context, adminId string) error {
-	userAdmin, err := cs.userRepo.GetByIdWithSelectedFields(adminId, "id, status, role")
-	if err != nil {
+func (cs *configService) SaveOrUpdate(c echo.Context, in *models.ConfigRootLocation) error {
+	if err := cs.configRepo.SaveOrUpdateRootLocation(in); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
-	} else if userAdmin.IsEmpty() || !userAdmin.IsActive() || !userAdmin.IsAdmin() {
-		return helpers.ResponseNonAdminForbiddenAccess(c)
 	}
 
+	go cs.configRedisRepo.SaveRootLocation(in)
+	return helpers.Response(c, http.StatusOK, "success create or update config root location")
+}
+
+func (cs *configService) GetRootLocation(c echo.Context) error {
 	rootLocation, err := cs.configRedisRepo.GetRootLocation()
 	if err != nil || rootLocation.IsEmpty() {
 		config, err := cs.configRepo.GetByType(models.ConfigType_RootLocation)
