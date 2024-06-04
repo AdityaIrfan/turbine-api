@@ -21,10 +21,11 @@ func main() {
 	}()
 
 	config.InitLogger()
-	postgres := config.InitPostgres()
-	redis := config.InitRedis()
+	// postgres := config.InitPostgres()
+	// redis := config.InitRedis()
 
-	apis := routes.NewApi().Init(postgres, redis)
+	// apis := routes.NewApi().Init(postgres, redis)
+	apis := routes.NewApi().Init(nil, nil)
 
 	log.Info().Msg(fmt.Sprintf("This server is running on port %d", port))
 

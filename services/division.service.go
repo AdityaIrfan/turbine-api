@@ -22,7 +22,7 @@ func NewDivisionService(divisionRepo contract.IDivisionRepository, userRepo cont
 }
 
 func (d *divisionService) Create(c echo.Context, in *models.DivisionWriteRequest) error {
-	exist, err := d.divisionRepo.IsEqualTypeExist(in.Type)
+	exist, err := d.divisionRepo.IsEqualNameExist(in.Name)
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
@@ -45,7 +45,7 @@ func (d *divisionService) Update(c echo.Context, in *models.DivisionWriteRequest
 		return helpers.Response(c, http.StatusNotFound, "division not found")
 	}
 
-	divisionByType, err := d.divisionRepo.GetByTypeWithSelectedFields(in.Type, "id")
+	divisionByType, err := d.divisionRepo.GetByNameWithSelectedFields(in.Name, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if !divisionByType.IsEmpty() && divisionByType.Id != in.Id {

@@ -47,3 +47,10 @@ type IConfigService interface {
 }
 
 type ITurbineService interface{}
+
+type ITowerService interface {
+	Create(c echo.Context, in *models.TowerWriteRequest) error
+	Update(c echo.Context, in *models.TowerWriteRequest) error
+	GetListMaster(c echo.Context, search string) error
+	Delete(c echo.Context, in *models.TowerWriteRequest) error
+}

@@ -72,7 +72,7 @@ func (u *User) ToResponse() *UserResponse {
 		Name:      u.Name,
 		Username:  u.Username,
 		Email:     u.Email,
-		Division:  string(u.Division.Type),
+		Division:  string(u.Division.Name),
 		Role:      u.GetUserRoleInString(),
 		Status:    u.GetUserStatusInString(),
 		CreatedAt: u.CreatedAt.Format(helpers.DefaultTimeFormat),
@@ -99,7 +99,7 @@ type UserResponse struct {
 func (u *User) ToResponseList() *UserListResponse {
 	return &UserListResponse{
 		Name:     u.Name,
-		Division: string(u.Division.Type),
+		Division: string(u.Division.Name),
 		Status:   u.GetUserStatusInString(),
 	}
 }

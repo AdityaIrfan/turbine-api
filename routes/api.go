@@ -39,6 +39,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	authRedisRepository := repositories.NewAuthRedisRepository(client)
 	configRepository := repositories.NewConfigRepository(db)
 	configRedisRepository := repositories.NewConfigRedisRepository(client)
+	towerRepository := repositories.NewTowerRepository(db)
 
 	// Services
 	// roleService := services.NewRoleService(roleRepository)
@@ -46,6 +47,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	userService := services.NewUserService(userRepository, divisionRepository, roleRepository)
 	authService := services.NewAuthService(userRepository, authRedisRepository, divisionRepository)
 	configService := services.NewConfigService(configRepository, configRedisRepository, userRepository)
+	towerService := services.NewTowerService(towerRepository)
 
 	// Handlers
 	// roleHandler := handlers.NewRoleHandler(roleService)
@@ -53,6 +55,8 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	userHandler := handlers.NewUserHandler(userService)
 	authHandler := handlers.NewAuthHandler(authService)
 	configHandler := handlers.NewConfigHandler(configService)
+	turbineHandler := handlers.NewTurbineHandler()
+	towerHandler := handlers.NewTowerHandler(towerService)
 
 	// Middleware
 	middleware := middleware.NewMiddleware(authRedisRepository, userRepository)
@@ -104,6 +108,18 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	configRouting := route.Group("/config")
 	configRouting.POST("/root-location", configHandler.SaveOrUpdate, authAdmin, applicationJson)
 	configRouting.GET("/root-location", configHandler.GetRootLocation, authAdmin)
+
+	towerRouting := route.Group("/tower")
+	towerRouting.POST("", towerHandler.Create, authAdmin, applicationJson)
+	towerRouting.PUT("/:id", towerHandler.Update, authAdmin, applicationJson)
+	towerRouting.GET("/master", towerHandler.GetListMaster, allAuth)
+	towerRouting.DELETE("/:d", towerHandler.Delete, authAdmin)
+
+	turbineRouting := route.Group("/turbine")
+	turbineRouting.POST("", turbineHandler.Create, applicationJson)
+	turbineRouting.POST("", turbineHandler.Create, applicationJson)
+	turbineRouting.POST("", turbineHandler.Create, applicationJson)
+	turbineRouting.POST("", turbineHandler.Create, applicationJson)
 
 	return route
 }

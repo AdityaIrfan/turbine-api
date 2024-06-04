@@ -109,7 +109,7 @@ func (a *authService) Login(c echo.Context, in *models.Login) error {
 
 	response := &models.AuthResponse{
 		Name:         user.Name,
-		Division:     string(user.Division.Type),
+		Division:     string(user.Division.Name),
 		Token:        token,
 		RefreshToken: refreshToken,
 	}
@@ -183,7 +183,7 @@ func (a *authService) RefreshToken(c echo.Context, in *models.RefreshTokenReques
 
 	response := &models.AuthResponse{
 		Name:         user.Name,
-		Division:     string(user.Division.Type),
+		Division:     string(user.Division.Name),
 		Token:        token,
 		RefreshToken: refreshToken,
 	}

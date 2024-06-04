@@ -43,4 +43,13 @@ type IConfigHandler interface {
 	GetRootLocation(c echo.Context) error
 }
 
-type ITurbineInterface interface{}
+type ITurbineHandler interface {
+	Create(c echo.Context) error
+}
+
+type ITowerHandler interface {
+	Create(c echo.Context) error
+	Update(c echo.Context) error
+	GetListMaster(c echo.Context) error
+	Delete(c echo.Context) error
+}

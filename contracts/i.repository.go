@@ -23,8 +23,8 @@ type IDivisionRepository interface {
 	GetAll(search string) ([]*models.Division, error)
 	GetById(id string) (*models.Division, error)
 	GetByIdWithSelectedFields(id string, selectedFields string) (*models.Division, error)
-	GetByTypeWithSelectedFields(divisionTYpe models.DivisionType, selectedFields string) (*models.Division, error)
-	IsEqualTypeExist(divisionType models.DivisionType) (bool, error)
+	GetByNameWithSelectedFields(divisionName models.DivisionName, selectedFields string) (*models.Division, error)
+	IsEqualNameExist(divisionName models.DivisionName) (bool, error)
 	Delete(role *models.Division) error
 	GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.Division, *helpers.CursorPagination, error)
 }
@@ -64,3 +64,12 @@ type IConfigRedisRepository interface {
 }
 
 type ITurbineRepository interface{}
+
+type ITowerRepository interface {
+	Create(tower *models.Tower) error
+	Update(tower *models.Tower) error
+	GetByIdWithSelectedFields(id string, selectedFields string) (*models.Tower, error)
+	GetByEqualNameWithSelectedFields(name string, selectedFields string) (*models.Tower, error)
+	GetAll(search string) ([]*models.Tower, error)
+	Delete(tower *models.Tower) error
+}

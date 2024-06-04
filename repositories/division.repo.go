@@ -85,10 +85,10 @@ func (d *divisionRepository) GetByIdWithSelectedFields(id string, selectedFields
 	return division, nil
 }
 
-func (d *divisionRepository) GetByTypeWithSelectedFields(divisionTYpe models.DivisionType, selectedFields string) (*models.Division, error) {
+func (d *divisionRepository) GetByNameWithSelectedFields(divisionName models.DivisionName, selectedFields string) (*models.Division, error) {
 	var division *models.Division
 
-	if err := d.db.Select(selectedFields).Where("LOWER(type) = LOWER(?)", divisionTYpe).First(&division).Error; err != nil {
+	if err := d.db.Select(selectedFields).Where("LOWER(type) = LOWER(?)", divisionName).First(&division).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -99,10 +99,10 @@ func (d *divisionRepository) GetByTypeWithSelectedFields(divisionTYpe models.Div
 	return division, nil
 }
 
-func (d *divisionRepository) IsEqualTypeExist(divisionType models.DivisionType) (bool, error) {
+func (d *divisionRepository) IsEqualNameExist(divisionName models.DivisionName) (bool, error) {
 	var division *models.Division
 
-	err := d.db.Where("LOWER(type) LIKE ?", "%"+strings.ToLower(string(divisionType))+"%").First(&division).Error
+	err := d.db.Where("LOWER(type) LIKE ?", "%"+strings.ToLower(string(divisionName))+"%").First(&division).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
