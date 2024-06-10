@@ -24,7 +24,7 @@ func (u *userHandler) CreateUserAdminByAdmin(c echo.Context) error {
 	payload := new(models.UserAdminCreateByAdminRequest)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {
@@ -39,7 +39,7 @@ func (u *userHandler) UpdateByAdmin(c echo.Context) error {
 	payload := new(models.UserUpdateByAdminRequest)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {
@@ -54,7 +54,7 @@ func (u *userHandler) Update(c echo.Context) error {
 	payload := new(models.UserUpdateRequest)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {
@@ -100,7 +100,7 @@ func (u *userHandler) ChangePassword(c echo.Context) error {
 	payload := new(models.UserChangePasswordRequest)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {

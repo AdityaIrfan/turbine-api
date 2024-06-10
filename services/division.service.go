@@ -26,7 +26,7 @@ func (d *divisionService) Create(c echo.Context, in *models.DivisionWriteRequest
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
-		return helpers.Response(c, http.StatusBadRequest, "division type already in use")
+		return helpers.Response(c, http.StatusBadRequest, "nama divisi sudah digunakan")
 	}
 
 	division := in.ToModelCreate()
@@ -34,7 +34,7 @@ func (d *divisionService) Create(c echo.Context, in *models.DivisionWriteRequest
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success create role", division.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil membuat divisi baru", division.ToResponse())
 }
 
 func (d *divisionService) Update(c echo.Context, in *models.DivisionWriteRequest) error {
@@ -42,14 +42,14 @@ func (d *divisionService) Update(c echo.Context, in *models.DivisionWriteRequest
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if division.IsEmpty() {
-		return helpers.Response(c, http.StatusNotFound, "division not found")
+		return helpers.Response(c, http.StatusNotFound, "divisi tidak ditemukan")
 	}
 
 	divisionByType, err := d.divisionRepo.GetByNameWithSelectedFields(in.Name, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if !divisionByType.IsEmpty() && divisionByType.Id != in.Id {
-		return helpers.Response(c, http.StatusBadRequest, "division type already in use")
+		return helpers.Response(c, http.StatusBadRequest, "nama divisi sudah digunakan")
 	}
 
 	division = in.ToModelUpdate()
@@ -57,7 +57,7 @@ func (d *divisionService) Update(c echo.Context, in *models.DivisionWriteRequest
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success update division", division.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil mengubah divisi", division.ToResponse())
 }
 
 func (d *divisionService) GetListMaster(c echo.Context, search string) error {
@@ -71,7 +71,7 @@ func (d *divisionService) GetListMaster(c echo.Context, search string) error {
 		res = append(res, d.ToMasterResponse())
 	}
 
-	return helpers.Response(c, http.StatusOK, "success get all divisions", res)
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua divisi", res)
 }
 
 func (d *divisionService) GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error {
@@ -85,7 +85,7 @@ func (d *divisionService) GetListWithPaginate(c echo.Context, cursor *helpers.Cu
 		divisionRes = append(divisionRes, division.ToResponse())
 	}
 
-	return helpers.Response(c, http.StatusOK, "success get division list", divisionRes, pagination)
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan divisi", divisionRes, pagination)
 }
 
 func (d *divisionService) Delete(c echo.Context, in *models.DivisionWriteRequest) error {
@@ -93,12 +93,12 @@ func (d *divisionService) Delete(c echo.Context, in *models.DivisionWriteRequest
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if division.IsEmpty() {
-		return helpers.Response(c, http.StatusNotFound, "division not found")
+		return helpers.Response(c, http.StatusNotFound, "divisi tidak ditemukan")
 	}
 
 	if err := d.divisionRepo.Delete(division); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success delete division")
+	return helpers.Response(c, http.StatusOK, "berhasil mengubah divisi")
 }

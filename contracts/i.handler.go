@@ -45,6 +45,8 @@ type IConfigHandler interface {
 
 type ITurbineHandler interface {
 	Create(c echo.Context) error
+	GetDetail(c echo.Context) error
+	GetList(c echo.Context) error
 }
 
 type ITowerHandler interface {

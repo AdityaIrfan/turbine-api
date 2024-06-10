@@ -24,7 +24,7 @@ func (r *roleService) Create(c echo.Context, in *models.RoleWriteRequest) error 
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
-		return helpers.Response(c, http.StatusBadRequest, "role type already in use")
+		return helpers.Response(c, http.StatusBadRequest, "nama role sudah digunakan")
 	}
 
 	role := in.ToModelCreate()
@@ -32,7 +32,7 @@ func (r *roleService) Create(c echo.Context, in *models.RoleWriteRequest) error 
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success create role", role.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil membuat role baru", role.ToResponse())
 }
 
 func (r *roleService) Update(c echo.Context, in *models.RoleWriteRequest) error {
@@ -40,14 +40,14 @@ func (r *roleService) Update(c echo.Context, in *models.RoleWriteRequest) error 
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if role.IsEmpty() {
-		return helpers.Response(c, http.StatusNotFound, "role not found")
+		return helpers.Response(c, http.StatusNotFound, "role tidak ditemukan")
 	}
 
 	role, err = r.roleRepo.GetByTypeWithSelectedFields(in.Type, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if !role.IsEmpty() && role.Id != in.Id {
-		return helpers.Response(c, http.StatusBadRequest, "role type already in use")
+		return helpers.Response(c, http.StatusBadRequest, "nama role sudah digunakan")
 	}
 
 	role = in.ToModelUpdate()
@@ -55,7 +55,7 @@ func (r *roleService) Update(c echo.Context, in *models.RoleWriteRequest) error 
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success update role", role.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil mengubah role", role.ToResponse())
 }
 
 func (r *roleService) GetListMaster(c echo.Context, search string) error {
@@ -69,7 +69,7 @@ func (r *roleService) GetListMaster(c echo.Context, search string) error {
 		res = append(res, r.ToResponse())
 	}
 
-	return helpers.Response(c, http.StatusOK, "success get all roles", res)
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua role", res)
 }
 
 func (r *roleService) Delete(c echo.Context, id string) error {
@@ -77,12 +77,12 @@ func (r *roleService) Delete(c echo.Context, id string) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if role.IsEmpty() {
-		return helpers.Response(c, http.StatusNotFound, "role not found")
+		return helpers.Response(c, http.StatusNotFound, "role tidak ditemukan")
 	}
 
 	if err := r.roleRepo.Delete(role); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success delete role")
+	return helpers.Response(c, http.StatusOK, "berhasil menghapus role")
 }

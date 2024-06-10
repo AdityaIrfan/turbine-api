@@ -19,7 +19,7 @@ func (t *turbineHandler) Create(c echo.Context) error {
 	payload := new(models.TurbineWriteRequest)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {
@@ -31,4 +31,12 @@ func (t *turbineHandler) Create(c echo.Context) error {
 	}
 
 	return helpers.Response(c, http.StatusOK, "good payload")
+}
+
+func (t *turbineHandler) GetDetail(c echo.Context) error {
+	return nil
+}
+
+func (t *turbineHandler) GetList(c echo.Context) error {
+	return nil
 }

@@ -23,7 +23,7 @@ func (ch *configHandler) SaveOrUpdate(c echo.Context) error {
 	payload := new(models.ConfigRootLocation)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {

@@ -37,7 +37,7 @@ func (a *authService) Register(c echo.Context, in *models.Register) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
-		return helpers.Response(c, http.StatusBadRequest, "username already in use")
+		return helpers.Response(c, http.StatusBadRequest, "username sudah digunakan")
 	}
 
 	// check division
@@ -45,7 +45,7 @@ func (a *authService) Register(c echo.Context, in *models.Register) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if division.IsEmpty() {
-		return helpers.Response(c, http.StatusBadRequest, "division not found")
+		return helpers.Response(c, http.StatusBadRequest, "divisi tidak ditemukan")
 	}
 
 	user, err := in.ToModel()
@@ -56,7 +56,7 @@ func (a *authService) Register(c echo.Context, in *models.Register) error {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "register success, waiting for admin permission")
+	return helpers.Response(c, http.StatusOK, "berhasil register, menunggu persetujuan admin")
 }
 
 func (a *authService) Login(c echo.Context, in *models.Login) error {
@@ -64,27 +64,27 @@ func (a *authService) Login(c echo.Context, in *models.Login) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "credential not found")
+		return helpers.Response(c, http.StatusForbidden, "username atau password salah")
 	}
 
 	isBlocked, err := a.authRedisRepo.IsLoginBlocked(user.Id)
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if isBlocked {
-		return helpers.Response(c, http.StatusForbidden, "you were blocked for 10 minutes due to invalid credential 3 times")
+		return helpers.Response(c, http.StatusForbidden, "akun anda diblokir, silahkan tunggu 10 menit untuk mencoba lagi")
 	}
 
 	if user.IsInActive() {
-		return helpers.Response(c, http.StatusForbidden, "your account is inactive, waiting for admin permission")
+		return helpers.Response(c, http.StatusForbidden, "akun anda tidak aktif, silahkan hubungi admin untuk informasi lebih lanjut")
 	} else if user.IsBlockedByAdmin() {
-		return helpers.Response(c, http.StatusForbidden, "your account has been blocked, contact admin for more information")
+		return helpers.Response(c, http.StatusForbidden, "akun anda diblokir, silahkan hubungi admin untuk informasi lebih lanjut")
 	}
 
 	hash, _ := helpers.Decrypt(user.PasswordHash)
 	salt, _ := helpers.Decrypt(user.PasswordSalt)
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(in.Password+salt)); err != nil {
 		go a.authRedisRepo.IncLoginFailedCounter(user.Id)
-		return helpers.Response(c, http.StatusBadRequest, "wrong password")
+		return helpers.Response(c, http.StatusBadRequest, "username atau password salah")
 	}
 
 	tokenExpiration := time.Now().Add(helpers.LoginExpiration)
@@ -114,7 +114,7 @@ func (a *authService) Login(c echo.Context, in *models.Login) error {
 		RefreshToken: refreshToken,
 	}
 
-	return helpers.Response(c, http.StatusOK, "login success", response)
+	return helpers.Response(c, http.StatusOK, "berhasil login", response)
 }
 
 func (a *authService) RefreshToken(c echo.Context, in *models.RefreshTokenRequest) error {
@@ -123,42 +123,42 @@ func (a *authService) RefreshToken(c echo.Context, in *models.RefreshTokenReques
 		log.Error().Err(errors.New("ERROR VERIFY REFRESH TOKEN : " + err.Error())).Msg("")
 		return helpers.Response(c, http.StatusBadRequest, "invalid refresh token")
 	} else if !refrehToken.Valid {
-		return helpers.Response(c, http.StatusBadRequest, "invalid refresh token")
+		return helpers.Response(c, http.StatusBadRequest, "refresh token tidak valid")
 	}
 
 	var userId string
 	if value, ok := refrehToken.Claims.(jwt.MapClaims)["Id"].(string); !ok {
 		log.Error().Err(errors.New("ERROR GETTING USER ID FROM CLAIMS : USER ID IS EMPTY OR VALUE IS NOT STRING")).Msg("")
-		return helpers.Response(c, http.StatusBadRequest, "invalid refresh token")
+		return helpers.Response(c, http.StatusBadRequest, "refresh token tidak valid")
 	} else {
 		userId = value
 	}
 
 	if helpers.IsTokenExpired(refrehToken) {
 		go a.authRedisRepo.DeleteRefreshToken(userId)
-		return helpers.Response(c, http.StatusBadRequest, "refresh token expired")
+		return helpers.Response(c, http.StatusBadRequest, "refresh token kedaluarsa")
 	}
 
 	refreshTokenRedis, err := a.authRedisRepo.GetRefreshToken(userId)
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if refreshTokenRedis == nil {
-		return helpers.Response(c, http.StatusBadRequest, "refres token expired")
+		return helpers.Response(c, http.StatusBadRequest, "refresh token kedaluarsa")
 	}
 
 	if refreshTokenRedis.RefreshToken != in.RefreshToken {
-		return helpers.Response(c, http.StatusBadRequest, "invalid refresh token")
+		return helpers.Response(c, http.StatusBadRequest, "refresh token tidak valid")
 	}
 
 	if !refreshTokenRedis.IsActive() {
-		return helpers.Response(c, http.StatusBadRequest, "token still active")
+		return helpers.Response(c, http.StatusBadRequest, "token masih aktif")
 	}
 
 	user, err := a.userRepo.GetByIdWithSelectedFields(userId, "*", "Division")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusForbidden, "invalid credential")
+		return helpers.Response(c, http.StatusForbidden, "akun tidak valid")
 	}
 
 	tokenExpiration := time.Now().Add(helpers.LoginExpiration)
@@ -188,7 +188,7 @@ func (a *authService) RefreshToken(c echo.Context, in *models.RefreshTokenReques
 		RefreshToken: refreshToken,
 	}
 
-	return helpers.Response(c, http.StatusOK, "refresh token success", response)
+	return helpers.Response(c, http.StatusOK, "refresh token berhasil", response)
 }
 
 func (a *authService) Logout(c echo.Context, token string) error {
@@ -208,10 +208,10 @@ func (a *authService) Logout(c echo.Context, token string) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if existingToken == "" || existingToken != token {
-		return helpers.Response(c, http.StatusBadRequest, "invalid token")
+		return helpers.Response(c, http.StatusBadRequest, "token tidak valid")
 	}
 
 	go a.authRedisRepo.DeleteToken(userId)
 
-	return helpers.Response(c, http.StatusOK, "success logout")
+	return helpers.Response(c, http.StatusOK, "berhasil logout")
 }

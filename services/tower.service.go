@@ -24,7 +24,7 @@ func (t *towerService) Create(c echo.Context, in *models.TowerWriteRequest) erro
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if !towerByName.IsEmpty() {
-		return helpers.Response(c, http.StatusBadRequest, "name already in use")
+		return helpers.Response(c, http.StatusBadRequest, "nama tower sudah digunakan")
 	}
 
 	tower := in.ToModelCreate()
@@ -32,7 +32,7 @@ func (t *towerService) Create(c echo.Context, in *models.TowerWriteRequest) erro
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success create tower", tower.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil membuat tower baru", tower.ToResponse())
 }
 
 func (t *towerService) Update(c echo.Context, in *models.TowerWriteRequest) error {
@@ -40,7 +40,7 @@ func (t *towerService) Update(c echo.Context, in *models.TowerWriteRequest) erro
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if tower.IsEmpty() {
-		return helpers.Response(c, http.StatusBadRequest, "tower not found")
+		return helpers.Response(c, http.StatusBadRequest, "tower tidak ditemukan")
 	}
 
 	if in.Name != tower.Name {
@@ -48,7 +48,7 @@ func (t *towerService) Update(c echo.Context, in *models.TowerWriteRequest) erro
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
 		} else if !towerByName.IsEmpty() {
-			return helpers.Response(c, http.StatusBadRequest, "name already in use")
+			return helpers.Response(c, http.StatusBadRequest, "nama tower sudah digunakan")
 		}
 
 		tower := in.ToModelCreate()
@@ -57,7 +57,7 @@ func (t *towerService) Update(c echo.Context, in *models.TowerWriteRequest) erro
 		}
 	}
 
-	return helpers.Response(c, http.StatusOK, "success create tower", tower.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil mengubah tower", tower.ToResponse())
 }
 
 func (t *towerService) GetListMaster(c echo.Context, search string) error {
@@ -71,7 +71,7 @@ func (t *towerService) GetListMaster(c echo.Context, search string) error {
 		towerResponse = append(towerResponse, tower.ToResponse())
 	}
 
-	return helpers.Response(c, http.StatusOK, "success get list master tower", towerResponse)
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua tower master", towerResponse)
 }
 
 func (t *towerService) Delete(c echo.Context, in *models.TowerWriteRequest) error {
@@ -79,12 +79,12 @@ func (t *towerService) Delete(c echo.Context, in *models.TowerWriteRequest) erro
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if tower.IsEmpty() {
-		return helpers.Response(c, http.StatusBadRequest, "tower not found")
+		return helpers.Response(c, http.StatusBadRequest, "tower tidak ditemukan")
 	}
 
 	if err := t.towerRepo.Delete(tower); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success delete tower")
+	return helpers.Response(c, http.StatusOK, "berhasil menghapus tower")
 }

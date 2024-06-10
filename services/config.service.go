@@ -34,7 +34,7 @@ func (cs *configService) SaveOrUpdate(c echo.Context, in *models.ConfigRootLocat
 	}
 
 	go cs.configRedisRepo.SaveRootLocation(in)
-	return helpers.Response(c, http.StatusOK, "success create or update config root location")
+	return helpers.Response(c, http.StatusOK, "berhasil membuat atau mengubah konfigurasi lokasi")
 }
 
 func (cs *configService) GetRootLocation(c echo.Context) error {
@@ -45,14 +45,14 @@ func (cs *configService) GetRootLocation(c echo.Context) error {
 			return helpers.ResponseUnprocessableEntity(c)
 		} else if config.IsEmpty() {
 			log.Error().Err(errors.New("ERROR CONFIG ROOT LOCATION IS EMPTY ON DATABASE")).Msg("")
-			return helpers.Response(c, http.StatusNotFound, "not found, call developer immediately")
+			return helpers.Response(c, http.StatusNotFound, "data tidak ditemukan, hubungi developer secepatnya")
 		}
 
 		rootLocation := config.ToConfigRootLocation()
 		go cs.configRedisRepo.SaveRootLocation(rootLocation)
 
-		return helpers.Response(c, http.StatusOK, "success get config location", rootLocation)
+		return helpers.Response(c, http.StatusOK, "berhasil mendapatkan konfigurasi lokasi", rootLocation)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success get config location", rootLocation)
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan konfigurasi lokasi", rootLocation)
 }

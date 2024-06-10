@@ -23,7 +23,7 @@ func (r *roleHandler) Create(c echo.Context) error {
 	payload := new(models.RoleWriteRequest)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {
@@ -37,7 +37,7 @@ func (r *roleHandler) Update(c echo.Context) error {
 	payload := new(models.RoleWriteRequest)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {

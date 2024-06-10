@@ -28,14 +28,14 @@ func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdmi
 	if exist, err := u.userRepo.IsUsernameExist(in.Username); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
-		return helpers.Response(c, http.StatusBadRequest, "username already in use")
+		return helpers.Response(c, http.StatusBadRequest, "username sudah digunakan")
 	}
 
 	// check existing email
 	if exist, err := u.userRepo.IsEmailExist(in.Email); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
-		return helpers.Response(c, http.StatusBadRequest, "email already in use")
+		return helpers.Response(c, http.StatusBadRequest, "email sudah digunakan")
 	}
 
 	// check division by id
@@ -43,7 +43,7 @@ func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdmi
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if division.IsEmpty() {
-		return helpers.Response(c, http.StatusBadRequest, "division not found")
+		return helpers.Response(c, http.StatusBadRequest, "divisi tidak ditemukan")
 	}
 
 	user := in.ToModel()
@@ -51,7 +51,7 @@ func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdmi
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success create user", user.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil membuat user baru", user.ToResponse())
 }
 
 func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdminRequest) error {
@@ -59,14 +59,14 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusBadRequest, "user not found")
+		return helpers.Response(c, http.StatusBadRequest, "user tidak ditemukan")
 	}
 
 	var anyUpdated bool
 
 	if in.Role != nil && user.Role != *in.Role {
 		if !models.IsUserRoleAvailable(*in.Role) {
-			return helpers.Response(c, http.StatusBadRequest, "role value is not available")
+			return helpers.Response(c, http.StatusBadRequest, "role tidak tersedia")
 		}
 
 		anyUpdated = true
@@ -75,7 +75,7 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 
 	if in.Status != nil && user.Status != *in.Status {
 		if !models.IsUserStatusExist(*in.Status) {
-			return helpers.Response(c, http.StatusBadRequest, "status value is not available")
+			return helpers.Response(c, http.StatusBadRequest, "status user tidak tersedia")
 		}
 
 		anyUpdated = true
@@ -87,7 +87,7 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
 		} else if division.IsEmpty() {
-			return helpers.Response(c, http.StatusBadRequest, "division not found")
+			return helpers.Response(c, http.StatusBadRequest, "divisi tidak ditemukan")
 		}
 
 		anyUpdated = true
@@ -100,7 +100,7 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 		}
 	}
 
-	return helpers.Response(c, http.StatusOK, "success update user", user.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil mengubah user", user.ToResponse())
 }
 
 func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error {
@@ -108,7 +108,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusBadRequest, "user not found")
+		return helpers.Response(c, http.StatusBadRequest, "user tidak ditemukan")
 	}
 
 	var anyUpdated bool
@@ -118,7 +118,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
 		} else if !userByUsername.IsEmpty() && userByUsername.Id != user.Id {
-			return helpers.Response(c, http.StatusBadRequest, "username already in use")
+			return helpers.Response(c, http.StatusBadRequest, "username sudah digunakan")
 		}
 
 		anyUpdated = true
@@ -130,7 +130,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
 		} else if !userByEmail.IsEmpty() && userByEmail.Id != user.Id {
-			return helpers.Response(c, http.StatusBadRequest, "email already in use")
+			return helpers.Response(c, http.StatusBadRequest, "email sudah digunakan")
 		}
 
 		anyUpdated = true
@@ -148,7 +148,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 		}
 	}
 
-	return helpers.Response(c, http.StatusOK, "success update user", user.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil mengubah user", user.ToResponse())
 }
 
 func (u *userService) GetDetailByAdmin(c echo.Context, in *models.UserGetDetailRequest) error {
@@ -156,10 +156,10 @@ func (u *userService) GetDetailByAdmin(c echo.Context, in *models.UserGetDetailR
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusNotFound, "user not found")
+		return helpers.Response(c, http.StatusNotFound, "user tidak ditemukan")
 	}
 
-	return helpers.Response(c, http.StatusOK, "success get user", user.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan user", user.ToResponse())
 }
 
 func (u *userService) GetMyProfile(c echo.Context, id string) error {
@@ -167,10 +167,10 @@ func (u *userService) GetMyProfile(c echo.Context, id string) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusNotFound, "user not found")
+		return helpers.Response(c, http.StatusNotFound, "user tidak ditemukan")
 	}
 
-	return helpers.Response(c, http.StatusOK, "success get user", user.ToResponse())
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan user", user.ToResponse())
 }
 
 func (u *userService) DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error {
@@ -185,7 +185,7 @@ func (u *userService) DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdmin
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success delete user")
+	return helpers.Response(c, http.StatusOK, "berhasil menghaous user")
 }
 
 func (u *userService) GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error {
@@ -199,7 +199,7 @@ func (u *userService) GetListWithPaginateByAdmin(c echo.Context, cursor *helpers
 		userRes = append(userRes, user.ToResponseList())
 	}
 
-	return helpers.Response(c, http.StatusOK, "success get user list", userRes, pagination)
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", userRes, pagination)
 }
 
 func (u *userService) ChangePassword(c echo.Context, in *models.UserChangePasswordRequest) error {
@@ -222,7 +222,7 @@ func (u *userService) ChangePassword(c echo.Context, in *models.UserChangePasswo
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success change password")
+	return helpers.Response(c, http.StatusOK, "berhasil mengubah password")
 }
 
 func (u *userService) GeneratePasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
@@ -246,7 +246,7 @@ func (u *userService) GeneratePasswordByAdmin(c echo.Context, in *models.Generat
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "success generate password", map[string]interface{}{
+	return helpers.Response(c, http.StatusOK, "berhasil membuat password baru", map[string]interface{}{
 		"Password": password,
 	})
 }

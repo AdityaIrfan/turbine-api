@@ -117,9 +117,8 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 
 	turbineRouting := route.Group("/turbine")
 	turbineRouting.POST("", turbineHandler.Create, applicationJson)
-	turbineRouting.POST("", turbineHandler.Create, applicationJson)
-	turbineRouting.POST("", turbineHandler.Create, applicationJson)
-	turbineRouting.POST("", turbineHandler.Create, applicationJson)
+	turbineRouting.GET("/:id", turbineHandler.GetDetail, applicationJson)
+	turbineRouting.GET("", turbineHandler.GetList, applicationJson)
 
 	return route
 }

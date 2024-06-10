@@ -33,7 +33,7 @@ func (a *authHandler) Register(c echo.Context) error {
 	payload := new(models.Register)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {
@@ -48,7 +48,7 @@ func (a *authHandler) Login(c echo.Context) error {
 	payload := new(models.Login)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {
@@ -63,7 +63,7 @@ func (a *authHandler) RefreshToken(c echo.Context) error {
 	payload := new(models.RefreshTokenRequest)
 
 	if err := c.Bind(payload); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, "error binding body request")
+		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
 	if err := c.Validate(payload); err != nil {
