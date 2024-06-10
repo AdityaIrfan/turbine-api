@@ -9,10 +9,14 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type turbineHandler struct{}
+type turbineHandler struct {
+	turbineService contract.ITurbineService
+}
 
-func NewTurbineHandler() contract.ITurbineHandler {
-	return &turbineHandler{}
+func NewTurbineHandler(turbineService contract.ITurbineService) contract.ITurbineHandler {
+	return &turbineHandler{
+		turbineService: turbineService,
+	}
 }
 
 func (t *turbineHandler) Create(c echo.Context) error {
@@ -22,15 +26,15 @@ func (t *turbineHandler) Create(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
 	}
 
-	if err := c.Validate(payload); err != nil {
-		errMessage := helpers.GenerateValidationErrorMessage(err)
-		return helpers.Response(c, http.StatusBadRequest, errMessage)
-	}
-	if err := payload.ValidateData(); err != nil {
-		return helpers.Response(c, http.StatusBadRequest, err.Error())
-	}
+	// if err := c.Validate(payload); err != nil {
+	// 	errMessage := helpers.GenerateValidationErrorMessage(err)
+	// 	return helpers.Response(c, http.StatusBadRequest, errMessage)
+	// }
+	// if err := payload.ValidateData(); err != nil {
+	// 	return helpers.Response(c, http.StatusBadRequest, err.Error())
+	// }
 
-	return helpers.Response(c, http.StatusOK, "good payload")
+	return t.turbineService.Create(c, payload)
 }
 
 func (t *turbineHandler) GetDetail(c echo.Context) error {

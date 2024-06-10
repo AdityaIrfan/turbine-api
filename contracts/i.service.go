@@ -46,7 +46,11 @@ type IConfigService interface {
 	GetRootLocation(c echo.Context) error
 }
 
-type ITurbineService interface{}
+type ITurbineService interface {
+	Create(c echo.Context, in *models.TurbineWriteRequest) error
+	GetDetail(c echo.Context, id string) error
+	GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error
+}
 
 type ITowerService interface {
 	Create(c echo.Context, in *models.TowerWriteRequest) error

@@ -40,6 +40,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	configRepository := repositories.NewConfigRepository(db)
 	configRedisRepository := repositories.NewConfigRedisRepository(client)
 	towerRepository := repositories.NewTowerRepository(db)
+	turbineRepository := repositories.NewTurbineRepository(db)
 
 	// Services
 	// roleService := services.NewRoleService(roleRepository)
@@ -48,6 +49,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	authService := services.NewAuthService(userRepository, authRedisRepository, divisionRepository)
 	configService := services.NewConfigService(configRepository, configRedisRepository, userRepository)
 	towerService := services.NewTowerService(towerRepository)
+	turbineService := services.NewTurbineService(turbineRepository)
 
 	// Handlers
 	// roleHandler := handlers.NewRoleHandler(roleService)
@@ -55,7 +57,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	userHandler := handlers.NewUserHandler(userService)
 	authHandler := handlers.NewAuthHandler(authService)
 	configHandler := handlers.NewConfigHandler(configService)
-	turbineHandler := handlers.NewTurbineHandler()
+	turbineHandler := handlers.NewTurbineHandler(turbineService)
 	towerHandler := handlers.NewTowerHandler(towerService)
 
 	// Middleware

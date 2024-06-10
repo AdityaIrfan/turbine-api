@@ -63,7 +63,11 @@ type IConfigRedisRepository interface {
 	GetRootLocation() (*models.ConfigRootLocation, error)
 }
 
-type ITurbineRepository interface{}
+type ITurbineRepository interface {
+	Create(turbine *models.Turbine) error
+	GetById(id string, selectedFields string) (*models.Turbine, error)
+	GetAllWithPaginate(cursor *helpers.Cursor, selectedFields string) ([]*models.Turbine, *helpers.CursorPagination, error)
+}
 
 type ITowerRepository interface {
 	Create(tower *models.Tower) error
