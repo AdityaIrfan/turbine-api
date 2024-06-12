@@ -55,7 +55,7 @@ func (d *divisionHandler) GetListMaster(c echo.Context) error {
 }
 
 func (d *divisionHandler) GetListWithPaginate(c echo.Context) error {
-	cursor, err := helpers.GenerateCursorPaginationByEcho(c)
+	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.DivisionDefaultSort)
 	if err != nil {
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}

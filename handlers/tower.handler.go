@@ -56,7 +56,5 @@ func (t *towerHandler) GetListMaster(c echo.Context) error {
 }
 
 func (t *towerHandler) Delete(c echo.Context) error {
-	return t.towerService.Delete(c, &models.TowerWriteRequest{
-		Id: c.Param("id"),
-	})
+	return t.towerService.Delete(c, c.Param("id"))
 }

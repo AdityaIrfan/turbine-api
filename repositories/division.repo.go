@@ -138,12 +138,12 @@ func (u *divisionRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*mode
 
 	var sortBy string
 	switch strings.ToLower(cursor.SortBy) {
-	case "type":
-		sortBy = "type"
+	case "name":
+		sortBy = "name"
 	case "createdat":
 		sortBy = "created_at"
 	default:
-		sortBy = "id"
+		sortBy = "created_at"
 	}
 
 	var divisions []*models.Division

@@ -65,7 +65,7 @@ type IConfigRedisRepository interface {
 
 type ITurbineRepository interface {
 	Create(turbine *models.Turbine) error
-	GetById(id string, selectedFields string) (*models.Turbine, error)
+	GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.Turbine, error)
 	GetAllWithPaginate(cursor *helpers.Cursor, selectedFields string) ([]*models.Turbine, *helpers.CursorPagination, error)
 }
 
@@ -73,7 +73,7 @@ type ITowerRepository interface {
 	Create(tower *models.Tower) error
 	Update(tower *models.Tower) error
 	GetByIdWithSelectedFields(id string, selectedFields string) (*models.Tower, error)
-	GetByEqualNameWithSelectedFields(name string, selectedFields string) (*models.Tower, error)
+	GetByEqualNameAndUnitNumberWithSelectedFields(name, unitNumber string, selectedFields string) (*models.Tower, error)
 	GetAll(search string) ([]*models.Tower, error)
 	Delete(tower *models.Tower) error
 }

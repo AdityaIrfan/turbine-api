@@ -165,7 +165,7 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 	db := u.db
 
 	if cursor.Search != "" {
-		db = db.Where("LOWER(name) LIKE LOWER(?)", "'%"+cursor.Search+"%'")
+		db = db.Where("LOWER(name) LIKE LOWER(?)", "%"+cursor.Search+"%")
 	}
 
 	var total int64

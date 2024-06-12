@@ -8,23 +8,32 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"turbine-api/helpers"
 
+	"github.com/oklog/ulid/v2"
 	"github.com/phuslu/log"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
+var TurbineDefaultMap = map[string]string{
+	"TowerName": "towername",
+	"CreatedAt": "createdat",
+}
+
 type Turbine struct {
-	Id                  string          `gorm:"column:id"`
-	TowerId             string          `gorm:"tower_id"`
-	GenBearingToKopling float64         `gorm:"column:gen_bearing_to_kopling"`
-	KoplingToTurbine    float64         `gorm:"column:kopling_to_turbine"`
-	Data                datatypes.JSON  `gorm:"data"`
-	CreatedAt           *time.Time      `gorm:"column:created_at"`
-	UpdatedAt           *time.Time      `gorm:"column:updated_at;<-:update"`
-	DeletedAt           *gorm.DeletedAt `gorm:"column:deleted_at"`
+	Id                   string          `gorm:"column:id"`
+	TowerId              string          `gorm:"tower_id"`
+	GenBearingToCoupling float64         `gorm:"column:gen_bearing_to_coupling"`
+	CouplingToTurbine    float64         `gorm:"column:coupling_to_turbine"`
+	Data                 datatypes.JSON  `gorm:"data"`
+	CreatedAt            *time.Time      `gorm:"column:created_at"`
+	UpdatedAt            *time.Time      `gorm:"column:updated_at;<-:update"`
+	DeletedAt            *gorm.DeletedAt `gorm:"column:deleted_at"`
+	CreatedBy            string          `json:"column:created_by"`
 
 	Tower *Tower `gorm:"foreignKey:TowerId;references:Id"`
+	User  *User  `gorm:"foreignKey:CreatedBy;references:Id"`
 }
 
 func (t *Turbine) IsEmpty() bool {
@@ -32,11 +41,12 @@ func (t *Turbine) IsEmpty() bool {
 }
 
 type TurbineWriteRequest struct {
-	Id                  string
-	TowerId             string                 `json:"TowerId" validate:"required"`
-	GenBearingToKopling float64                `json:"GenBearingToKopling" validate:"required"`
-	KoplingToTurbine    float64                `json:"KoplingToTurbine" validate:"required"`
-	Data                map[string]interface{} `json:"Data" validate:"required"`
+	Id                   string
+	TowerId              string                 `json:"TowerId" validate:"required"`
+	GenBearingToCoupling float64                `json:"GenBearingToCoupling" validate:"required"`
+	CouplingToTurbine    float64                `json:"CouplingToTurbine" validate:"required"`
+	Data                 map[string]interface{} `json:"Data" validate:"required"`
+	CreatedBy            string
 }
 
 func (t *TurbineWriteRequest) ValidateData() error {
@@ -57,9 +67,6 @@ func (t *TurbineWriteRequest) ValidateData() error {
 		"Turbine": false,
 	}
 
-	var totalTest int
-	var index int
-
 	for part, partValue := range t.Data {
 
 		dataPerPart, ok := partValue.(map[string]interface{})
@@ -70,18 +77,20 @@ func (t *TurbineWriteRequest) ValidateData() error {
 			availableParts[part] = true
 		}
 
+		var index int
+		var totalTest int
 		for axis, test := range dataPerPart {
 			testValue, ok := test.(map[string]interface{})
 			if !ok {
-				return fmt.Errorf("data sumbu %v tidak valid, data harus bertipa data json", axis)
+				return fmt.Errorf("data sumbu %v pada bagian %v tidak valid, data harus bertipa data json", axis, part)
 			}
 
 			if len(testValue) == 0 {
-				return fmt.Errorf("data sumbu %v tidak valid, nilai kosong", axis)
+				return fmt.Errorf("data sumbu %v pada bagian %v tidak valid, nilai kosong", axis, part)
 			}
 
 			if index != 0 && totalTest != len(testValue) {
-				return fmt.Errorf("data tidak valid, total percobaan pada masing masing sumbu tidak sama")
+				return fmt.Errorf("data tidak valid, total percobaan pada masing masing sumbu bagian %v tidak sama", part)
 			}
 
 			var missingTestvalue []string
@@ -89,10 +98,10 @@ func (t *TurbineWriteRequest) ValidateData() error {
 			for test, value := range testValue {
 				_, err := strconv.Atoi(test)
 				if err != nil {
-					return fmt.Errorf(`percobaan pada sumbu %s tidak valid, percobaan '%s' tidak diterima, percobaan harus berupa nomor string`, axis, test)
+					return fmt.Errorf(`percobaan pada sumbu %s bagian %v tidak valid, percobaan '%s' tidak diterima, percobaan harus berupa nomor string`, axis, part, test)
 				}
 				if _, ok := value.(float64); !ok {
-					return fmt.Errorf(`hasil percobaan pada sumbu %s tidak valid, hasil percobaan pada percobaan '%v' haarus berupa desimal`, axis, test)
+					return fmt.Errorf(`hasil percobaan pada sumbu %s bagian %v tidak valid, hasil percobaan pada percobaan '%v' haarus berupa desimal`, axis, part, test)
 				}
 				v := strconv.Itoa(indexTestValue)
 				if _, ok := testValue[v]; !ok {
@@ -102,7 +111,7 @@ func (t *TurbineWriteRequest) ValidateData() error {
 			}
 
 			if len(missingTestvalue) != 0 {
-				return fmt.Errorf("percobaan ke-%v tidak ditemukan pada sumbu %v", strings.Join(missingTestvalue, ","), axis)
+				return fmt.Errorf("percobaan ke-%v tidak ditemukan pada sumbu %v bagian %v", strings.Join(missingTestvalue, ","), axis, part)
 			}
 
 			totalTest = len(testValue)
@@ -122,7 +131,7 @@ func (t *TurbineWriteRequest) ValidateData() error {
 		}
 	}
 	if len(missingParts) != 0 {
-		return fmt.Errorf("part %v tidak ditemukan", strings.Join(missingParts, ", "))
+		return fmt.Errorf("bagian %v tidak ditemukan", strings.Join(missingParts, ", "))
 	}
 
 	var missingAxes []string
@@ -146,35 +155,36 @@ func (t *TurbineWriteRequest) ToModelCreate() *Turbine {
 	}
 
 	return &Turbine{
-		GenBearingToKopling: t.GenBearingToKopling,
-		KoplingToTurbine:    t.KoplingToTurbine,
-		Data:                data,
+		Id:                   ulid.Make().String(),
+		TowerId:              t.TowerId,
+		GenBearingToCoupling: t.GenBearingToCoupling,
+		CouplingToTurbine:    t.CouplingToTurbine,
+		Data:                 data,
+		CreatedBy:            t.CreatedBy,
 	}
 }
 
 type TurbineResponse struct {
-	DetailUnit       TurbineDetailUnit      `json:"DetailUnit"`
+	Id               string                 `json:"Id"`
+	TowerName        string                 `json:"TowerName"`
 	Shaft            TurbineShaft           `json:"Shaft"`
 	Chart            map[string]interface{} `json:"Chart"`
 	DetailData       map[string]interface{} `json:"DetailData"`
 	TotalCrockedness float64                `json:"TotalCrockedness"`
-}
-
-type TurbineDetailUnit struct {
-	PLTAName string `json:"PLTAName"`
-	No       string `json:"No"`
+	CreatedAt        string                 `json:"CreatedAt"`
+	CreatedBy        string                 `json:"CreatedBy"`
 }
 
 type TurbineShaft struct {
-	GenBearingToKopling float64 `json:"GenBearingToKopling"`
-	KopingToTurbine     float64 `json:"KoplingToTurbine"`
+	GenBearingToKopling float64 `json:"GenBearingToCoupling"`
+	CouplingToTurbine   float64 `json:"CouplingToTurbine"`
 	Total               float64 `json:"Total"`
 	Ratio               float64 `json:"Ratio"`
 }
 
 func (t *Turbine) ToResponse() *TurbineResponse {
-	total := t.GenBearingToKopling + t.KoplingToTurbine
-	ratio := t.GenBearingToKopling / total
+	total := t.GenBearingToCoupling + t.CouplingToTurbine
+	ratio := t.GenBearingToCoupling / total
 	chart := make(map[string]interface{})
 	chart["AC"] = map[string]interface{}{
 		"Upper":   "",
@@ -271,32 +281,46 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	defaultUpperAC := averageUpperAC * -1
 	chartClutchAC := averageUpperAC + defaultUpperAC
 	chartTurbineAC := averageTurbineAC + defaultUpperAC
-	chart["AC"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToKopling)
+	chart["AC"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToCoupling)
 	chart["AC"].(map[string]interface{})["Clutch"] = fmt.Sprintf("%f|0", chartClutchAC)
-	chart["AC"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineAC, t.KoplingToTurbine)
+	chart["AC"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineAC, t.CouplingToTurbine)
 
 	defaultUpperBD := averageUpperBD * -1
 	chartClutchBD := averageClutchBD + defaultUpperBD
 	chartTurbineBD := averageTurbineBD + defaultUpperBD
-	chart["BD"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToKopling)
+	chart["BD"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToCoupling)
 	chart["BD"].(map[string]interface{})["Clutch"] = fmt.Sprintf("%f|0", chartClutchBD)
-	chart["BD"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineBD, t.KoplingToTurbine)
+	chart["BD"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineBD, t.CouplingToTurbine)
 
 	chart["Upper"] = fmt.Sprintf("%f|%f", crockednessAC, crockednessBD)
 
 	return &TurbineResponse{
-		// DetailUnit: TurbineDetailUnit{
-		// 	PLTAName: t.Tower.Name,
-		// 	No:       "001",
-		// },
+		Id:        t.Id,
+		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
 		Shaft: TurbineShaft{
-			GenBearingToKopling: t.GenBearingToKopling,
-			KopingToTurbine:     t.KoplingToTurbine,
+			GenBearingToKopling: t.GenBearingToCoupling,
+			CouplingToTurbine:   t.CouplingToTurbine,
 			Total:               total,
 			Ratio:               ratio,
 		},
 		Chart:            chart,
 		DetailData:       detailData,
 		TotalCrockedness: math.Pow((crockednessAC + crockednessBD), 0.5),
+		CreatedAt:        t.CreatedAt.Format(helpers.DefaultTimeFormat),
+		CreatedBy:        t.User.Name,
+	}
+}
+
+type TurbineResponseList struct {
+	Id        string `json:"Id"`
+	TowerName string `json:"TowerName"`
+	CreatedAt string `json:"CreatedAt"`
+}
+
+func (t *Turbine) ToResponseList() *TurbineResponseList {
+	return &TurbineResponseList{
+		Id:        t.Id,
+		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
+		CreatedAt: t.CreatedAt.Format(helpers.DefaultTimeFormat),
 	}
 }

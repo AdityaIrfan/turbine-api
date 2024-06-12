@@ -20,7 +20,7 @@ func NewTowerService(towerRepo contract.ITowerRepository) contract.ITowerService
 }
 
 func (t *towerService) Create(c echo.Context, in *models.TowerWriteRequest) error {
-	towerByName, err := t.towerRepo.GetByEqualNameWithSelectedFields(in.Name, "id")
+	towerByName, err := t.towerRepo.GetByEqualNameAndUnitNumberWithSelectedFields(in.Name, in.UnitNumber, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if !towerByName.IsEmpty() {
@@ -44,7 +44,7 @@ func (t *towerService) Update(c echo.Context, in *models.TowerWriteRequest) erro
 	}
 
 	if in.Name != tower.Name {
-		towerByName, err := t.towerRepo.GetByEqualNameWithSelectedFields(in.Name, "id")
+		towerByName, err := t.towerRepo.GetByEqualNameAndUnitNumberWithSelectedFields(in.Name, in.UnitNumber, "id")
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
 		} else if !towerByName.IsEmpty() {
@@ -56,6 +56,13 @@ func (t *towerService) Update(c echo.Context, in *models.TowerWriteRequest) erro
 			return helpers.ResponseUnprocessableEntity(c)
 		}
 	}
+	if in.UnitNumber != tower.UnitNumber {
+		tower.UnitNumber = in.UnitNumber
+	}
+
+	if err := t.towerRepo.Update(tower); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
 
 	return helpers.Response(c, http.StatusOK, "berhasil mengubah tower", tower.ToResponse())
 }
@@ -66,16 +73,16 @@ func (t *towerService) GetListMaster(c echo.Context, search string) error {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	var towerResponse []*models.TowerResponse
+	var towerResponse []*models.TowerResponseMaster
 	for _, tower := range towers {
-		towerResponse = append(towerResponse, tower.ToResponse())
+		towerResponse = append(towerResponse, tower.ToResponseMaster())
 	}
 
 	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua tower master", towerResponse)
 }
 
-func (t *towerService) Delete(c echo.Context, in *models.TowerWriteRequest) error {
-	tower, err := t.towerRepo.GetByIdWithSelectedFields(in.Id, "id")
+func (t *towerService) Delete(c echo.Context, id string) error {
+	tower, err := t.towerRepo.GetByIdWithSelectedFields(id, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if tower.IsEmpty() {

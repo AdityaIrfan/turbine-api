@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/phuslu/log"
@@ -27,8 +26,8 @@ func InitRedis() *redis.Client {
 		PoolSize:   200,
 	})
 
-	client.Do(context.Background(), "CLIENT", "SETNAME", "saas-be-profile-manager")
-	fmt.Println(client.ClientGetName(context.Background()))
+	// client.Do(context.Background(), "CLIENT", "SETNAME", "saas-be-profile-manager")
+	// fmt.Println(client.ClientGetName(context.Background()))
 
 	if err := client.Ping(context.Background()).Err(); err != nil {
 		log.Error().Err(errors.New("REDIS PING INITIALIZATION FAILED : " + err.Error())).Msg("")

@@ -49,7 +49,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	authService := services.NewAuthService(userRepository, authRedisRepository, divisionRepository)
 	configService := services.NewConfigService(configRepository, configRedisRepository, userRepository)
 	towerService := services.NewTowerService(towerRepository)
-	turbineService := services.NewTurbineService(turbineRepository)
+	turbineService := services.NewTurbineService(turbineRepository, towerRepository)
 
 	// Handlers
 	// roleHandler := handlers.NewRoleHandler(roleService)
@@ -107,20 +107,20 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	// roleRouting.GET("/", roleHandler.GetListMaster)
 	// roleRouting.DELETE("/:id", roleHandler.Delete)
 
-	configRouting := route.Group("/config")
+	configRouting := route.Group("/configs")
 	configRouting.POST("/root-location", configHandler.SaveOrUpdate, authAdmin, applicationJson)
 	configRouting.GET("/root-location", configHandler.GetRootLocation, authAdmin)
 
-	towerRouting := route.Group("/tower")
+	towerRouting := route.Group("/towers")
 	towerRouting.POST("", towerHandler.Create, authAdmin, applicationJson)
 	towerRouting.PUT("/:id", towerHandler.Update, authAdmin, applicationJson)
 	towerRouting.GET("/master", towerHandler.GetListMaster, allAuth)
-	towerRouting.DELETE("/:d", towerHandler.Delete, authAdmin)
+	towerRouting.DELETE("/:id", towerHandler.Delete, authAdmin)
 
-	turbineRouting := route.Group("/turbine")
-	turbineRouting.POST("", turbineHandler.Create, applicationJson)
-	turbineRouting.GET("/:id", turbineHandler.GetDetail, applicationJson)
-	turbineRouting.GET("", turbineHandler.GetList, applicationJson)
+	turbineRouting := route.Group("/turbines")
+	turbineRouting.POST("", turbineHandler.Create, allAuth, applicationJson)
+	turbineRouting.GET("/:id", turbineHandler.GetDetail, allAuth)
+	turbineRouting.GET("", turbineHandler.GetList, allAuth)
 
 	return route
 }

@@ -8,6 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
+var UserDefaultSort = map[string]string{
+	"Name":      "name",
+	"Username":  "Username",
+	"CreatedAt": "createdat",
+}
+
 type UserStatus uint8
 type UserRole uint8
 
@@ -22,24 +28,19 @@ const (
 )
 
 type User struct {
-	Id         string `gorm:"column:id"`
-	Name       string `gorm:"column:name"`
-	Username   string `gorm:"column:username"`
-	Email      string `gorm:"column:email"`
-	DivisionId string `gorm:"column:division_id"`
-	// RoleId       string          `gorm:"column:role_id"`
-	Role         UserRole   `gorm:"column:role"`
-	Status       UserStatus `gorm:"status"`
-	PasswordHash string     `gorm:"column:password_hash"`
-	PasswordSalt string     `gorm:"column:password_salt"`
-	CreatedAt    *time.Time `gorm:"column:created_at"`
-	// CreatedBy    string          `gorm:"column:created_by"`
-	UpdatedAt *time.Time `gorm:"column:updated_at;<-:update"`
-	// UpdatedBy    *string         `gorm:"column:updated_by"`
-	DeletedAt *gorm.DeletedAt `gorm:"column:deleted_at"`
-	// DeletedBy    *string         `gorm:"column:deleted_by"`
+	Id           string          `gorm:"column:id"`
+	Name         string          `gorm:"column:name"`
+	Username     string          `gorm:"column:username"`
+	Email        string          `gorm:"column:email"`
+	DivisionId   string          `gorm:"column:division_id"`
+	Role         UserRole        `gorm:"column:role"`
+	Status       UserStatus      `gorm:"status"`
+	PasswordHash string          `gorm:"column:password_hash"`
+	PasswordSalt string          `gorm:"column:password_salt"`
+	CreatedAt    *time.Time      `gorm:"column:created_at"`
+	UpdatedAt    *time.Time      `gorm:"column:updated_at;<-:update"`
+	DeletedAt    *gorm.DeletedAt `gorm:"column:deleted_at"`
 
-	// Role     *Role     `gorm:"foreignKey:RoleId;references:Id"`
 	Division *Division `gorm:"foreignKey:DivisionId;references:Id"`
 }
 

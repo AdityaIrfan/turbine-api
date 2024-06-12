@@ -88,7 +88,7 @@ func (u *userHandler) DeleteByAdmin(c echo.Context) error {
 }
 
 func (u *userHandler) GetListWithPaginateByAdmin(c echo.Context) error {
-	cursor, err := helpers.GenerateCursorPaginationByEcho(c)
+	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.UserDefaultSort)
 	if err != nil {
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}

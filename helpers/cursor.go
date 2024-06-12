@@ -12,7 +12,7 @@ import (
 	"github.com/phuslu/log"
 )
 
-func GenerateCursorPaginationByEcho(c echo.Context) (*Cursor, error) {
+func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (*Cursor, error) {
 	cursorNextParam := c.QueryParam("Next")
 	cursorPrevParam := c.QueryParam("Prev")
 
@@ -49,16 +49,11 @@ func GenerateCursorPaginationByEcho(c echo.Context) (*Cursor, error) {
 	}
 
 	if sortByParams != "" {
-		switch strings.ToLower(sortByParams) {
-		case "name":
-			sortByParams = "Name"
-		case "createdat":
-			sortByParams = "CreatedAt"
-		case "username":
-			sortByParams = "Username"
-		default:
-			sortByParams = "CreatedAt"
+		value, ok := sortMap[sortByParams]
+		if !ok {
+			value = "createdat"
 		}
+		sortByParams = value
 	} else {
 		sortByParams = "CreatedAt"
 	}
