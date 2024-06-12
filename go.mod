@@ -1,4 +1,4 @@
-module github.com/AdityaIrfan/turbine-api
+module pln/AdityaIrfan/turbine-api
 
 go 1.21.1
 

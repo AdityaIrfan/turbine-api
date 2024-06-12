@@ -3,9 +3,9 @@ package repositories
 import (
 	"errors"
 	"fmt"
-	contract "github.com/AdityaIrfan/turbine-api/contracts"
-	"github.com/AdityaIrfan/turbine-api/helpers"
-	"github.com/AdityaIrfan/turbine-api/models"
+	contract "pln/AdityaIrfan/turbine-api/contracts"
+	"pln/AdityaIrfan/turbine-api/helpers"
+	"pln/AdityaIrfan/turbine-api/models"
 	"strings"
 
 	"github.com/phuslu/log"

@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strings"
 
-	contract "github.com/AdityaIrfan/turbine-api/contracts"
-	"github.com/AdityaIrfan/turbine-api/helpers"
-	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	contract "pln/AdityaIrfan/turbine-api/contracts"
+	"pln/AdityaIrfan/turbine-api/helpers"
+	"pln/AdityaIrfan/turbine-api/models"
 )
 
 func NewMiddleware(authRedisRepo contract.IAuthRedisRepository, userRepo contract.IUserRepository) *middleware {

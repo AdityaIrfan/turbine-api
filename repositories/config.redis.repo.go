@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 
-	contract "github.com/AdityaIrfan/turbine-api/contracts"
-	"github.com/AdityaIrfan/turbine-api/helpers"
-	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/phuslu/log"
 	"github.com/redis/go-redis/v9"
+	contract "pln/AdityaIrfan/turbine-api/contracts"
+	"pln/AdityaIrfan/turbine-api/helpers"
+	"pln/AdityaIrfan/turbine-api/models"
 )
 
 type configRedisRepository struct {

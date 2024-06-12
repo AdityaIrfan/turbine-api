@@ -1,9 +1,9 @@
 package contract
 
 import (
-	"github.com/AdityaIrfan/turbine-api/helpers"
-	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/labstack/echo/v4"
+	"pln/AdityaIrfan/turbine-api/helpers"
+	"pln/AdityaIrfan/turbine-api/models"
 )
 
 type IRoleService interface {

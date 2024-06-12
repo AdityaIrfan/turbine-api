@@ -3,8 +3,8 @@ package models
 import (
 	"time"
 
-	"github.com/AdityaIrfan/turbine-api/helpers"
 	"github.com/oklog/ulid/v2"
+	"pln/AdityaIrfan/turbine-api/helpers"
 )
 
 type Register struct {

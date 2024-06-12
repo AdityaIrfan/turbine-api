@@ -3,9 +3,9 @@ package models
 import (
 	"time"
 
-	"github.com/AdityaIrfan/turbine-api/helpers"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
+	"pln/AdityaIrfan/turbine-api/helpers"
 )
 
 var UserDefaultSort = map[string]string{

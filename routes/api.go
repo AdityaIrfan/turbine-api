@@ -3,15 +3,15 @@ package routes
 import (
 	"net/http"
 
-	"github.com/AdityaIrfan/turbine-api/handlers"
-	"github.com/AdityaIrfan/turbine-api/helpers"
-	"github.com/AdityaIrfan/turbine-api/middleware"
-	"github.com/AdityaIrfan/turbine-api/repositories"
-	"github.com/AdityaIrfan/turbine-api/services"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"pln/AdityaIrfan/turbine-api/handlers"
+	"pln/AdityaIrfan/turbine-api/helpers"
+	"pln/AdityaIrfan/turbine-api/middleware"
+	"pln/AdityaIrfan/turbine-api/repositories"
+	"pln/AdityaIrfan/turbine-api/services"
 )
 
 func NewApi() *api {

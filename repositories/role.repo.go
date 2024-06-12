@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"errors"
-	contract "github.com/AdityaIrfan/turbine-api/contracts"
-	"github.com/AdityaIrfan/turbine-api/models"
+	contract "pln/AdityaIrfan/turbine-api/contracts"
+	"pln/AdityaIrfan/turbine-api/models"
 	"strings"
 
 	"github.com/phuslu/log"

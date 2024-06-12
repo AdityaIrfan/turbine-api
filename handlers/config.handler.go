@@ -3,10 +3,10 @@ package handlers
 import (
 	"net/http"
 
-	contract "github.com/AdityaIrfan/turbine-api/contracts"
-	helpers "github.com/AdityaIrfan/turbine-api/helpers"
-	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/labstack/echo/v4"
+	contract "pln/AdityaIrfan/turbine-api/contracts"
+	helpers "pln/AdityaIrfan/turbine-api/helpers"
+	"pln/AdityaIrfan/turbine-api/models"
 )
 
 type configHandler struct {

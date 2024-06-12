@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"time"
 
-	contract "github.com/AdityaIrfan/turbine-api/contracts"
-	"github.com/AdityaIrfan/turbine-api/helpers"
-	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/phuslu/log"
 	"golang.org/x/crypto/bcrypt"
+	contract "pln/AdityaIrfan/turbine-api/contracts"
+	"pln/AdityaIrfan/turbine-api/helpers"
+	"pln/AdityaIrfan/turbine-api/models"
 )
 
 type authService struct {
