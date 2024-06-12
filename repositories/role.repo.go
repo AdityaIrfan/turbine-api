@@ -2,9 +2,9 @@ package repositories
 
 import (
 	"errors"
+	contract "github.com/AdityaIrfan/turbine-api/contracts"
+	"github.com/AdityaIrfan/turbine-api/models"
 	"strings"
-	contract "turbine-api/contracts"
-	"turbine-api/models"
 
 	"github.com/phuslu/log"
 	"gorm.io/gorm"

@@ -1,4 +1,4 @@
-module turbine-api
+module github.com/AdityaIrfan/turbine-api
 
 go 1.21.1
 
@@ -10,6 +10,7 @@ require (
 	github.com/phuslu/log v1.0.101
 	github.com/redis/go-redis/v9 v9.5.2
 	golang.org/x/crypto v0.22.0
+	gorm.io/datatypes v1.2.0
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.10
 )
@@ -35,6 +36,5 @@ require (
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	gorm.io/datatypes v1.2.0 // indirect
 	gorm.io/driver/mysql v1.4.7 // indirect
 )

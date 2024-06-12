@@ -1,9 +1,9 @@
 package contract
 
 import (
+	"github.com/AdityaIrfan/turbine-api/helpers"
+	"github.com/AdityaIrfan/turbine-api/models"
 	"time"
-	"turbine-api/helpers"
-	"turbine-api/models"
 )
 
 type IRoleRepository interface {

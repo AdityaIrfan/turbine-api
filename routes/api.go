@@ -2,12 +2,12 @@ package routes
 
 import (
 	"net/http"
-	"turbine-api/handlers"
-	"turbine-api/helpers"
-	"turbine-api/middleware"
-	"turbine-api/repositories"
-	"turbine-api/services"
 
+	"github.com/AdityaIrfan/turbine-api/handlers"
+	"github.com/AdityaIrfan/turbine-api/helpers"
+	"github.com/AdityaIrfan/turbine-api/middleware"
+	"github.com/AdityaIrfan/turbine-api/repositories"
+	"github.com/AdityaIrfan/turbine-api/services"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"

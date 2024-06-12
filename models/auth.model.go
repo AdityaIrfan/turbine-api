@@ -2,8 +2,8 @@ package models
 
 import (
 	"time"
-	"turbine-api/helpers"
 
+	"github.com/AdityaIrfan/turbine-api/helpers"
 	"github.com/oklog/ulid/v2"
 )
 

@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	contract "turbine-api/contracts"
-	"turbine-api/helpers"
-	"turbine-api/models"
 
+	contract "github.com/AdityaIrfan/turbine-api/contracts"
+	"github.com/AdityaIrfan/turbine-api/helpers"
+	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )

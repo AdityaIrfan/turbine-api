@@ -3,10 +3,10 @@ package repositories
 import (
 	"errors"
 	"fmt"
+	contract "github.com/AdityaIrfan/turbine-api/contracts"
+	"github.com/AdityaIrfan/turbine-api/helpers"
+	"github.com/AdityaIrfan/turbine-api/models"
 	"strings"
-	contract "turbine-api/contracts"
-	"turbine-api/helpers"
-	"turbine-api/models"
 
 	"github.com/phuslu/log"
 	"gorm.io/gorm"

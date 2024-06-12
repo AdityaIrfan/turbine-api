@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	contract "turbine-api/contracts"
-	"turbine-api/helpers"
-	"turbine-api/models"
 
+	contract "github.com/AdityaIrfan/turbine-api/contracts"
+	"github.com/AdityaIrfan/turbine-api/helpers"
+	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/phuslu/log"
 	"github.com/redis/go-redis/v9"
 )

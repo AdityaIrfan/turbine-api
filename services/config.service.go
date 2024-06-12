@@ -3,11 +3,12 @@ package services
 import (
 	"errors"
 	"net/http"
-	contract "turbine-api/contracts"
-	"turbine-api/helpers"
-	"turbine-api/models"
 
+	contract "github.com/AdityaIrfan/turbine-api/contracts"
+	"github.com/AdityaIrfan/turbine-api/helpers"
+	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/labstack/echo/v4"
+
 	"github.com/phuslu/log"
 )
 

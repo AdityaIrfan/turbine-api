@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"net/http"
-	contract "turbine-api/contracts"
-	helpers "turbine-api/helpers"
-	"turbine-api/models"
 
+	contract "github.com/AdityaIrfan/turbine-api/contracts"
+	helpers "github.com/AdityaIrfan/turbine-api/helpers"
+	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )

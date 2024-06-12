@@ -1,9 +1,8 @@
 package contract
 
 import (
-	"turbine-api/helpers"
-	"turbine-api/models"
-
+	"github.com/AdityaIrfan/turbine-api/helpers"
+	"github.com/AdityaIrfan/turbine-api/models"
 	"github.com/labstack/echo/v4"
 )
 
