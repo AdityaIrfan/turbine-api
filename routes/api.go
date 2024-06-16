@@ -3,15 +3,16 @@ package routes
 import (
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 	"pln/AdityaIrfan/turbine-api/handlers"
 	"pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/middleware"
 	"pln/AdityaIrfan/turbine-api/repositories"
 	"pln/AdityaIrfan/turbine-api/services"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v4"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 func NewApi() *api {
@@ -62,7 +63,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 
 	// Middleware
 	middleware := middleware.NewMiddleware(authRedisRepository, userRepository)
-	applicationJson := middleware.ApplicationJson
+	// applicationJson := middleware.ApplicationJson
 	authAdmin := middleware.AuthAdmin
 	authUser := middleware.AuthUser
 	allAuth := middleware.Auth
@@ -78,47 +79,47 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	divisionRouting := route.Group("divisions")
 	divisionRouting.GET("/master", divisionHandler.GetListMaster)
 	divisionRouting.GET("", divisionHandler.GetListWithPaginate, authAdmin)
-	divisionRouting.POST("", divisionHandler.Create, applicationJson, authAdmin)
-	divisionRouting.PUT("/:id", divisionHandler.Update, applicationJson, authAdmin)
+	divisionRouting.POST("", divisionHandler.Create /*, applicationJson*/, authAdmin)
+	divisionRouting.PUT("/:id", divisionHandler.Update /*, applicationJson*/, authAdmin)
 	divisionRouting.DELETE("/:id", divisionHandler.Delete, authAdmin)
 
 	authRouting := route.Group("auth")
-	authRouting.POST("/register", authHandler.Register, applicationJson)
-	authRouting.POST("/login", authHandler.Login, applicationJson)
-	authRouting.POST("/refresh-token", authHandler.RefreshToken, applicationJson)
+	authRouting.POST("/register", authHandler.Register /*, applicationJson*/)
+	authRouting.POST("/login", authHandler.Login /*, applicationJson*/)
+	authRouting.POST("/refresh-token", authHandler.RefreshToken /*, applicationJson*/)
 	authRouting.POST("/logout", authHandler.Logout, allAuth)
 
 	userRoutingByAdmin := route.Group("/admin/users")
-	userRoutingByAdmin.POST("/", userHandler.CreateUserAdminByAdmin, authAdmin, applicationJson)
-	userRoutingByAdmin.PUT("/:id", userHandler.UpdateByAdmin, authAdmin, applicationJson)
+	userRoutingByAdmin.POST("/", userHandler.CreateUserAdminByAdmin, authAdmin /*, applicationJson*/)
+	userRoutingByAdmin.PUT("/:id", userHandler.UpdateByAdmin, authAdmin /*, applicationJson*/)
 	userRoutingByAdmin.GET("/:id", userHandler.GetDetailByAdmin, authAdmin)
 	userRoutingByAdmin.DELETE("/:id", userHandler.DeleteByAdmin, authAdmin)
 	userRoutingByAdmin.GET("/", userHandler.GetListWithPaginateByAdmin, authAdmin)
-	userRoutingByAdmin.POST("/generate-password", userHandler.GeneratePasswordByAdmin, authAdmin, applicationJson)
+	userRoutingByAdmin.POST("/generate-password", userHandler.GeneratePasswordByAdmin, authAdmin /*, applicationJson*/)
 
 	userRouting := route.Group("/my")
 	userRouting.PUT("/:id", userHandler.Update, authUser)
 	userRouting.GET("", userHandler.GetMyProfile, authUser)
-	userRouting.POST("/change-password", userHandler.ChangePassword, authUser, applicationJson)
+	userRouting.POST("/change-password", userHandler.ChangePassword, authUser /*, applicationJson*/)
 
 	// roleRouting := route.Group("/roles", authAdmin)
-	// roleRouting.POST("/", roleHandler.Create, applicationJson)
-	// roleRouting.PUT("/:id", roleHandler.Create, applicationJson)
+	// roleRouting.POST("/", roleHandler.Create/*, applicationJson*/)
+	// roleRouting.PUT("/:id", roleHandler.Create/*, applicationJson*/)
 	// roleRouting.GET("/", roleHandler.GetListMaster)
 	// roleRouting.DELETE("/:id", roleHandler.Delete)
 
 	configRouting := route.Group("/configs")
-	configRouting.POST("/root-location", configHandler.SaveOrUpdate, authAdmin, applicationJson)
+	configRouting.POST("/root-location", configHandler.SaveOrUpdate, authAdmin /*, applicationJson*/)
 	configRouting.GET("/root-location", configHandler.GetRootLocation, authAdmin)
 
 	towerRouting := route.Group("/towers")
-	towerRouting.POST("", towerHandler.Create, authAdmin, applicationJson)
-	towerRouting.PUT("/:id", towerHandler.Update, authAdmin, applicationJson)
+	towerRouting.POST("", towerHandler.Create, authAdmin /*, applicationJson*/)
+	towerRouting.PUT("/:id", towerHandler.Update, authAdmin /*, applicationJson*/)
 	towerRouting.GET("/master", towerHandler.GetListMaster, allAuth)
 	towerRouting.DELETE("/:id", towerHandler.Delete, authAdmin)
 
 	turbineRouting := route.Group("/turbines")
-	turbineRouting.POST("", turbineHandler.Create, allAuth, applicationJson)
+	turbineRouting.POST("", turbineHandler.Create, allAuth /*, applicationJson*/)
 	turbineRouting.GET("/:id", turbineHandler.GetDetail, allAuth)
 	turbineRouting.GET("", turbineHandler.GetList, allAuth)
 

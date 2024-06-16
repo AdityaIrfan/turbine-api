@@ -3,9 +3,10 @@ package models
 import (
 	"time"
 
+	"pln/AdityaIrfan/turbine-api/helpers"
+
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
-	"pln/AdityaIrfan/turbine-api/helpers"
 )
 
 var DivisionDefaultSort = map[string]string{
@@ -54,7 +55,7 @@ func (d *Division) ToMasterResponse() *DivisionMasterResponse {
 
 type DivisionWriteRequest struct {
 	Id   string
-	Name DivisionName `json:"Name" validate:"required"`
+	Name DivisionName `json:"Name" form:"Name" validate:"required"`
 }
 
 func (d *DivisionWriteRequest) ToModelCreate() *Division {

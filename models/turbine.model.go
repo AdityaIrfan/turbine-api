@@ -9,11 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"pln/AdityaIrfan/turbine-api/helpers"
+
 	"github.com/oklog/ulid/v2"
 	"github.com/phuslu/log"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
-	"pln/AdityaIrfan/turbine-api/helpers"
 )
 
 var TurbineDefaultMap = map[string]string{
@@ -42,10 +43,10 @@ func (t *Turbine) IsEmpty() bool {
 
 type TurbineWriteRequest struct {
 	Id                   string
-	TowerId              string                 `json:"TowerId" validate:"required"`
-	GenBearingToCoupling float64                `json:"GenBearingToCoupling" validate:"required"`
-	CouplingToTurbine    float64                `json:"CouplingToTurbine" validate:"required"`
-	Data                 map[string]interface{} `json:"Data" validate:"required"`
+	TowerId              string                 `json:"TowerId" form:"TowerId" validate:"required"`
+	GenBearingToCoupling float64                `json:"GenBearingToCoupling" form:"GenBearingToCoupling" validate:"required"`
+	CouplingToTurbine    float64                `json:"CouplingToTurbine" form:"CouplingToTurbine" validate:"required"`
+	Data                 map[string]interface{} `json:"Data" form:"Data" validate:"required"`
 	CreatedBy            string
 }
 

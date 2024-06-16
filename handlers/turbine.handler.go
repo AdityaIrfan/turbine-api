@@ -1,13 +1,15 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	helpers "pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
 )
 
 type turbineHandler struct {
@@ -22,6 +24,15 @@ func NewTurbineHandler(turbineService contract.ITurbineService) contract.ITurbin
 
 func (t *turbineHandler) Create(c echo.Context) error {
 	payload := new(models.TurbineWriteRequest)
+
+	if c.FormValue("Data") != "" {
+		var data map[string]interface{}
+		if err := json.Unmarshal([]byte(c.FormValue("Data")), &data); err != nil {
+			return helpers.Response(c, http.StatusBadRequest, "Data must be json stringify")
+		}
+		payload.Data = data
+		c.Request().Form.Del("Data")
+	}
 
 	if err := c.Bind(payload); err != nil {
 		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")

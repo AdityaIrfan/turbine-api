@@ -41,10 +41,10 @@ const (
 )
 
 type ConfigRootLocation struct {
-	Long             float64          `gorm:"column:long" json:"Long" validate:"required"`
-	Lat              float64          `gorm:"column:lat" json:"Lat" validate:"required"`
-	CoverageArea     float64          `gorm:"column:coverage_area" json:"CoverageArea" validate:"required"`
-	CoverageAreaType CoverageAreaType `gorm:"column:coverage_area_type" json:"CoverageAreaType" validate:"required"`
+	Long             float64          `gorm:"column:long" json:"Long" form:"Long" validate:"required"`
+	Lat              float64          `gorm:"column:lat" json:"Lat" form:"Lat" validate:"required"`
+	CoverageArea     float64          `gorm:"column:coverage_area" json:"CoverageArea" form:"CoverageArea" validate:"required"`
+	CoverageAreaType CoverageAreaType `gorm:"column:coverage_area_type" json:"CoverageAreaType" form:"CoverageAreaType" validate:"required"`
 }
 
 func (c *ConfigRootLocation) IsEmpty() bool {

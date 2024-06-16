@@ -3,16 +3,18 @@ package models
 import (
 	"time"
 
-	"github.com/oklog/ulid/v2"
 	"pln/AdityaIrfan/turbine-api/helpers"
+
+	"github.com/oklog/ulid/v2"
 )
 
 type Register struct {
-	Name                 string `json:"Name" validate:"required"`
-	Username             string `json:"Username" validation:"required"`
-	DivisionId           string `json:"DivisionId" validate:"required"`
-	Password             string `json:"Password" validation:"required"`
-	PasswordConfirmation string `json:"PasswordConfirmation" validate:"required,eqfield=Password"`
+	Name                 string `json:"Name" form:"Name" validate:"required"`
+	Username             string `json:"Username" form:"Username" validation:"required"`
+	Email                string `json:"Email" form:"Email" validation:"required"`
+	DivisionId           string `json:"DivisionId" form:"DivisionId" validate:"required"`
+	Password             string `json:"Password" form:"Password" validation:"required"`
+	PasswordConfirmation string `json:"PasswordConfirmation" form:"PasswordConfirmation" validate:"required,eqfield=Password"`
 }
 
 func (r *Register) ToModel() (*User, error) {
@@ -27,6 +29,7 @@ func (r *Register) ToModel() (*User, error) {
 		Id:           id,
 		Name:         r.Name,
 		Username:     r.Username,
+		Email:        r.Email,
 		DivisionId:   r.DivisionId,
 		Role:         UserRole_User,
 		Status:       UserStatus_InActive,
@@ -36,8 +39,8 @@ func (r *Register) ToModel() (*User, error) {
 }
 
 type Login struct {
-	Username string `json:"Username" validate:"required"`
-	Password string `json:"Password" validate:"required"`
+	Username string `json:"Username" form:"Username" validate:"required"`
+	Password string `json:"Password" form:"Password" validate:"required"`
 }
 
 type AuthResponse struct {
@@ -48,7 +51,7 @@ type AuthResponse struct {
 }
 
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"RefreshToken" validate:"required"`
+	RefreshToken string `json:"RefreshToken" form:"RefreshToken" validate:"required"`
 }
 
 type RefreshTokenRedis struct {
@@ -62,5 +65,5 @@ func (r *RefreshTokenRedis) IsActive() bool {
 }
 
 type Logout struct {
-	Token string `json:"Token" validate:"required"`
+	Token string `json:"Token" form:"Token" validate:"required"`
 }

@@ -38,8 +38,8 @@ func (t *Tower) ToResponseMaster() *TowerResponseMaster {
 
 type TowerWriteRequest struct {
 	Id         string
-	Name       string `json:"Name" validate:"required"`
-	UnitNumber string `json:"UnitNumber" validate:"required,max=20"`
+	Name       string `json:"Name" form:"Name" validate:"required"`
+	UnitNumber string `json:"UnitNumber" form:"UnitNumber" validate:"required,max=20"`
 }
 
 func (t *TowerWriteRequest) ToModelCreate() *Tower {

@@ -3,9 +3,10 @@ package models
 import (
 	"time"
 
+	"pln/AdityaIrfan/turbine-api/helpers"
+
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
-	"pln/AdityaIrfan/turbine-api/helpers"
 )
 
 var UserDefaultSort = map[string]string{
@@ -112,10 +113,10 @@ type UserListResponse struct {
 }
 
 type UserAdminCreateByAdminRequest struct {
-	Name       string `json:"Name"`
-	Username   string `json:"useranme"`
-	Email      string `json:"Email"`
-	DivisionId string `json:"DivisionId"`
+	Name       string `json:"Name" form:"Name"`
+	Username   string `json:"useranme" form:"useranme"`
+	Email      string `json:"Email" form:"Email"`
+	DivisionId string `json:"DivisionId" form:"DivisionId"`
 }
 
 func (u *UserAdminCreateByAdminRequest) ToModel() *User {
@@ -135,22 +136,22 @@ func (u *UserAdminCreateByAdminRequest) ToModel() *User {
 
 type UserUpdateByAdminRequest struct {
 	Id         string
-	Role       *UserRole   `json:"Role"`
-	DivisionId *string     `json:"DivisionId"`
-	Status     *UserStatus `json:"UserStatus"`
+	Role       *UserRole   `json:"Role" form:"Role"`
+	DivisionId *string     `json:"DivisionId" form:"DivisionId"`
+	Status     *UserStatus `json:"UserStatus" form:"UserStatus"`
 }
 
 type UserUpdateRequest struct {
 	Id       string
-	Name     *string `json:"Name"`
-	Username *string `json:"Username"`
-	Email    *string `json:"Email"`
+	Name     *string `json:"Name" form:"Name"`
+	Username *string `json:"Username" form:"Username"`
+	Email    *string `json:"Email" form:"Email"`
 }
 
 type UserChangePasswordRequest struct {
 	Id                   string
-	Password             string `json:"Password" validate:"required"`
-	PasswordConfirmation string `json:"PasswordConfirmation" validate:"required,eqfield:Password"`
+	Password             string `json:"Password" form:"Password" validate:"required"`
+	PasswordConfirmation string `json:"PasswordConfirmation" form:"PasswordConfirmation" validate:"required,eqfield:Password"`
 }
 
 type GeneratePasswordByAdmin struct {
