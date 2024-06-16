@@ -46,7 +46,7 @@ func (d *divisionRepository) GetAll(search string) ([]*models.Division, error) {
 
 	db := d.db
 	if search != "" {
-		db = db.Where("LOWER(type) LIKE ?", "%"+strings.ToLower(search)+"%")
+		db = db.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(search)+"%")
 	}
 
 	if err := db.Find(&divisions).Error; err != nil {
@@ -88,7 +88,7 @@ func (d *divisionRepository) GetByIdWithSelectedFields(id string, selectedFields
 func (d *divisionRepository) GetByNameWithSelectedFields(divisionName models.DivisionName, selectedFields string) (*models.Division, error) {
 	var division *models.Division
 
-	if err := d.db.Select(selectedFields).Where("LOWER(type) = LOWER(?)", divisionName).First(&division).Error; err != nil {
+	if err := d.db.Select(selectedFields).Where("LOWER(name) = LOWER(?)", divisionName).First(&division).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -102,7 +102,7 @@ func (d *divisionRepository) GetByNameWithSelectedFields(divisionName models.Div
 func (d *divisionRepository) IsEqualNameExist(divisionName models.DivisionName) (bool, error) {
 	var division *models.Division
 
-	err := d.db.Where("LOWER(type) LIKE ?", "%"+strings.ToLower(string(divisionName))+"%").First(&division).Error
+	err := d.db.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(string(divisionName))+"%").First(&division).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
@@ -127,7 +127,7 @@ func (u *divisionRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*mode
 	db := u.db
 
 	if cursor.Search != "" {
-		db = db.Where("LOWER(type) LIKE LOWER(?)", "%"+cursor.Search+"%")
+		db = db.Where("LOWER(name) LIKE LOWER(?)", "%"+cursor.Search+"%")
 	}
 
 	var total int64
