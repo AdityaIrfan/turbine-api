@@ -10,8 +10,8 @@ import (
 
 type Register struct {
 	Name                 string `json:"Name" form:"Name" validate:"required"`
-	Username             string `json:"Username" form:"Username" validation:"required"`
-	Email                string `json:"Email" form:"Email" validation:"required"`
+	Username             string `json:"Username" form:"Username" validate:"required"`
+	Email                string `json:"Email" form:"Email" validate:"required"`
 	DivisionId           string `json:"DivisionId" form:"DivisionId" validate:"required"`
 	Password             string `json:"Password" form:"Password" validation:"required"`
 	PasswordConfirmation string `json:"PasswordConfirmation" form:"PasswordConfirmation" validate:"required,eqfield=Password"`

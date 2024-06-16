@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"time"
 
+	contract "pln/AdityaIrfan/turbine-api/contracts"
+	"pln/AdityaIrfan/turbine-api/helpers"
+	"pln/AdityaIrfan/turbine-api/models"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/phuslu/log"
 	"golang.org/x/crypto/bcrypt"
-	contract "pln/AdityaIrfan/turbine-api/contracts"
-	"pln/AdityaIrfan/turbine-api/helpers"
-	"pln/AdityaIrfan/turbine-api/models"
 )
 
 type authService struct {
@@ -38,6 +39,14 @@ func (a *authService) Register(c echo.Context, in *models.Register) error {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if exist {
 		return helpers.Response(c, http.StatusBadRequest, "username sudah digunakan")
+	}
+
+	// check email
+	exist, err = a.userRepo.IsEmailExist(in.Email)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if exist {
+		return helpers.Response(c, http.StatusBadRequest, "email sudah digunakan")
 	}
 
 	// check division
