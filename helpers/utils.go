@@ -41,7 +41,7 @@ func Encrypt(plainText string) string {
 
 // return salt, hash, error
 func GenerateHashAndSalt(key string) (string, string, error) {
-	salt := RandomByte(RandomInt(32, 64))
+	salt := RandomByte(RandomInt(8, 16))
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(key+salt), 7)
 	if err != nil {
