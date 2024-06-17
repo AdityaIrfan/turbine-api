@@ -41,6 +41,113 @@ func (t *Turbine) IsEmpty() bool {
 	return t == nil
 }
 
+// type TurbineWriteRequest struct {
+// 	Id                   string
+// 	TowerId              string                 `json:"TowerId" form:"TowerId" validate:"required"`
+// 	GenBearingToCoupling float64                `json:"GenBearingToCoupling" form:"GenBearingToCoupling" validate:"required"`
+// 	CouplingToTurbine    float64                `json:"CouplingToTurbine" form:"CouplingToTurbine" validate:"required"`
+// 	Data                 map[string]interface{} `json:"Data" form:"Data" validate:"required"`
+// 	CreatedBy            string
+// }
+
+// func (t *TurbineWriteRequest) ValidateData() error {
+// 	if len(t.Data) < 1 {
+// 		return errors.New("data tidak valid, data harus berupa sumbu dan hasil percobaan dalam tipe data json")
+// 	}
+
+// 	var availableAxes = map[string]bool{
+// 		"A": false,
+// 		"B": false,
+// 		"C": false,
+// 		"D": false,
+// 	}
+
+// 	var availableParts = map[string]bool{
+// 		"Upper":   false,
+// 		"Clutch":  false,
+// 		"Turbine": false,
+// 	}
+
+// 	for part, partValue := range t.Data {
+
+// 		dataPerPart, ok := partValue.(map[string]interface{})
+// 		if !ok {
+// 			return fmt.Errorf("data dibagian %v harus betipe data json", part)
+// 		}
+// 		if _, ok := availableParts[part]; ok {
+// 			availableParts[part] = true
+// 		}
+
+// 		var index int
+// 		var totalTest int
+// 		for axis, test := range dataPerPart {
+// 			testValue, ok := test.(map[string]interface{})
+// 			if !ok {
+// 				return fmt.Errorf("data sumbu %v pada bagian %v tidak valid, data harus bertipa data json", axis, part)
+// 			}
+
+// 			if len(testValue) == 0 {
+// 				return fmt.Errorf("data sumbu %v pada bagian %v tidak valid, nilai kosong", axis, part)
+// 			}
+
+// 			if index != 0 && totalTest != len(testValue) {
+// 				return fmt.Errorf("data tidak valid, total percobaan pada masing masing sumbu bagian %v tidak sama", part)
+// 			}
+
+// 			var missingTestvalue []string
+// 			var indexTestValue = 1
+// 			for test, value := range testValue {
+// 				_, err := strconv.Atoi(test)
+// 				if err != nil {
+// 					return fmt.Errorf(`percobaan pada sumbu %s bagian %v tidak valid, percobaan '%s' tidak diterima, percobaan harus berupa nomor string`, axis, part, test)
+// 				}
+// 				if _, ok := value.(float64); !ok {
+// 					return fmt.Errorf(`hasil percobaan pada sumbu %s bagian %v tidak valid, hasil pada percobaan '%v' harus berupa desimal`, axis, part, test)
+// 				}
+// 				v := strconv.Itoa(indexTestValue)
+// 				if _, ok := testValue[v]; !ok {
+// 					missingTestvalue = append(missingTestvalue, v)
+// 				}
+// 				indexTestValue++
+// 			}
+
+// 			if len(missingTestvalue) != 0 {
+// 				return fmt.Errorf("percobaan ke-%v tidak ditemukan pada sumbu %v bagian %v", strings.Join(missingTestvalue, ","), axis, part)
+// 			}
+
+// 			totalTest = len(testValue)
+
+// 			if _, ok := availableAxes[axis]; ok {
+// 				availableAxes[axis] = true
+// 			}
+
+// 			index++
+// 		}
+// 	}
+
+// 	var missingParts []string
+// 	for axis, isAvailable := range availableParts {
+// 		if !isAvailable {
+// 			missingParts = append(missingParts, axis)
+// 		}
+// 	}
+// 	if len(missingParts) != 0 {
+// 		return fmt.Errorf("bagian %v tidak ditemukan", strings.Join(missingParts, ", "))
+// 	}
+
+// 	var missingAxes []string
+// 	for axis, isAvailable := range availableAxes {
+// 		if !isAvailable {
+// 			missingAxes = append(missingAxes, axis)
+// 		}
+// 	}
+// 	if len(missingAxes) != 0 {
+// 		return fmt.Errorf("sumbu %v tidak ditemukan", strings.Join(missingAxes, ", "))
+// 	}
+
+// 	return nil
+// }
+
 type TurbineWriteRequest struct {
 	Id                   string
 	TowerId              string                 `json:"TowerId" form:"TowerId" validate:"required"`
@@ -72,7 +179,7 @@ func (t *TurbineWriteRequest) ValidateData() error {
 
 		dataPerPart, ok := partValue.(map[string]interface{})
 		if !ok {
-			return fmt.Errorf("data dibagian %v harus betipe data json", part)
+			return fmt.Errorf("data dibagian %v harus betipe json", part)
 		}
 		if _, ok := availableParts[part]; ok {
 			availableParts[part] = true
@@ -81,9 +188,9 @@ func (t *TurbineWriteRequest) ValidateData() error {
 		var index int
 		var totalTest int
 		for axis, test := range dataPerPart {
-			testValue, ok := test.(map[string]interface{})
+			testValue, ok := test.([]interface{})
 			if !ok {
-				return fmt.Errorf("data sumbu %v pada bagian %v tidak valid, data harus bertipa data json", axis, part)
+				return fmt.Errorf("data sumbu %v pada bagian %v tidak valid, data harus bertipa array number", axis, part)
 			}
 
 			if len(testValue) == 0 {
@@ -94,27 +201,6 @@ func (t *TurbineWriteRequest) ValidateData() error {
 				return fmt.Errorf("data tidak valid, total percobaan pada masing masing sumbu bagian %v tidak sama", part)
 			}
 
-			var missingTestvalue []string
-			var indexTestValue = 1
-			for test, value := range testValue {
-				_, err := strconv.Atoi(test)
-				if err != nil {
-					return fmt.Errorf(`percobaan pada sumbu %s bagian %v tidak valid, percobaan '%s' tidak diterima, percobaan harus berupa nomor string`, axis, part, test)
-				}
-				if _, ok := value.(float64); !ok {
-					return fmt.Errorf(`hasil percobaan pada sumbu %s bagian %v tidak valid, hasil percobaan pada percobaan '%v' haarus berupa desimal`, axis, part, test)
-				}
-				v := strconv.Itoa(indexTestValue)
-				if _, ok := testValue[v]; !ok {
-					missingTestvalue = append(missingTestvalue, v)
-				}
-				indexTestValue++
-			}
-
-			if len(missingTestvalue) != 0 {
-				return fmt.Errorf("percobaan ke-%v tidak ditemukan pada sumbu %v bagian %v", strings.Join(missingTestvalue, ","), axis, part)
-			}
-
 			totalTest = len(testValue)
 
 			if _, ok := availableAxes[axis]; ok {
@@ -122,6 +208,16 @@ func (t *TurbineWriteRequest) ValidateData() error {
 			}
 
 			index++
+
+			testValueTemp := make(map[string]interface{})
+			for i := 0; i < len(testValue); i++ {
+				value, ok := testValue[i].(float64)
+				if !ok {
+					return fmt.Errorf(`hasil percobaan pada sumbu %s bagian %v tidak valid, hasil pada percobaan '%v' harus berupa desimal`, axis, part, i+1)
+				}
+				testValueTemp[fmt.Sprintf("%v", i+1)] = value
+			}
+			t.Data[part].(map[string]interface{})[axis] = testValueTemp
 		}
 	}
 
@@ -148,7 +244,25 @@ func (t *TurbineWriteRequest) ValidateData() error {
 	return nil
 }
 
+// func (t *TurbineWriteRequest) ToModelCreate() *Turbine {
+// 	data, err := json.Marshal(t.Data)
+// 	if err != nil {
+// 		log.Error().Err(errors.New("ERROR MARSHAL TURBINE DATA : " + err.Error())).Msg("")
+// 		data = datatypes.JSON{}
+// 	}
+
+// 	return &Turbine{
+// 		Id:                   ulid.Make().String(),
+// 		TowerId:              t.TowerId,
+// 		GenBearingToCoupling: t.GenBearingToCoupling,
+// 		CouplingToTurbine:    t.CouplingToTurbine,
+// 		Data:                 data,
+// 		CreatedBy:            t.CreatedBy,
+// 	}
+// }
+
 func (t *TurbineWriteRequest) ToModelCreate() *Turbine {
+
 	data, err := json.Marshal(t.Data)
 	if err != nil {
 		log.Error().Err(errors.New("ERROR MARSHAL TURBINE DATA : " + err.Error())).Msg("")
