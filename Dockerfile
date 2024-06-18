@@ -1,5 +1,8 @@
 FROM golang:1.21-alpine as builder
 
+ARG branch=develop
+ENV current_branch=$branch
+
 # Utilities
 RUN apk add git gcc g++ tzdata zip ca-certificates
 # Add dep for package management
@@ -20,10 +23,18 @@ RUN go mod tidy
 COPY . .
 RUN go get
 
+# COPY ENV BASED ON BRANCH
+COPY .env.$branch .env
+
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/turbine-api main.go 
 
 # final stage
 FROM alpine:latest
+ARG branch=develop
+ENV current_branch=$branch
+
+# COPY ENV BASED ON BRANCH
+COPY .env.$branch .env
 
 #Env  
 ENV TIMEZONE Asia/Jakarta

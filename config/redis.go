@@ -3,7 +3,9 @@ package config
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/phuslu/log"
 	"github.com/redis/go-redis/v9"
@@ -18,9 +20,17 @@ func InitRedis() *redis.Client {
 
 	// log.Println(os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"))
 
+	host := os.Getenv("REDIS_HOST")
+	port, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
+	if err != nil {
+		log.Error().Err(errors.New("REDIS PORT IS NOT A NUMBER, CHECK ENV")).Msg("")
+		os.Exit(1)
+	}
+	password := os.Getenv("REDIS_PASSWORD")
+
 	client := redis.NewClient(&redis.Options{
-		Addr:       "103.59.94.19:6379",
-		Password:   "asnd9aud9jk32e0Sdbsjds9",
+		Addr:       fmt.Sprintf("%s:%d", host, port),
+		Password:   password,
 		DB:         0,
 		MaxRetries: 3,
 		PoolSize:   200,
