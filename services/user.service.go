@@ -3,10 +3,11 @@ package services
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/labstack/echo/v4"
 )
 
 type userService struct {
@@ -113,7 +114,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 
 	var anyUpdated bool
 
-	if in.Username != nil && user.Username != *in.Username {
+	if in.Username != nil && *in.Username != "" && user.Username != *in.Username {
 		userByUsername, err := u.userRepo.GetByUsernameWithSelectedFields(*in.Username, "id")
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
@@ -125,7 +126,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 		user.Username = *in.Username
 	}
 
-	if in.Email != nil && user.Email != *in.Email {
+	if in.Email != nil && *in.Email != "" && user.Email != *in.Email {
 		userByEmail, err := u.userRepo.GetByEmailWithSelectedFields(*in.Email, "id")
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
@@ -137,7 +138,7 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 		user.Email = *in.Email
 	}
 
-	if in.Name != nil && user.Name != *in.Name {
+	if in.Name != nil && *in.Name != "" && user.Name != *in.Name {
 		anyUpdated = true
 		user.Name = *in.Name
 	}

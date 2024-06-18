@@ -113,10 +113,10 @@ type UserListResponse struct {
 }
 
 type UserAdminCreateByAdminRequest struct {
-	Name       string `json:"Name" form:"Name"`
-	Username   string `json:"useranme" form:"useranme"`
-	Email      string `json:"Email" form:"Email"`
-	DivisionId string `json:"DivisionId" form:"DivisionId"`
+	Name       string `json:"Name" form:"Name" validate:"required"`
+	Username   string `json:"useranme" form:"useranme" validate:"required"`
+	Email      string `json:"Email" form:"Email" validate:"required"`
+	DivisionId string `json:"DivisionId" form:"DivisionId" validate:"required"`
 }
 
 func (u *UserAdminCreateByAdminRequest) ToModel() *User {
