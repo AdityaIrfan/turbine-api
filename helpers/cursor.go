@@ -65,17 +65,21 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (
 		sortOrderParam = "asc"
 	}
 
-	if _, err := time.Parse("2006-01-02", startDate); err != nil {
-		log.Error().Err(errors.New("INVALID START DATE : " + startDate)).Msg("")
-		return nil, errors.New("invalid start date filter, format must be 2006-01-02")
+	if startDate != "" {
+		if _, err := time.Parse("2006-01-02", startDate); err != nil {
+			log.Error().Err(errors.New("INVALID START DATE : " + startDate)).Msg("")
+			return nil, errors.New("invalid start date filter, format must be 2006-01-02")
+		}
+		startDate += " 00:00:00"
 	}
-	startDate += " 00:00:00"
 
-	if _, err := time.Parse("2006-01-02", endDate); err != nil {
-		log.Error().Err(errors.New("INVALID END DATE : " + endDate)).Msg("")
-		return nil, errors.New("invalid end date filter, format must be 2006-01-02")
+	if endDate != "" {
+		if _, err := time.Parse("2006-01-02", endDate); err != nil {
+			log.Error().Err(errors.New("INVALID END DATE : " + endDate)).Msg("")
+			return nil, errors.New("invalid end date filter, format must be 2006-01-02")
+		}
+		endDate += " 23:59:59"
 	}
-	endDate += " 23:59:59"
 
 	return &Cursor{
 		Action:      NEXT,
