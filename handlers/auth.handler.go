@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/labstack/echo/v4"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	helpers "pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/labstack/echo/v4"
 )
 
 var RefreshTokenMap = map[string]interface{}{}

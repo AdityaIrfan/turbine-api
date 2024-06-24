@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/phuslu/log"
@@ -42,6 +43,8 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (
 	sortOrderParam := strings.ToLower(c.QueryParam("SortOrder"))
 	sortByParams := strings.ToLower(c.QueryParam("SortBy"))
 	searchParam := c.QueryParam("Search")
+	startDate := c.QueryParam("StartDate")
+	endDate := c.QueryParam("EndDate")
 
 	limit, _ := strconv.Atoi(limitParam)
 	if limit <= 0 {
@@ -62,6 +65,18 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (
 		sortOrderParam = "asc"
 	}
 
+	if _, err := time.Parse("2006-01-02", startDate); err != nil {
+		log.Error().Err(errors.New("INVALID START DATE : " + startDate)).Msg("")
+		return nil, errors.New("invalid start date filter, format must be 2006-01-02")
+	}
+	startDate += " 00:00:00"
+
+	if _, err := time.Parse("2006-01-02", endDate); err != nil {
+		log.Error().Err(errors.New("INVALID END DATE : " + endDate)).Msg("")
+		return nil, errors.New("invalid end date filter, format must be 2006-01-02")
+	}
+	endDate += " 23:59:59"
+
 	return &Cursor{
 		Action:      NEXT,
 		PerPage:     limit,
@@ -69,6 +84,8 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (
 		SortOrder:   CursorSortOrder(sortOrderParam),
 		SortBy:      sortByParams,
 		Search:      searchParam,
+		StartDate:   startDate,
+		EndDate:     endDate,
 	}, nil
 }
 
@@ -100,6 +117,8 @@ type Cursor struct {
 	SortOrder   CursorSortOrder `json:"SortOrder"`
 	SortBy      string          `json:"SortBy"`
 	Search      string          `json:"Search"`
+	StartDate   string          `json:"StartDate"`
+	EndDate     string          `json:"EndDate"`
 	Action      CursorAction    `json:"Action"`
 }
 

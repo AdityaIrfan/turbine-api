@@ -25,6 +25,7 @@ func (t *turbineRepository) Create(turbine *models.Turbine) error {
 	if err := t.db.
 		Clauses(clause.Returning{}).
 		Create(&turbine).
+		Preload("Tower").
 		Preload("User", func(tx *gorm.DB) *gorm.DB {
 			return tx.Select("id, name")
 		}).First(&turbine).Error; err != nil {
@@ -45,6 +46,7 @@ func (t *turbineRepository) GetByIdWithSelectedFields(id string, selectedFields 
 	if err := db.
 		Select(selectedFields).
 		Where("id = ?", id).
+		Preload("Tower").
 		Preload("User", func(tx *gorm.DB) *gorm.DB {
 			return tx.Select("id, name")
 		}).
@@ -64,6 +66,14 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 			Where("LOWER(towers.name) LIKE LOWER(?)", "%"+cursor.Search+"%").
 			Or("LOWER(towers.unit_number) LIKE LOWER(?)", "%"+cursor.Search+"%")
 		alreadyWithTower = true
+	}
+
+	if cursor.StartDate != "" {
+		db = db.Where("created_at >= ?", cursor.StartDate)
+	}
+
+	if cursor.EndDate != "" {
+		db = db.Where("created_at <= ?", cursor.EndDate)
 	}
 
 	var total int64
@@ -100,4 +110,24 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 	cursorPagination := cursor.GeneratePager(total)
 
 	return turbine, cursorPagination, nil
+}
+
+func (t *turbineRepository) GetLatest() (*models.Turbine, error) {
+	var turbine *models.Turbine
+
+	if err := t.db.
+		Preload("Tower").
+		Preload("User", func(tx *gorm.DB) *gorm.DB {
+			return tx.Select("id, name")
+		}).
+		Order("created_at desc").
+		First(&turbine).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		log.Error().Err(errors.New("ERROR QUERY LATEST TURBINE : " + err.Error())).Msg("")
+		return nil, err
+	}
+
+	return turbine, nil
 }

@@ -122,6 +122,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	turbineRouting.POST("", turbineHandler.Create, allAuth /*, applicationJson*/)
 	turbineRouting.GET("/:id", turbineHandler.GetDetail, allAuth)
 	turbineRouting.GET("", turbineHandler.GetList, allAuth)
+	turbineRouting.GET("/latest", turbineHandler.GetLatest, allAuth)
 
 	return route
 }

@@ -62,3 +62,7 @@ func (t *turbineHandler) GetList(c echo.Context) error {
 
 	return t.turbineService.GetListWithPaginate(c, cursor)
 }
+
+func (t *turbineHandler) GetLatest(c echo.Context) error {
+	return t.turbineService.GetLatest(c)
+}

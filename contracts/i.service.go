@@ -1,9 +1,10 @@
 package contract
 
 import (
-	"github.com/labstack/echo/v4"
 	"pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/labstack/echo/v4"
 )
 
 type IRoleService interface {
@@ -49,6 +50,7 @@ type ITurbineService interface {
 	Create(c echo.Context, in *models.TurbineWriteRequest) error
 	GetDetail(c echo.Context, id string) error
 	GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error
+	GetLatest(c echo.Context) error
 }
 
 type ITowerService interface {

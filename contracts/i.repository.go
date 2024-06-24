@@ -67,6 +67,7 @@ type ITurbineRepository interface {
 	Create(turbine *models.Turbine) error
 	GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.Turbine, error)
 	GetAllWithPaginate(cursor *helpers.Cursor, selectedFields string) ([]*models.Turbine, *helpers.CursorPagination, error)
+	GetLatest() (*models.Turbine, error)
 }
 
 type ITowerRepository interface {

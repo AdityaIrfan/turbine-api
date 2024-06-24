@@ -3,10 +3,11 @@ package services
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/labstack/echo/v4"
 )
 
 type turbineService struct {
@@ -64,4 +65,16 @@ func (t *turbineService) GetListWithPaginate(c echo.Context, cursor *helpers.Cur
 	}
 
 	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua data turbine", turbineResponse, pagination)
+}
+
+func (t *turbineService) GetLatest(c echo.Context) error {
+	turbine, err := t.turbineRepo.GetLatest()
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+	if turbine.IsEmpty() {
+		return helpers.Response(c, http.StatusNotFound, "data tidak ditemukan")
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan data turbine terakhir", turbine.ToResponse())
 }
