@@ -395,14 +395,20 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	crockednessAC := math.Pow(float64(ratio*(averageTurbineAC-averageUpperAC))-(averageClutchAC-averageUpperAC), 2)
 	crockednessBD := math.Pow(float64(ratio*(averageTurbineBD-averageUpperBD))-(averageClutchBD-averageUpperBD), 2)
 
-	defaultUpperAC := averageUpperAC * -1
-	chartClutchAC := averageUpperAC + defaultUpperAC
+	defaultUpperAC := averageUpperAC
+	if defaultUpperAC > 0 {
+		defaultUpperAC = defaultUpperAC * -1
+	}
+	chartClutchAC := averageClutchAC + defaultUpperAC
 	chartTurbineAC := averageTurbineAC + defaultUpperAC
 	chart["AC"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToCoupling)
 	chart["AC"].(map[string]interface{})["Clutch"] = fmt.Sprintf("%f|0", chartClutchAC)
 	chart["AC"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineAC, t.CouplingToTurbine)
 
-	defaultUpperBD := averageUpperBD * -1
+	defaultUpperBD := averageUpperBD
+	if defaultUpperBD > 0 {
+		defaultUpperBD = defaultUpperBD * -1
+	}
 	chartClutchBD := averageClutchBD + defaultUpperBD
 	chartTurbineBD := averageTurbineBD + defaultUpperBD
 	chart["BD"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToCoupling)
