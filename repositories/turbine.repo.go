@@ -98,7 +98,7 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 
 	var turbine []*models.Turbine
 	if err := db.Debug().
-		Offset(cursor.CurrentPage - 1).
+		Offset(cursor.CurrentPage*cursor.PerPage - cursor.PerPage).
 		Limit(cursor.PerPage).
 		Preload("Tower").
 		Order(fmt.Sprintf("%v %v", sortBy, cursor.SortOrder)).
