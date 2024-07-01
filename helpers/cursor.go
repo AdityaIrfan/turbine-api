@@ -159,16 +159,16 @@ func (c *Cursor) GeneratePager(totalData int64) *CursorPagination {
 			}
 		}
 
-		nextCursor := c
-		prevCursor := c
+		nextCursor := *c
+		prevCursor := *c
 		nextCursor.Action = NEXT
 		prevCursor.Action = PREV
 		nextCursor.CurrentPage++
 		prevCursor.CurrentPage--
 
 		return &CursorPagination{
-			NextCursor: encodeCursor(nextCursor),
-			PrevCursor: encodeCursor(prevCursor),
+			NextCursor: encodeCursor(&nextCursor),
+			PrevCursor: encodeCursor(&prevCursor),
 		}
 	} else if c.Action == PREV {
 		if c.CurrentPage == 1 {
@@ -179,16 +179,16 @@ func (c *Cursor) GeneratePager(totalData int64) *CursorPagination {
 			}
 		}
 
-		nextCursor := c
-		prevCursor := c
+		nextCursor := *c
+		prevCursor := *c
 		nextCursor.Action = NEXT
 		prevCursor.Action = PREV
 		nextCursor.CurrentPage++
 		prevCursor.CurrentPage--
 
 		return &CursorPagination{
-			NextCursor: encodeCursor(nextCursor),
-			PrevCursor: encodeCursor(prevCursor),
+			NextCursor: encodeCursor(&nextCursor),
+			PrevCursor: encodeCursor(&prevCursor),
 		}
 	}
 
