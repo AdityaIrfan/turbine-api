@@ -396,21 +396,51 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	crockednessBD := math.Pow(float64(ratio*(averageTurbineBD-averageUpperBD))-(averageClutchBD-averageUpperBD), 2)
 
 	defaultUpperAC := averageUpperAC
-	if defaultUpperAC > 0 {
-		defaultUpperAC = defaultUpperAC * -1
+	chartClutchAC := averageClutchAC
+	chartTurbineAC := averageTurbineAC
+	if chartClutchAC > 0 {
+		if defaultUpperAC > 0 {
+			chartClutchAC -= defaultUpperAC
+		} else {
+			chartClutchAC += defaultUpperAC
+		}
+	} else {
+		chartClutchAC -= defaultUpperAC
 	}
-	chartClutchAC := averageClutchAC + defaultUpperAC
-	chartTurbineAC := averageTurbineAC + defaultUpperAC
+	if chartTurbineAC > 0 {
+		if defaultUpperAC > 0 {
+			chartTurbineAC -= defaultUpperAC
+		} else {
+			chartTurbineAC += defaultUpperAC
+		}
+	} else {
+		chartTurbineAC -= defaultUpperAC
+	}
 	chart["AC"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToCoupling)
 	chart["AC"].(map[string]interface{})["Clutch"] = fmt.Sprintf("%f|0", chartClutchAC)
 	chart["AC"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineAC, t.CouplingToTurbine)
 
 	defaultUpperBD := averageUpperBD
-	if defaultUpperBD > 0 {
-		defaultUpperBD = defaultUpperBD * -1
+	chartClutchBD := averageClutchBD
+	chartTurbineBD := averageTurbineBD
+	if chartClutchBD > 0 {
+		if defaultUpperBD > 0 {
+			chartClutchBD -= defaultUpperBD
+		} else {
+			chartClutchBD += defaultUpperBD
+		}
+	} else {
+		chartClutchBD -= defaultUpperBD
 	}
-	chartClutchBD := averageClutchBD + defaultUpperBD
-	chartTurbineBD := averageTurbineBD + defaultUpperBD
+	if chartTurbineBD > 0 {
+		if defaultUpperBD > 0 {
+			chartTurbineBD -= defaultUpperBD
+		} else {
+			chartTurbineBD += defaultUpperBD
+		}
+	} else {
+		chartTurbineBD -= defaultUpperBD
+	}
 	chart["BD"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToCoupling)
 	chart["BD"].(map[string]interface{})["Clutch"] = fmt.Sprintf("%f|0", chartClutchBD)
 	chart["BD"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineBD, t.CouplingToTurbine)
