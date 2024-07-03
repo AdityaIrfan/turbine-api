@@ -32,6 +32,8 @@ func (c *Config) ToConfigRootLocation() *ConfigRootLocation {
 		return &ConfigRootLocation{}
 	}
 
+	rootLocation.Status = c.Status
+
 	return rootLocation
 }
 
