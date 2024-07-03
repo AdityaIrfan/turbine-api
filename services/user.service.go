@@ -48,7 +48,7 @@ func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdmi
 	}
 
 	user := in.ToModel()
-	if err := u.userRepo.Create(user); err != nil {
+	if err := u.userRepo.Create(user, "Division"); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
@@ -84,7 +84,7 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 	}
 
 	if in.DivisionId != nil && user.DivisionId != *in.DivisionId {
-		division, err := u.divisionRepo.GetByIdWithSelectedFields(*in.DivisionId, "id")
+		division, err := u.divisionRepo.GetByIdWithSelectedFields(*in.DivisionId, "*")
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
 		} else if division.IsEmpty() {
@@ -93,6 +93,7 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 
 		anyUpdated = true
 		user.DivisionId = *in.DivisionId
+		user.Division = division
 	}
 
 	if anyUpdated {
@@ -186,7 +187,7 @@ func (u *userService) DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdmin
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	return helpers.Response(c, http.StatusOK, "berhasil menghaous user")
+	return helpers.Response(c, http.StatusOK, "berhasil menghapus user")
 }
 
 func (u *userService) GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error {

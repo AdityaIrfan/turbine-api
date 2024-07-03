@@ -3,11 +3,12 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	helpers "pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
 )
 
 type userHandler struct {
@@ -47,6 +48,8 @@ func (u *userHandler) UpdateByAdmin(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
+	payload.Id = c.Param("id")
+
 	return u.userService.UpdateByAdmin(c, payload)
 }
 
@@ -62,7 +65,7 @@ func (u *userHandler) Update(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
-	payload.Id = c.Get("claims").(jwt.MapClaims)["id"].(string)
+	payload.Id = c.Get("claims").(jwt.MapClaims)["Id"].(string)
 
 	return u.userService.Update(c, payload)
 }
@@ -75,7 +78,7 @@ func (u *userHandler) GetDetailByAdmin(c echo.Context) error {
 }
 
 func (u *userHandler) GetMyProfile(c echo.Context) error {
-	return u.userService.GetMyProfile(c, c.Get("claims").(jwt.MapClaims)["id"].(string))
+	return u.userService.GetMyProfile(c, c.Get("claims").(jwt.MapClaims)["Id"].(string))
 }
 
 func (u *userHandler) DeleteByAdmin(c echo.Context) error {
@@ -108,7 +111,11 @@ func (u *userHandler) ChangePassword(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
-	payload.Id = c.Get("claims").(jwt.MapClaims)["id"].(string)
+	if payload.Password != payload.PasswordConfirmation {
+		return helpers.Response(c, http.StatusBadRequest, "Password dan PasswordConfirmation tidak sama")
+	}
+
+	payload.Id = c.Get("claims").(jwt.MapClaims)["Id"].(string)
 
 	return u.userService.ChangePassword(c, payload)
 }

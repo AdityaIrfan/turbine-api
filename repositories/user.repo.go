@@ -10,7 +10,6 @@ import (
 
 	"github.com/phuslu/log"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type userRepository struct {
@@ -30,7 +29,7 @@ func (u *userRepository) Create(user *models.User, preloads ...string) error {
 		db = db.Preload(p)
 	}
 
-	if err := db.Create(&user).Clauses(clause.Returning{}).Error; err != nil {
+	if err := db.Create(&user).Last(&user).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY USER CREATE : " + err.Error())).Msg("")
 		return err
 	}
@@ -39,13 +38,12 @@ func (u *userRepository) Create(user *models.User, preloads ...string) error {
 }
 
 func (u *userRepository) Update(user *models.User, preloads ...string) error {
-
 	db := u.db
 
 	for _, p := range preloads {
 		db = db.Preload(p)
 	}
-	if err := db.Updates(&user).Error; err != nil {
+	if err := db.Debug().Updates(&user).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY USER UPDATE : " + err.Error())).Msg("")
 		return err
 	}
@@ -188,6 +186,7 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 
 	var users []*models.User
 	if err := db.
+		Preload("Division").
 		Offset(cursor.CurrentPage - 1).
 		Limit(cursor.PerPage).
 		Order(fmt.Sprintf("%v %v", sortBy, cursor.SortOrder)).

@@ -90,16 +90,16 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	authRouting.POST("/logout", authHandler.Logout, allAuth)
 
 	userRoutingByAdmin := route.Group("/admin/users")
-	userRoutingByAdmin.POST("/", userHandler.CreateUserAdminByAdmin, authAdmin /*, applicationJson*/)
+	userRoutingByAdmin.POST("", userHandler.CreateUserAdminByAdmin, authAdmin /*, applicationJson*/)
 	userRoutingByAdmin.PUT("/:id", userHandler.UpdateByAdmin, authAdmin /*, applicationJson*/)
 	userRoutingByAdmin.GET("/:id", userHandler.GetDetailByAdmin, authAdmin)
 	userRoutingByAdmin.DELETE("/:id", userHandler.DeleteByAdmin, authAdmin)
-	userRoutingByAdmin.GET("/", userHandler.GetListWithPaginateByAdmin, authAdmin)
-	userRoutingByAdmin.POST("/generate-password", userHandler.GeneratePasswordByAdmin, authAdmin /*, applicationJson*/)
+	userRoutingByAdmin.GET("", userHandler.GetListWithPaginateByAdmin, authAdmin)
+	userRoutingByAdmin.POST("/generate-password/:id", userHandler.GeneratePasswordByAdmin, authAdmin /*, applicationJson*/)
 
 	userRouting := route.Group("/my")
-	userRouting.PUT("/:id", userHandler.Update, authUser)
-	userRouting.GET("", userHandler.GetMyProfile, authUser)
+	userRouting.PUT("", userHandler.Update, authUser)
+	userRouting.GET("", userHandler.GetMyProfile, allAuth)
 	userRouting.POST("/change-password", userHandler.ChangePassword, authUser /*, applicationJson*/)
 
 	// roleRouting := route.Group("/roles", authAdmin)

@@ -35,7 +35,7 @@ type User struct {
 	Email        string          `gorm:"column:email"`
 	DivisionId   string          `gorm:"column:division_id"`
 	Role         UserRole        `gorm:"column:role"`
-	Status       UserStatus      `gorm:"status"`
+	Status       UserStatus      `gorm:"column:status"`
 	PasswordHash string          `gorm:"column:password_hash"`
 	PasswordSalt string          `gorm:"column:password_salt"`
 	CreatedAt    *time.Time      `gorm:"column:created_at"`
@@ -71,6 +71,7 @@ func (u *User) IsSuperAdmin() bool {
 
 func (u *User) ToResponse() *UserResponse {
 	res := &UserResponse{
+		Id:        u.Id,
 		Name:      u.Name,
 		Username:  u.Username,
 		Email:     u.Email,
@@ -88,6 +89,7 @@ func (u *User) ToResponse() *UserResponse {
 }
 
 type UserResponse struct {
+	Id        string `json:"Id"`
 	Name      string `json:"Name"`
 	Username  string `json:"Username"`
 	Email     string `json:"Email"`
@@ -100,6 +102,7 @@ type UserResponse struct {
 
 func (u *User) ToResponseList() *UserListResponse {
 	return &UserListResponse{
+		Id:       u.Id,
 		Name:     u.Name,
 		Division: string(u.Division.Name),
 		Status:   u.GetUserStatusInString(),
@@ -107,6 +110,7 @@ func (u *User) ToResponseList() *UserListResponse {
 }
 
 type UserListResponse struct {
+	Id       string `json:"Id"`
 	Name     string `json:"Name"`
 	Division string `json:"Division"`
 	Status   string `json:"Status"`
@@ -114,7 +118,7 @@ type UserListResponse struct {
 
 type UserAdminCreateByAdminRequest struct {
 	Name       string `json:"Name" form:"Name" validate:"required"`
-	Username   string `json:"useranme" form:"useranme" validate:"required"`
+	Username   string `json:"useranme" form:"Username" validate:"required"`
 	Email      string `json:"Email" form:"Email" validate:"required"`
 	DivisionId string `json:"DivisionId" form:"DivisionId" validate:"required"`
 }
@@ -126,6 +130,7 @@ func (u *UserAdminCreateByAdminRequest) ToModel() *User {
 		Id:           id,
 		Name:         u.Name,
 		Username:     u.Username,
+		Email:        u.Email,
 		DivisionId:   u.DivisionId,
 		Role:         UserRole_Admin,
 		Status:       UserStatus_Active,
@@ -138,7 +143,7 @@ type UserUpdateByAdminRequest struct {
 	Id         string
 	Role       *UserRole   `json:"Role" form:"Role"`
 	DivisionId *string     `json:"DivisionId" form:"DivisionId"`
-	Status     *UserStatus `json:"UserStatus" form:"UserStatus"`
+	Status     *UserStatus `json:"Status" form:"Status"`
 }
 
 type UserUpdateRequest struct {
@@ -151,7 +156,7 @@ type UserUpdateRequest struct {
 type UserChangePasswordRequest struct {
 	Id                   string
 	Password             string `json:"Password" form:"Password" validate:"required"`
-	PasswordConfirmation string `json:"PasswordConfirmation" form:"PasswordConfirmation" validate:"required,eqfield:Password"`
+	PasswordConfirmation string `json:"PasswordConfirmation" form:"PasswordConfirmation" validate:"required"`
 }
 
 type GeneratePasswordByAdmin struct {
