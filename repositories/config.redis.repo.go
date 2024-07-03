@@ -6,11 +6,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/phuslu/log"
-	"github.com/redis/go-redis/v9"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/phuslu/log"
+	"github.com/redis/go-redis/v9"
 )
 
 type configRedisRepository struct {
@@ -51,11 +52,11 @@ func (a *configRedisRepository) GetRootLocation() (*models.ConfigRootLocation, e
 		return nil, nil
 	}
 
-	var refreshtoken *models.ConfigRootLocation
-	if err := json.Unmarshal([]byte(val), &refreshtoken); err != nil {
+	var config *models.ConfigRootLocation
+	if err := json.Unmarshal([]byte(val), &config); err != nil {
 		log.Error().Err(fmt.Errorf("ERROR UNMARSHAL ROOT LOCATION REDIS THAT HAVING KEY %s : %s", key, err.Error())).Msg("")
 		return nil, err
 	}
 
-	return refreshtoken, nil
+	return config, nil
 }

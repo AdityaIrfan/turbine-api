@@ -15,8 +15,9 @@ const (
 )
 
 type Config struct {
-	Type ConfigType     `gorm:"column:type"`
-	Data datatypes.JSON `gorm:"column:data"`
+	Type   ConfigType     `gorm:"column:type"`
+	Data   datatypes.JSON `gorm:"column:data"`
+	Status bool           `gorm:"status"`
 }
 
 func (c *Config) IsEmpty() bool {
@@ -45,6 +46,7 @@ type ConfigRootLocation struct {
 	Lat              float64          `gorm:"column:lat" json:"Lat" form:"Lat" validate:"required"`
 	CoverageArea     float64          `gorm:"column:coverage_area" json:"CoverageArea" form:"CoverageArea" validate:"required"`
 	CoverageAreaType CoverageAreaType `gorm:"column:coverage_area_type" json:"CoverageAreaType" form:"CoverageAreaType" validate:"required"`
+	Status           bool             `gorm:"status" json:"Status" form:"status"`
 }
 
 func (c *ConfigRootLocation) IsEmpty() bool {
