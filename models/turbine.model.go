@@ -290,6 +290,7 @@ type TurbineResponse struct {
 	TotalCrockedness float64                `json:"TotalCrockedness"`
 	CreatedAt        string                 `json:"CreatedAt"`
 	CreatedBy        string                 `json:"CreatedBy"`
+	Status           bool                   `json:"Status"`
 }
 
 type TurbineShaft struct {
@@ -446,7 +447,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	chart["BD"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineBD, t.CouplingToTurbine)
 
 	chart["Upper"] = fmt.Sprintf("%f|%f", crockednessAC, crockednessBD)
-
+	totalCrockedness := math.Pow((crockednessAC + crockednessBD), 0.5)
 	return &TurbineResponse{
 		Id:        t.Id,
 		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
@@ -460,9 +461,10 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 		DetailData:       detailData,
 		ACCrockedness:    crockednessAC,
 		BDCrockedness:    crockednessBD,
-		TotalCrockedness: math.Pow((crockednessAC + crockednessBD), 0.5),
+		TotalCrockedness: totalCrockedness,
 		CreatedAt:        t.CreatedAt.Format(helpers.DefaultTimeFormat),
 		CreatedBy:        t.User.Name,
+		Status:           totalCrockedness <= 3,
 	}
 }
 
