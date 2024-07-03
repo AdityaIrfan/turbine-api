@@ -62,7 +62,7 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (
 	}
 
 	if sortOrderParam != "asc" && sortOrderParam != "desc" {
-		sortOrderParam = "asc"
+		sortOrderParam = "desc"
 	}
 
 	if startDate != "" {
