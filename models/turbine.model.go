@@ -393,8 +393,10 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	averageClutchBD := averageData["Clutch"]["D"] - (averageData["Clutch"]["B"])
 	averageTurbineBD := averageData["Turbine"]["D"] - (averageData["Turbine"]["B"])
 
-	crockednessAC := math.Pow(float64(ratio*(averageTurbineAC-averageUpperAC))-(averageClutchAC-averageUpperAC), 2)
-	crockednessBD := math.Pow(float64(ratio*(averageTurbineBD-averageUpperBD))-(averageClutchBD-averageUpperBD), 2)
+	resultanAC := float64(ratio*(averageTurbineAC-averageUpperAC)) - (averageClutchAC - averageUpperAC)
+	resultanBD := float64(ratio*(averageTurbineBD-averageUpperBD)) - (averageClutchBD - averageUpperBD)
+	crockednessAC := math.Pow(resultanAC, 2)
+	crockednessBD := math.Pow(resultanBD, 2)
 
 	defaultUpperAC := averageUpperAC
 	chartClutchAC := averageClutchAC
@@ -403,7 +405,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 		if defaultUpperAC > 0 {
 			chartClutchAC -= defaultUpperAC
 		} else {
-			chartClutchAC += defaultUpperAC
+			chartClutchAC += defaultUpperAC * -1
 		}
 	} else {
 		chartClutchAC -= defaultUpperAC
@@ -412,7 +414,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 		if defaultUpperAC > 0 {
 			chartTurbineAC -= defaultUpperAC
 		} else {
-			chartTurbineAC += defaultUpperAC
+			chartTurbineAC += defaultUpperAC * -1
 		}
 	} else {
 		chartTurbineAC -= defaultUpperAC
@@ -446,8 +448,9 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	chart["BD"].(map[string]interface{})["Clutch"] = fmt.Sprintf("%f|0", chartClutchBD)
 	chart["BD"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineBD, t.CouplingToTurbine)
 
-	chart["Upper"] = fmt.Sprintf("%f|%f", crockednessAC, crockednessBD)
+	chart["Upper"] = fmt.Sprintf("%f|%f", resultanAC, resultanBD)
 	totalCrockedness := math.Pow((crockednessAC + crockednessBD), 0.5)
+
 	return &TurbineResponse{
 		Id:        t.Id,
 		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
