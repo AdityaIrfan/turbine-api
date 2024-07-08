@@ -45,7 +45,7 @@ func (m *middleware) AuthSuperAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_SuperAdmin)
 		if err != nil {
-			return middlewareErrorResponse(err)
+			return middlewareErrorResponse(c, err)
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
@@ -59,7 +59,7 @@ func (m *middleware) AuthAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_Admin)
 		if err != nil {
-			return middlewareErrorResponse(err)
+			return middlewareErrorResponse(c, err)
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
@@ -73,7 +73,7 @@ func (m *middleware) AuthUser(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_User)
 		if err != nil {
-			return middlewareErrorResponse(err)
+			return middlewareErrorResponse(c, err)
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
@@ -87,7 +87,7 @@ func (m *middleware) Auth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_SuperAdmin, models.UserRole_Admin, models.UserRole_User)
 		if err != nil {
-			return middlewareErrorResponse(err)
+			return middlewareErrorResponse(c, err)
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
@@ -97,7 +97,7 @@ func (m *middleware) Auth(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func middlewareErrorResponse(err error) error {
+func middlewareErrorResponse(c echo.Context, err error) error {
 	switch err.Error() {
 	case "missing authorization token":
 		return helpers.Response(c, http.StatusBadRequest, "missing authorization header")
