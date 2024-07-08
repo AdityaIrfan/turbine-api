@@ -2,15 +2,17 @@ package middleware
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
+	"github.com/phuslu/log"
 )
 
 func NewMiddleware(authRedisRepo contract.IAuthRedisRepository, userRepo contract.IUserRepository) *middleware {
@@ -43,16 +45,7 @@ func (m *middleware) AuthSuperAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_SuperAdmin)
 		if err != nil {
-			switch err.Error() {
-			case "missing authorization token":
-				return helpers.Response(c, http.StatusBadRequest, "missing authorization header")
-			case "invalid token":
-				return helpers.Response(c, http.StatusUnauthorized, "invalid token")
-			case "forbidden access":
-				return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
-			default:
-				return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
-			}
+			return middlewareErrorResponse(err)
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
@@ -66,16 +59,7 @@ func (m *middleware) AuthAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_Admin)
 		if err != nil {
-			switch err.Error() {
-			case "missing authorization token":
-				return helpers.Response(c, http.StatusBadRequest, "missing authorization header")
-			case "invalid token":
-				return helpers.Response(c, http.StatusUnauthorized, "invalid token")
-			case "forbidden access":
-				return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
-			default:
-				return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
-			}
+			return middlewareErrorResponse(err)
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
@@ -89,16 +73,7 @@ func (m *middleware) AuthUser(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_User)
 		if err != nil {
-			switch err.Error() {
-			case "missing authorization token":
-				return helpers.Response(c, http.StatusBadRequest, "missing authorization header")
-			case "invalid token":
-				return helpers.Response(c, http.StatusUnauthorized, "invalid token")
-			case "forbidden access":
-				return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
-			default:
-				return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
-			}
+			return middlewareErrorResponse(err)
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
@@ -112,22 +87,28 @@ func (m *middleware) Auth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_SuperAdmin, models.UserRole_Admin, models.UserRole_User)
 		if err != nil {
-			switch err.Error() {
-			case "missing authorization token":
-				return helpers.Response(c, http.StatusBadRequest, "missing authorization header")
-			case "invalid token":
-				return helpers.Response(c, http.StatusUnauthorized, "invalid token")
-			case "forbidden access":
-				return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
-			default:
-				return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
-			}
+			return middlewareErrorResponse(err)
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
 		c.Set("claims", claims)
 
 		return next(c)
+	}
+}
+
+func middlewareErrorResponse(err error) error {
+	switch err.Error() {
+	case "missing authorization token":
+		return helpers.Response(c, http.StatusBadRequest, "missing authorization header")
+	case "invalid token":
+		return helpers.Response(c, http.StatusUnauthorized, "invalid token")
+	case "forbidden access":
+		return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
+	case "expired token":
+		return helpers.Response(c, http.StatusUnauthorized, "expired token")
+	default:
+		return helpers.Response(c, http.StatusUnauthorized, "forbidden access")
 	}
 }
 
@@ -147,13 +128,24 @@ func (m *middleware) checkToken(c echo.Context, roles ...models.UserRole) (*jwt.
 
 	token, err := helpers.VerifyToken(tokenString)
 	if err != nil {
-		log.Println("ERROR VERIFY TOKEN : " + err.Error())
+		log.Error().Err(errors.New("ERROR VERIFY TOKEN : " + err.Error())).Msg("")
 		return nil, errors.New("invalid token")
 	}
 
 	userId, ok := token.Claims.(jwt.MapClaims)["Id"].(string)
 	if !ok || userId == "" {
+		log.Error().Err(errors.New("THIS TOKEN DOES NOT HAVE [Id] IN CLAIMS : ")).Msg("")
 		return nil, errors.New("forbidden access")
+	}
+
+	expUnix, ok := token.Claims.(jwt.MapClaims)["Exp"].(float64)
+	if !ok || userId == "" {
+		log.Error().Err(errors.New("THIS TOKEN DOES NOT HAVE [Exp] IN CLAIMS : ")).Msg("")
+		return nil, errors.New("forbidden access")
+	}
+	expirationTime := time.Unix(int64(expUnix), 0)
+	if time.Now().After(expirationTime) {
+		return nil, errors.New("expired token")
 	}
 
 	existingToken, err := m.authRedisRepo.GetToken(userId)
