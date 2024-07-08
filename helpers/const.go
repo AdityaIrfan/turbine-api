@@ -31,13 +31,13 @@ func LoadConstData() {
 		os.Exit(1)
 	}
 
-	loginExpirationTTL, err := strconv.Atoi(os.Getenv("LOGIN_EXPIRATION_IN_HOURS"))
+	loginExpirationTTL, err := strconv.Atoi(os.Getenv("LOGIN_EXPIRATION_IN_MINUTES"))
 	if err != nil {
 		log.Error().Err(errors.New("LOGIN_EXPIRATION_IN_HOURS IS NOT A NUMBER, CHECK ENV")).Msg("")
 		os.Exit(1)
 	}
 
-	refreshTokenExpirationTTL, err := strconv.Atoi(os.Getenv("REFRESH_TOKEN_EXPIRATION_IN_HOURS"))
+	refreshTokenExpirationTTL, err := strconv.Atoi(os.Getenv("REFRESH_TOKEN_EXPIRATION_IN_MINUTES"))
 	if err != nil {
 		log.Error().Err(errors.New("REFRESH_TOKEN_EXPIRATION_IN_HOURS IS NOT A NUMBER, CHECK ENV")).Msg("")
 		os.Exit(1)
@@ -51,7 +51,7 @@ func LoadConstData() {
 
 	MaxLoginFailed = maxLoginFailed
 	LoginFailedTTL = time.Minute * time.Duration(loginFailedTTL)
-	LoginExpiration = time.Hour * time.Duration(loginExpirationTTL)
-	RefreshTokenExpiration = time.Hour * time.Duration(refreshTokenExpirationTTL)
+	LoginExpiration = time.Minute * time.Duration(loginExpirationTTL)
+	RefreshTokenExpiration = time.Minute * time.Duration(refreshTokenExpirationTTL)
 	RootLocationRedisExpiration = time.Hour * time.Duration(rootLocationRedisExpirationTTL)
 }
