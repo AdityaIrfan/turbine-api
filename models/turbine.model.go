@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -24,14 +25,17 @@ var TurbineDefaultMap = map[string]string{
 
 type Turbine struct {
 	Id                   string          `gorm:"column:id"`
-	TowerId              string          `gorm:"tower_id"`
+	TowerId              string          `gorm:"column:tower_id"`
 	GenBearingToCoupling float64         `gorm:"column:gen_bearing_to_coupling"`
 	CouplingToTurbine    float64         `gorm:"column:coupling_to_turbine"`
-	Data                 datatypes.JSON  `gorm:"data"`
+	Data                 datatypes.JSON  `gorm:"column:data"`
 	CreatedAt            *time.Time      `gorm:"column:created_at"`
 	UpdatedAt            *time.Time      `gorm:"column:updated_at;<-:update"`
 	DeletedAt            *gorm.DeletedAt `gorm:"column:deleted_at"`
-	CreatedBy            string          `json:"column:created_by"`
+	CreatedBy            string          `gorm:"column:created_by"`
+	TotalBolts           uint32          `gorm:"column:total_bolts"`
+	CurrentTorque        float64         `gorm:"column:current_torque"`
+	MaxTorque            float64         `gorm:"column:max_torque"`
 
 	Tower *Tower `gorm:"foreignKey:TowerId;references:Id"`
 	User  *User  `gorm:"foreignKey:CreatedBy;references:Id"`
@@ -154,6 +158,9 @@ type TurbineWriteRequest struct {
 	GenBearingToCoupling float64                `json:"GenBearingToCoupling" form:"GenBearingToCoupling" validate:"required"`
 	CouplingToTurbine    float64                `json:"CouplingToTurbine" form:"CouplingToTurbine" validate:"required"`
 	Data                 map[string]interface{} `json:"Data" form:"Data" validate:"required"`
+	TotalBolts           uint32                 `json:"TotalBolts" form:"TotalBolts" validate:"required,min=4"`
+	CurrentTorque        float64                `json:"CurrentTorque" form:"CurrentTorque" validate:"required"`
+	MaxTorque            float64                `json:"MaxTorque" form:"MaxTorque" validate:"required"`
 	CreatedBy            string
 }
 
@@ -276,21 +283,29 @@ func (t *TurbineWriteRequest) ToModelCreate() *Turbine {
 		CouplingToTurbine:    t.CouplingToTurbine,
 		Data:                 data,
 		CreatedBy:            t.CreatedBy,
+		TotalBolts:           t.TotalBolts,
+		CurrentTorque:        t.CurrentTorque,
+		MaxTorque:            t.MaxTorque,
 	}
 }
 
 type TurbineResponse struct {
-	Id               string                 `json:"Id"`
-	TowerName        string                 `json:"TowerName"`
-	Shaft            TurbineShaft           `json:"Shaft"`
-	Chart            map[string]interface{} `json:"Chart"`
-	DetailData       map[string]interface{} `json:"DetailData"`
-	ACCrockedness    float64                `json:"ACCrockedness"`
-	BDCrockedness    float64                `json:"BDCrockedness"`
-	TotalCrockedness float64                `json:"TotalCrockedness"`
-	CreatedAt        string                 `json:"CreatedAt"`
-	CreatedBy        string                 `json:"CreatedBy"`
-	Status           bool                   `json:"Status"`
+	Id                string                 `json:"Id"`
+	TowerName         string                 `json:"TowerName"`
+	Shaft             TurbineShaft           `json:"Shaft"`
+	Chart             map[string]interface{} `json:"Chart"`
+	DetailData        map[string]interface{} `json:"DetailData"`
+	ACCrockedness     float64                `json:"ACCrockedness"`
+	BDCrockedness     float64                `json:"BDCrockedness"`
+	TotalCrockedness  float64                `json:"TotalCrockedness"`
+	CreatedAt         string                 `json:"CreatedAt"`
+	CreatedBy         string                 `json:"CreatedBy"`
+	Status            bool                   `json:"Status"`
+	TotalBolts        uint32                 `json:"TotalBolts"`
+	CurrentTorque     float64                `json:"CurrentTorque"`
+	MaxTorque         float64                `json:"MaxTorque"`
+	TorqueGap         float64                `json:"TorqueGap"`
+	TorqueCalculation map[string]interface{} `json:"TorqueCalculation"`
 }
 
 type TurbineShaft struct {
@@ -451,8 +466,147 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	chart["Upper"] = fmt.Sprintf("%f|%f", resultanAC, resultanBD)
 	totalCrockedness := math.Pow((crockednessAC + crockednessBD), 0.5)
 
+	// TORQUE CALCULATION
+	torqueGap := t.MaxTorque - t.CurrentTorque
+	totalAngleInDegrees := uint32(360)
+	degreeGap := float64(totalAngleInDegrees / t.TotalBolts)
+	circleRadius := math.Sqrt(math.Pow(resultanAC, 2) + math.Pow(resultanBD, 2))
+	bolt := 1
+	TorqueCalculation := make(map[string]interface{})
+	TorqueCalculationDetail := make(map[string]interface{})
+	points := [][2]float64{}
+	pointsTemp := make(map[string]uint32)
+	fmt.Println("RADIUS : ", circleRadius)
+	for i := float64(totalAngleInDegrees); i > 0; i -= degreeGap {
+		angleInDegrees := float64(totalAngleInDegrees) - i
+		angleInRadians := angleInDegrees * math.Pi / 180.0
+
+		// Compute the cosine and sin of degrees
+		cosValue := math.Cos(angleInRadians)
+		sinValue := math.Sin(angleInRadians)
+
+		fmt.Printf("cos(%f degrees) = %v\n", angleInDegrees, cosValue)
+		fmt.Printf("sin(%f degrees) = %v\n", angleInDegrees, sinValue)
+		fmt.Println()
+
+		if math.Abs(cosValue) < 1e-9 { // Allowing a small tolerance
+			cosValue = 0
+		}
+		if math.Abs(sinValue) < 1e-9 { // Allowing a small tolerance
+			sinValue = 0
+		}
+
+		x := circleRadius * cosValue
+		y := circleRadius * sinValue
+		points = append(points, [2]float64{x, y})
+		pointsTemp[fmt.Sprintf("%f|%f", x, y)] = uint32(bolt)
+		TorqueCalculationDetail[fmt.Sprintf("%d", bolt)] = fmt.Sprintf("%f|%f", x, y)
+		if bolt == 1 {
+			bolt = 8
+		} else {
+			bolt--
+		}
+	}
+	TorqueCalculation["Details"] = TorqueCalculationDetail
+	TorqueSuggestion := make(map[string]float64)
+
+	// closestCoordinates := getClosestCoordinates(points, 0.0, -circleRadius)
+	closestCoordinates := getClosestCoordinates(points, resultanAC, resultanBD)
+	if len(closestCoordinates) != 0 {
+		if len(closestCoordinates) == 1 {
+			orderBolt, ok := pointsTemp[closestCoordinates[0]]
+			if ok {
+				TorqueSuggestion[fmt.Sprintf("%d", orderBolt)] = t.CurrentTorque + (0.5 * torqueGap)
+				prevOrderBolt := orderBolt - 1
+				nextOrderBolt := orderBolt + 1
+
+				if orderBolt == 1 {
+					prevOrderBolt = t.TotalBolts
+				}
+				if orderBolt == t.TotalBolts {
+					nextOrderBolt = 1
+				}
+
+				TorqueSuggestion[fmt.Sprintf("%d", prevOrderBolt)] = t.CurrentTorque + (0.25 * torqueGap)
+				TorqueSuggestion[fmt.Sprintf("%d", nextOrderBolt)] = t.CurrentTorque + (0.25 * torqueGap)
+			} else {
+				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[0]))
+			}
+		} else {
+			var pressureOnTheClossestBolt float64
+			closestBolt, ok := pointsTemp[closestCoordinates[0]]
+			if ok {
+				// The closes bolt have the main formula no matter what the distance
+				// Closest Bolt Torque = current torque + (max torque - current torque) * 0.5
+				pressureOnTheClossestBolt = t.CurrentTorque + (0.5 * torqueGap)
+				TorqueSuggestion[fmt.Sprintf("%d", closestBolt)] = pressureOnTheClossestBolt
+			} else {
+				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[0]))
+			}
+
+			// Find the angle in degrees between coordinate (resultanAC, resultanBD) and the coordinate of the closest bolt
+			// Split closest coordinate from resultan from string type containing "|" to be x and y
+			closestBoltPoint := strings.Split(closestCoordinates[0], "|")
+			closesBoltPointX, _ := strconv.ParseFloat(closestBoltPoint[0], 64)
+			closesBoltPointY, _ := strconv.ParseFloat(closestBoltPoint[1], 64)
+			// set (0,0) as a center of the circle
+			closestDegree := calculateAngleInDegrees(Point{0, 0}, Point{X: resultanAC, Y: resultanBD}, Point{X: closesBoltPointX, Y: closesBoltPointY})
+
+			// Find the angle in degree every closest point from the second to fourth closes
+			// Second Bolt
+			SecondClosestBolt := strings.Split(closestCoordinates[1], "|")
+			secondClosesBoltPointX, _ := strconv.ParseFloat(SecondClosestBolt[0], 64)
+			secondClosesBoltPointY, _ := strconv.ParseFloat(SecondClosestBolt[1], 64)
+			secondClosestDegree := calculateAngleInDegrees(Point{0, 0}, Point{X: resultanAC, Y: resultanBD}, Point{X: secondClosesBoltPointX, Y: secondClosesBoltPointY})
+			// Third Bolt
+			ThirdClosestBolt := strings.Split(closestCoordinates[2], "|")
+			thirdClosesBoltPointX, _ := strconv.ParseFloat(ThirdClosestBolt[0], 64)
+			thirdClosesBoltPointY, _ := strconv.ParseFloat(ThirdClosestBolt[1], 64)
+			thirdClosestDegree := calculateAngleInDegrees(Point{0, 0}, Point{X: resultanAC, Y: resultanBD}, Point{X: thirdClosesBoltPointX, Y: thirdClosesBoltPointY})
+			// Fourth Bolt
+			FourthClosestBolt := strings.Split(closestCoordinates[3], "|")
+			fourthClosesBoltPointX, _ := strconv.ParseFloat(FourthClosestBolt[0], 64)
+			fourthClosesBoltPointY, _ := strconv.ParseFloat(FourthClosestBolt[1], 64)
+			fourthClosestDegree := calculateAngleInDegrees(Point{0, 0}, Point{X: resultanAC, Y: resultanBD}, Point{X: fourthClosesBoltPointX, Y: fourthClosesBoltPointY})
+
+			degreesPerBolt := totalAngleInDegrees / t.TotalBolts
+
+			// Second Bolt
+			secondtBolt, ok := pointsTemp[closestCoordinates[1]]
+			if ok {
+				// Except the closest bolt, there is fixed formula for others
+				// Bolt Torque = current torque + (closest bolt degree / degrees per bolt) * ((pressure closest bolt - current torque) * degrees per bolt / degrees each bolt from resultan coordinate
+				TorqueSuggestion[fmt.Sprintf("%d", secondtBolt)] = t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / secondClosestDegree))
+			} else {
+				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[1]))
+			}
+
+			// Second Bolt
+			thirdBolt, ok := pointsTemp[closestCoordinates[2]]
+			if ok {
+				// Except the closest bolt, there is fixed formula for others
+				// Bolt Torque = current torque + (closest bolt degree / degrees per bolt) * ((pressure closest bolt - current torque) * degrees per bolt / degrees each bolt from resultan coordinate
+				TorqueSuggestion[fmt.Sprintf("%d", thirdBolt)] = t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / thirdClosestDegree))
+			} else {
+				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[2]))
+			}
+
+			// Second Bolt
+			fourthtBolt, ok := pointsTemp[closestCoordinates[3]]
+			if ok {
+				// Except the closest bolt, there is fixed formula for others
+				// Bolt Torque = current torque + (closest bolt degree / degrees per bolt) * ((pressure closest bolt - current torque) * degrees per bolt / degrees each bolt from resultan coordinate
+				TorqueSuggestion[fmt.Sprintf("%d", fourthtBolt)] = t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / fourthClosestDegree))
+			} else {
+				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[3]))
+			}
+		}
+	}
+
+	TorqueCalculation["TorqueSuggestions"] = TorqueSuggestion
+
 	return &TurbineResponse{
-		Id:        t.Id,
+		Id: t.Id,
 		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
 		Shaft: TurbineShaft{
 			GenBearingToKopling: t.GenBearingToCoupling,
@@ -465,9 +619,14 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 		ACCrockedness:    crockednessAC,
 		BDCrockedness:    crockednessBD,
 		TotalCrockedness: totalCrockedness,
-		CreatedAt:        t.CreatedAt.Format(helpers.DefaultTimeFormat),
-		CreatedBy:        t.User.Name,
-		Status:           totalCrockedness <= 3,
+		CreatedAt:         t.CreatedAt.Format(helpers.DefaultTimeFormat),
+		CreatedBy:         t.User.Name,
+		Status:            totalCrockedness <= 3,
+		TotalBolts:        t.TotalBolts,
+		CurrentTorque:     t.CurrentTorque,
+		MaxTorque:         t.MaxTorque,
+		TorqueGap:         torqueGap,
+		TorqueCalculation: TorqueCalculation,
 	}
 }
 
@@ -483,4 +642,72 @@ func (t *Turbine) ToResponseList() *TurbineResponseList {
 		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
 		CreatedAt: t.CreatedAt.Format(helpers.DefaultTimeFormat),
 	}
+}
+
+func getClosestCoordinates(points [][2]float64, targetX, targetY float64) []string {
+	// Slice to hold the points and their distances
+	var pointDistances []PointDistance
+
+	// Calculate the distance for each point
+	for _, point := range points {
+		if point[0] == targetX && point[1] == targetY {
+			return []string{fmt.Sprintf("%f|%f", targetX, targetY)}
+		}
+		d := distance(targetX, targetY, point[0], point[1])
+		pointDistances = append(pointDistances, PointDistance{Point: point, Distance: d})
+	}
+
+	// Sort the points by distance
+	sort.Slice(pointDistances, func(i, j int) bool {
+		return pointDistances[i].Distance < pointDistances[j].Distance
+	})
+
+	var coordinateString = []string{}
+	for _, d := range pointDistances {
+		coordinateString = append(coordinateString, fmt.Sprintf("%f|%f", d.Point[0], d.Point[1]))
+		fmt.Printf("(%v, %v) with a distance of %v\n", d.Point[0], d.Point[1], d.Distance)
+	}
+
+	return coordinateString
+}
+
+// Function to calculate the distance between two points
+func distance(x1, y1, x2, y2 float64) float64 {
+	return math.Sqrt(math.Pow(x2-x1, 2) + math.Pow(y2-y1, 2))
+}
+
+// Struct to hold a point and its distance from (5,5)
+type PointDistance struct {
+	Point    [2]float64
+	Distance float64
+}
+
+// Point represents a point in 2D space
+type Point struct {
+	X, Y float64
+}
+
+// calculateAngle calculates the angle between two points on a circle centered at the origin
+func calculateAngleInDegrees(center, p1, p2 Point) float64 {
+	// Calculate vectors A and B
+	vectorA := Point{X: p1.X - center.X, Y: p1.Y - center.Y}
+	vectorB := Point{X: p2.X - center.X, Y: p2.Y - center.Y}
+
+	// Calculate the dot product of vectors A and B
+	dotProduct := vectorA.X*vectorB.X + vectorA.Y*vectorB.Y
+
+	// Calculate the magnitudes of vectors A and B
+	magnitudeA := math.Sqrt(vectorA.X*vectorA.X + vectorA.Y*vectorA.Y)
+	magnitudeB := math.Sqrt(vectorB.X*vectorB.X + vectorB.Y*vectorB.Y)
+
+	// Calculate the cosine of the angle
+	cosTheta := dotProduct / (magnitudeA * magnitudeB)
+
+	// Calculate the angle in radians
+	theta := math.Acos(cosTheta)
+
+	// Convert the angle from radians to degrees
+	thetaDegrees := theta * (180 / math.Pi)
+
+	return thetaDegrees
 }
