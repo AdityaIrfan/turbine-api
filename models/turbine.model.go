@@ -516,7 +516,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 		if len(closestCoordinates) == 1 {
 			orderBolt, ok := pointsTemp[closestCoordinates[0]]
 			if ok {
-				TorqueSuggestion[fmt.Sprintf("%d", orderBolt)] = t.CurrentTorque + (0.5 * torqueGap)
+				TorqueSuggestion[fmt.Sprintf("%d", orderBolt)] = math.Round(t.CurrentTorque + (0.5 * torqueGap))
 				prevOrderBolt := orderBolt - 1
 				nextOrderBolt := orderBolt + 1
 
@@ -527,8 +527,8 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 					nextOrderBolt = 1
 				}
 
-				TorqueSuggestion[fmt.Sprintf("%d", prevOrderBolt)] = t.CurrentTorque + (0.25 * torqueGap)
-				TorqueSuggestion[fmt.Sprintf("%d", nextOrderBolt)] = t.CurrentTorque + (0.25 * torqueGap)
+				TorqueSuggestion[fmt.Sprintf("%d", prevOrderBolt)] = math.Round(t.CurrentTorque + (0.25 * torqueGap))
+				TorqueSuggestion[fmt.Sprintf("%d", nextOrderBolt)] = math.Round(t.CurrentTorque + (0.25 * torqueGap))
 			} else {
 				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[0]))
 			}
@@ -539,7 +539,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 				// The closes bolt have the main formula no matter what the distance
 				// Closest Bolt Torque = current torque + (max torque - current torque) * 0.5
 				pressureOnTheClossestBolt = t.CurrentTorque + (0.5 * torqueGap)
-				TorqueSuggestion[fmt.Sprintf("%d", closestBolt)] = pressureOnTheClossestBolt
+				TorqueSuggestion[fmt.Sprintf("%d", closestBolt)] = math.Round(pressureOnTheClossestBolt)
 			} else {
 				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[0]))
 			}
@@ -576,7 +576,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 			if ok {
 				// Except the closest bolt, there is fixed formula for others
 				// Bolt Torque = current torque + (closest bolt degree / degrees per bolt) * ((pressure closest bolt - current torque) * degrees per bolt / degrees each bolt from resultan coordinate
-				TorqueSuggestion[fmt.Sprintf("%d", secondtBolt)] = t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / secondClosestDegree))
+				TorqueSuggestion[fmt.Sprintf("%d", secondtBolt)] = math.Round(t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / secondClosestDegree)))
 			} else {
 				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[1]))
 			}
@@ -586,7 +586,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 			if ok {
 				// Except the closest bolt, there is fixed formula for others
 				// Bolt Torque = current torque + (closest bolt degree / degrees per bolt) * ((pressure closest bolt - current torque) * degrees per bolt / degrees each bolt from resultan coordinate
-				TorqueSuggestion[fmt.Sprintf("%d", thirdBolt)] = t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / thirdClosestDegree))
+				TorqueSuggestion[fmt.Sprintf("%d", thirdBolt)] = math.Round(t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / thirdClosestDegree)))
 			} else {
 				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[2]))
 			}
@@ -596,7 +596,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 			if ok {
 				// Except the closest bolt, there is fixed formula for others
 				// Bolt Torque = current torque + (closest bolt degree / degrees per bolt) * ((pressure closest bolt - current torque) * degrees per bolt / degrees each bolt from resultan coordinate
-				TorqueSuggestion[fmt.Sprintf("%d", fourthtBolt)] = t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / fourthClosestDegree))
+				TorqueSuggestion[fmt.Sprintf("%d", fourthtBolt)] = math.Round(t.CurrentTorque + ((closestDegree / float64(degreesPerBolt)) * ((pressureOnTheClossestBolt - t.CurrentTorque) * float64(degreesPerBolt) / fourthClosestDegree)))
 			} else {
 				log.Error().Err(fmt.Errorf("COORDINATE %s IS NOT EXIST", closestCoordinates[3]))
 			}
@@ -606,7 +606,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	TorqueCalculation["TorqueSuggestions"] = TorqueSuggestion
 
 	return &TurbineResponse{
-		Id: t.Id,
+		Id:        t.Id,
 		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
 		Shaft: TurbineShaft{
 			GenBearingToKopling: t.GenBearingToCoupling,
@@ -614,11 +614,11 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 			Total:               total,
 			Ratio:               ratio,
 		},
-		Chart:            chart,
-		DetailData:       detailData,
-		ACCrockedness:    crockednessAC,
-		BDCrockedness:    crockednessBD,
-		TotalCrockedness: totalCrockedness,
+		Chart:             chart,
+		DetailData:        detailData,
+		ACCrockedness:     crockednessAC,
+		BDCrockedness:     crockednessBD,
+		TotalCrockedness:  totalCrockedness,
 		CreatedAt:         t.CreatedAt.Format(helpers.DefaultTimeFormat),
 		CreatedBy:         t.User.Name,
 		Status:            totalCrockedness <= 3,
