@@ -469,7 +469,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	// TORQUE CALCULATION
 	torqueGap := t.MaxTorque - t.CurrentTorque
 	totalAngleInDegrees := uint32(360)
-	degreeGap := float64(totalAngleInDegrees / t.TotalBolts)
+	degreeGap := float64(totalAngleInDegrees) / float64(t.TotalBolts)
 	circleRadius := math.Sqrt(math.Pow(resultanAC, 2) + math.Pow(resultanBD, 2))
 	bolt := 1
 	TorqueCalculation := make(map[string]interface{})
@@ -502,11 +502,12 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 		pointsTemp[fmt.Sprintf("%f|%f", x, y)] = uint32(bolt)
 		TorqueCalculationDetail[fmt.Sprintf("%d", bolt)] = fmt.Sprintf("%f|%f", x, y)
 		if bolt == 1 {
-			bolt = 8
+			bolt = int(t.TotalBolts)
 		} else {
 			bolt--
 		}
 	}
+
 	TorqueCalculation["Details"] = TorqueCalculationDetail
 	TorqueSuggestion := make(map[string]float64)
 
