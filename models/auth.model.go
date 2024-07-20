@@ -46,6 +46,7 @@ type Login struct {
 type AuthResponse struct {
 	Name         string `json:"Name"`
 	Division     string `json:"Division"`
+	IsAdmin      bool   `json:"IsAdmin"`
 	Token        string `json:"Token"`
 	RefreshToken string `json:"RefreshToken"`
 }

@@ -57,7 +57,7 @@ func (m *middleware) AuthSuperAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (m *middleware) AuthAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		token, err := m.checkToken(c, models.UserRole_Admin)
+		token, err := m.checkToken(c, models.UserRole_Admin, models.UserRole_SuperAdmin)
 		if err != nil {
 			return middlewareErrorResponse(c, err)
 		}
