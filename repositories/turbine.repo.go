@@ -51,6 +51,10 @@ func (t *turbineRepository) GetByIdWithSelectedFields(id string, selectedFields 
 			return tx.Select("id, name")
 		}).
 		First(&turbine).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
 		log.Error().Err(errors.New("ERROR QUERY TURBINE GETTING BY ID WITH SELECTED FIELDS : " + err.Error()))
 		return nil, err
 	}

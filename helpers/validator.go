@@ -29,29 +29,29 @@ func GenerateValidationErrorMessage(err error) string {
 		}
 		switch err.Tag() {
 		case "required":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s is required", err.Field()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s tidak boleh kosong", err.Field()))
 		case "numeric":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be a number", err.Field()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus berupa angka", err.Field()))
 		case "lt":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be less than %s", err.Field(), err.Param()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus kurang dari %s", err.Field(), err.Param()))
 		case "gt":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be greater than %s", err.Field(), err.Param()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus lebih dari %s", err.Field(), err.Param()))
 		case "gte":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be greater than equal %s", err.Field(), err.Param()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus lebih dari atau sama dengan %s", err.Field(), err.Param()))
 		case "max":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s length must be less than %s", err.Field(), err.Param()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus kurang dari %s", err.Field(), err.Param()))
 		case "min":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s length must greater than %s", err.Field(), err.Param()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus lebih dari %s", err.Field(), err.Param()))
 		case "eqfield":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be similar with %s", err.Field(), err.Param()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus sama dengan %s", err.Field(), err.Param()))
 		case "eq":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be '%v'", err.Field(), err.Param()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus '%v'", err.Field(), err.Param()))
 		case "eq=active|eq=nonactive":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be 'active' or 'nonactive'", err.Field()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus antara 'active' atau 'nonactive'", err.Field()))
 		case "base64":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be base64 format", err.Field()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus berformat base64", err.Field()))
 		case "base64url":
-			messageSlice = append(messageSlice, fmt.Sprintf("%s must be base64url string format", err.Field()))
+			messageSlice = append(messageSlice, fmt.Sprintf("%s harus berupa format base64url string", err.Field()))
 		}
 		mp[err.Field()] = true
 	}
