@@ -445,6 +445,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	chart["AC"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToCoupling)
 	chart["AC"].(map[string]interface{})["Clutch"] = fmt.Sprintf("%f|0", chartClutchAC)
 	chart["AC"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineAC, t.CouplingToTurbine)
+	chart["AC"].(map[string]interface{})["Scale"] = GetScale(t.GenBearingToCoupling, t.CouplingToTurbine, chartClutchAC, chartTurbineAC)
 
 	defaultUpperBD := averageUpperBD
 	chartClutchBD := averageClutchBD
@@ -470,9 +471,14 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	chart["BD"].(map[string]interface{})["Upper"] = fmt.Sprintf("0|%f", t.GenBearingToCoupling)
 	chart["BD"].(map[string]interface{})["Clutch"] = fmt.Sprintf("%f|0", chartClutchBD)
 	chart["BD"].(map[string]interface{})["Turbine"] = fmt.Sprintf("%f|%f", chartTurbineBD, t.CouplingToTurbine)
+	chart["BD"].(map[string]interface{})["Scale"] = GetScale(t.GenBearingToCoupling, t.CouplingToTurbine, chartClutchBD, chartTurbineBD)
 
 	chart["Upper"] = fmt.Sprintf("%f|%f", resultanAC, resultanBD)
 	totalCrockedness := math.Pow((crockednessAC + crockednessBD), 0.5)
+	chart["UpperScale"] = 7
+	if totalCrockedness != 0 {
+		chart["UpperScale"] = GetScale(resultanAC, resultanBD)
+	}
 
 	// TORQUE CALCULATION
 	torqueGap := t.MaxTorque - t.CurrentTorque
@@ -621,6 +627,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	}
 
 	TorqueCalculation["TorqueSuggestions"] = TorqueSuggestion
+	TorqueCalculation["Scale"] = circleRadius + 1
 
 	return &TurbineResponse{
 		Id:        t.Id,
@@ -650,6 +657,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 
 type TurbineResponseList struct {
 	Id        string `json:"Id"`
+	Title     string `json:"Title"`
 	TowerName string `json:"TowerName"`
 	CreatedAt string `json:"CreatedAt"`
 }
@@ -657,6 +665,7 @@ type TurbineResponseList struct {
 func (t *Turbine) ToResponseList() *TurbineResponseList {
 	return &TurbineResponseList{
 		Id:        t.Id,
+		Title:     t.Title,
 		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
 		CreatedAt: t.CreatedAt.Format(helpers.DefaultTimeFormat),
 	}
@@ -728,4 +737,23 @@ func calculateAngleInDegrees(center, p1, p2 Point) float64 {
 	thetaDegrees := theta * (180 / math.Pi)
 
 	return thetaDegrees
+}
+
+func GetScale(data ...float64) float64 {
+	switch len(data) {
+	case 0:
+		return 1
+	case 1:
+		return data[0] + 1
+	}
+
+	for i := 0; i < len(data); i++ {
+		for j := 0; j < len(data)-i-1; j++ {
+			if data[j] > data[j+1] {
+				data[j], data[j+1] = data[j+1], data[j]
+			}
+		}
+	}
+
+	return data[len(data)-1] + 1
 }
