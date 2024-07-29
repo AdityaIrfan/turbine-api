@@ -157,6 +157,10 @@ func (u *divisionRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*mode
 		return nil, nil, err
 	}
 
+	if total == 0 {
+		return nil, &helpers.CursorPagination{}, nil
+	}
+
 	cursorPagination := cursor.GeneratePager(total)
 
 	return divisions, cursorPagination, nil

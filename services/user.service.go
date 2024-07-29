@@ -196,7 +196,7 @@ func (u *userService) GetListWithPaginateByAdmin(c echo.Context, cursor *helpers
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	var userRes []*models.UserListResponse
+	var userRes = []*models.UserListResponse{}
 	for _, user := range users {
 		userRes = append(userRes, user.ToResponseList())
 	}

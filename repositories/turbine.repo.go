@@ -80,6 +80,10 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 		db = db.Where("created_at <= ?", cursor.EndDate)
 	}
 
+	if cursor.Filter != "" {
+		db = db.Where(fmt.Sprintf("%v = ?", cursor.Filter), cursor.FilterValue)
+	}
+
 	var total int64
 	if err := db.Table("turbines").Count(&total).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY TURBINES TOTAL : " + err.Error())).Msg("")
@@ -109,6 +113,10 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 		Find(&turbine).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY TURBINES LIST WITH PAGINATE : " + err.Error())).Msg("")
 		return nil, nil, err
+	}
+
+	if total == 0 {
+		return nil, &helpers.CursorPagination{}, nil
 	}
 
 	cursorPagination := cursor.GeneratePager(total)

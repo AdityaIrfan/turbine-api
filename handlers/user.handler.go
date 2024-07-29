@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	helpers "pln/AdityaIrfan/turbine-api/helpers"
@@ -91,8 +92,11 @@ func (u *userHandler) DeleteByAdmin(c echo.Context) error {
 }
 
 func (u *userHandler) GetListWithPaginateByAdmin(c echo.Context) error {
-	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.UserDefaultSort)
+	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.UserDefaultSort, models.UserDefaultFilter)
 	if err != nil {
+		if strings.Contains(err.Error(), "unavailable") {
+			return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", []models.User{}, helpers.CursorPagination{})
+		}
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}
 

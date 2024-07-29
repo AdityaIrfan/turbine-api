@@ -15,6 +15,10 @@ var UserDefaultSort = map[string]string{
 	"CreatedAt": "createdat",
 }
 
+var UserDefaultFilter = map[string]string{
+	"Status": "status",
+}
+
 type UserStatus uint8
 type UserRole uint8
 

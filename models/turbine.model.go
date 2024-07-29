@@ -18,9 +18,13 @@ import (
 	"gorm.io/gorm"
 )
 
-var TurbineDefaultMap = map[string]string{
+var TurbineDefaultSortMap = map[string]string{
 	"TowerName": "towername",
 	"CreatedAt": "createdat",
+}
+
+var TurbineDefaultSortFilter = map[string]string{
+	"Tower": "tower_id",
 }
 
 type Turbine struct {

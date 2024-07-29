@@ -13,7 +13,7 @@ import (
 	"github.com/phuslu/log"
 )
 
-func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (*Cursor, error) {
+func GenerateCursorPaginationByEcho(c echo.Context, sortMap, filterMap map[string]string) (*Cursor, error) {
 	cursorNextParam := c.QueryParam("Next")
 	cursorPrevParam := c.QueryParam("Prev")
 
@@ -45,16 +45,18 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (
 	searchParam := c.QueryParam("Search")
 	startDate := c.QueryParam("StartDate")
 	endDate := c.QueryParam("EndDate")
+	filter := c.QueryParam("Filter")
+	filterValue := c.QueryParam("FilterValue")
 
 	limit, _ := strconv.Atoi(limitParam)
 	if limit <= 0 {
 		limit = 10
 	}
 
-	if sortByParams != "" {
+	if sortByParams != "" && sortMap != nil {
 		value, ok := sortMap[sortByParams]
 		if !ok {
-			value = "createdat"
+			return nil, errors.New("unavailable")
 		}
 		sortByParams = value
 	} else {
@@ -81,6 +83,22 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (
 		endDate += " 23:59:59"
 	}
 
+	if filter != "" && filterMap != nil {
+		value, ok := filterMap[filter]
+		if !ok {
+			log.Error().Err(errors.New("UNAVAILABLE FILTER %v" + filter)).Msg("")
+			return nil, errors.New("unavailable")
+		}
+
+		if value == "status" {
+			if _, err := strconv.Atoi(filterValue); err != nil {
+				return nil, errors.New("status must be a number")
+			}
+		}
+
+		filter = value
+	}
+
 	return &Cursor{
 		Action:      NEXT,
 		PerPage:     limit,
@@ -90,6 +108,8 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap map[string]string) (
 		Search:      searchParam,
 		StartDate:   startDate,
 		EndDate:     endDate,
+		Filter:      filter,
+		FilterValue: filterValue,
 	}, nil
 }
 
@@ -120,6 +140,8 @@ type Cursor struct {
 	CurrentPage int             `json:"CurrentPage"`
 	SortOrder   CursorSortOrder `json:"SortOrder"`
 	SortBy      string          `json:"SortBy"`
+	Filter      string          `json:"Filter"`
+	FilterValue string          `json:"FilterValue"`
 	Search      string          `json:"Search"`
 	StartDate   string          `json:"StartDate"`
 	EndDate     string          `json:"EndDate"`

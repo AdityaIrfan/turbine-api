@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	helpers "pln/AdityaIrfan/turbine-api/helpers"
@@ -55,8 +56,11 @@ func (t *turbineHandler) GetDetail(c echo.Context) error {
 }
 
 func (t *turbineHandler) GetList(c echo.Context) error {
-	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.TurbineDefaultMap)
+	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.TurbineDefaultSortMap, models.TurbineDefaultSortFilter)
 	if err != nil {
+		if strings.Contains(err.Error(), "unavailable") {
+			return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua data turbine", []models.Turbine{}, helpers.CursorPagination{})
+		}
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}
 

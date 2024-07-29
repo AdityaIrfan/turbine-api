@@ -3,10 +3,11 @@ package services
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/labstack/echo/v4"
 )
 
 type divisionService struct {
@@ -80,7 +81,7 @@ func (d *divisionService) GetListWithPaginate(c echo.Context, cursor *helpers.Cu
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	var divisionRes []*models.DivisionResponse
+	var divisionRes = []*models.DivisionResponse{}
 	for _, division := range divisions {
 		divisionRes = append(divisionRes, division.ToResponse())
 	}

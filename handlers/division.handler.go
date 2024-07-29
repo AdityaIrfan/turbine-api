@@ -3,10 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	helpers "pln/AdityaIrfan/turbine-api/helpers"
 	"pln/AdityaIrfan/turbine-api/models"
+
+	"github.com/labstack/echo/v4"
 )
 
 type divisionHandler struct {
@@ -55,7 +56,7 @@ func (d *divisionHandler) GetListMaster(c echo.Context) error {
 }
 
 func (d *divisionHandler) GetListWithPaginate(c echo.Context) error {
-	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.DivisionDefaultSort)
+	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.DivisionDefaultSort, nil)
 	if err != nil {
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}

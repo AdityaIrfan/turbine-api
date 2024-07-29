@@ -166,6 +166,10 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 		db = db.Where("LOWER(name) LIKE LOWER(?)", "%"+cursor.Search+"%")
 	}
 
+	if cursor.Filter != "" {
+		db = db.Where(fmt.Sprintf("%v = ?", cursor.Filter), cursor.FilterValue)
+	}
+
 	var total int64
 	if err := db.Table("users").Count(&total).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY USERS TOTAL : " + err.Error())).Msg("")
@@ -185,7 +189,7 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 	}
 
 	var users []*models.User
-	if err := db.
+	if err := db.Debug().
 		Preload("Division").
 		Offset(cursor.CurrentPage - 1).
 		Limit(cursor.PerPage).
@@ -193,6 +197,10 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.U
 		Find(&users).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY USERS LIST WITH PAGINATE : " + err.Error())).Msg("")
 		return nil, nil, err
+	}
+
+	if total == 0 {
+		return nil, &helpers.CursorPagination{}, nil
 	}
 
 	cursorPagination := cursor.GeneratePager(total)
