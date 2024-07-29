@@ -43,7 +43,15 @@ func (u *userRepository) Update(user *models.User, preloads ...string) error {
 	for _, p := range preloads {
 		db = db.Preload(p)
 	}
-	if err := db.Debug().Updates(&user).Error; err != nil {
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if user.Status == 0 {
+			if err := tx.Table("users").Where("id = ?", user.Id).Update("status", 0).Error; err != nil {
+				return err
+			}
+		}
+
+		return tx.Updates(&user).Error
+	}); err != nil {
 		log.Error().Err(errors.New("ERROR QUERY USER UPDATE : " + err.Error())).Msg("")
 		return err
 	}
