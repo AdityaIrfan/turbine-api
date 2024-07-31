@@ -1,0 +1,47 @@
+services:
+  redis:
+    image: redis
+    container_name: turbine-redis-dev
+    restart: always
+    env_file:
+      - .env.develop
+    command: ["redis-server", "--requirepass", "Snjsd8&*&S7d6sy7sdHSUd7872913hSK"]  # Use the password in the Redis command
+    volumes:
+      - ~/.encrypted/docker-volumes/data-persistence/redis-dev:/data  # Named volume for Redis data persistence
+      # - ./redis.conf:/usr/local/etc/redis/redis.conf  # Bind mount for custom configuration
+    ports:
+      - 6379:6379
+    networks:
+      - turbine-network
+
+  postgres:
+    image: postgres
+    container_name: turbine-postgres-dev
+    restart: always
+    env_file:
+      - .env.develop
+    volumes:
+      - ~/.encrypted/docker-volumes/data-persistence/postgres-dev:/var/lib/postgresql/data  # Named volume for data persistence
+      # - ./postgres.conf:/etc/postgresql/postgresql.conf  # Bind mount for custom configuration (optional)
+    ports:
+      - 5432:5432
+    networks:
+      - turbine-network
+
+  app:
+    image: turbine-api-dev:v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_ENV: develop
+    container_name: turbine-api-dev
+    ports:
+      - 8081:8081
+    networks:
+      - turbine-network
+
+networks:
+  turbine-network:
+    driver: bridge
+    external: true

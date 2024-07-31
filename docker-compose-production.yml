@@ -1,0 +1,43 @@
+services:
+  redis:
+    image: redis
+    container_name: turbine-redis-production
+    restart: always
+    env_file:
+      - .env.production
+    command: ["redis-server", "--requirepass", "Snjsd8&*&S7d6sy7sdHSUd7872913hSK"]  # Use the password in the Redis command
+    volumes:
+      - ~/.encrypted/docker-volumes/data-persistence/redis-prod:/data  # Named volume for Redis data persistence
+      # - ./redis.conf:/usr/local/etc/redis/redis.conf  # Bind mount for custom configuration
+    networks:
+      - turbine-network-production
+
+  postgres:
+    image: postgres
+    container_name: turbine-postgres-production
+    restart: always
+    env_file:
+      - .env.production
+    volumes:
+      - ~/.encrypted/docker-volumes/data-persistence/postgres-prod:/var/lib/postgresql/data  # Named volume for data persistence
+      # - ./postgres.conf:/etc/postgresql/postgresql.conf  # Bind mount for custom configuration (optional)
+    networks:
+      - turbine-network-production
+
+  app:
+    image: turbine-api-production:v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_ENV: production
+    container_name: turbine-api-production
+    ports:
+      - 8080:8080
+    networks:
+      - turbine-network-production
+
+networks:
+  turbine-network:
+    driver: bridge
+    external: true

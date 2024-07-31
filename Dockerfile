@@ -1,7 +1,10 @@
 FROM golang:1.21-alpine as builder
 
-ARG branch=develop
-ENV current_branch=$branch
+# Define build argument
+ARG APP_ENV
+
+# Optionally set an environment variable with the argument
+ENV APP_ENV=${APP_ENV}
 
 # Utilities
 RUN apk add git gcc g++ tzdata zip ca-certificates
@@ -24,17 +27,23 @@ COPY . .
 RUN go get
 
 # COPY ENV BASED ON BRANCH
-COPY .env.$branch .env
+RUN rm -rf .env
+COPY .env.$APP_ENV .env
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/turbine-api main.go 
 
 # final stage
 FROM alpine:latest
-ARG branch=develop
-ENV current_branch=$branch
+
+# Define build argument
+ARG APP_ENV
+
+# Optionally set an environment variable with the argument
+ENV APP_ENV=${APP_ENV}
 
 # COPY ENV BASED ON BRANCH
-COPY .env.$branch .env
+RUN rm -rf .env
+COPY .env.$APP_ENV .env
 
 #Env  
 ENV TIMEZONE Asia/Jakarta
