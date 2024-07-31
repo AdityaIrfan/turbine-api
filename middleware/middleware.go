@@ -148,12 +148,12 @@ func (m *middleware) checkToken(c echo.Context, roles ...models.UserRole) (*jwt.
 		return nil, errors.New("expired token")
 	}
 
-	existingToken, err := m.authRedisRepo.GetToken(userId)
-	if err != nil {
-		return nil, helpers.ResponseUnprocessableEntity(c)
-	} else if existingToken == "" || tokenString != existingToken {
-		return nil, errors.New("invalid token")
-	}
+	// existingToken, err := m.authRedisRepo.GetToken(userId)
+	// if err != nil {
+	// 	return nil, helpers.ResponseUnprocessableEntity(c)
+	// } else if existingToken == "" || tokenString != existingToken {
+	// 	return nil, errors.New("invalid token")
+	// }
 
 	user, err := m.userRepo.GetByIdWithSelectedFields(userId, "id, status, role")
 	if err != nil {
