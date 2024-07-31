@@ -749,11 +749,21 @@ func GetScale(data ...float64) float64 {
 
 	for i := 0; i < len(data); i++ {
 		for j := 0; j < len(data)-i-1; j++ {
+			if data[j] < 0 {
+				data[j] *= -1
+			}
+
+			if data[j+1] < 0 {
+				data[j+1] *= -1
+			}
+
 			if data[j] > data[j+1] {
 				data[j], data[j+1] = data[j+1], data[j]
 			}
 		}
 	}
+
+	fmt.Println(data[len(data)-1] + 1)
 
 	return data[len(data)-1] + 1
 }
