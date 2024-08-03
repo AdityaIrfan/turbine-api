@@ -10,6 +10,9 @@ import (
 	"fmt"
 	"io"
 	mathRand "math/rand"
+	"net"
+	"net/http"
+	"strings"
 
 	"github.com/phuslu/log"
 	"golang.org/x/crypto/bcrypt"
@@ -93,4 +96,18 @@ func Decrypt(encryptedString string) (string, error) {
 	}
 
 	return string(plainText), nil
+}
+
+func GetClientIP(r *http.Request) string {
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = r.Header.Get("X-Real-IP")
+	}
+	if ip == "" {
+		ip, _, _ = net.SplitHostPort(r.RemoteAddr)
+	} else {
+		// If there are multiple IPs, the first one is the client's real IP
+		ip = strings.Split(ip, ",")[0]
+	}
+	return strings.TrimSpace(ip)
 }

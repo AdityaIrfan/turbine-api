@@ -35,6 +35,7 @@ func (r *Register) ToModel() (*User, error) {
 		Status:       UserStatus_InActive,
 		PasswordHash: hash,
 		PasswordSalt: salt,
+		RadiusStatus: true,
 	}, nil
 }
 
@@ -46,7 +47,7 @@ type Login struct {
 type AuthResponse struct {
 	Name         string `json:"Name"`
 	Division     string `json:"Division"`
-	IsAdmin      bool   `json:"IsAdmin"`
+	Source       string `json:"Source"`
 	Token        string `json:"Token"`
 	RefreshToken string `json:"RefreshToken"`
 }

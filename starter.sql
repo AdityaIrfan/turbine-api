@@ -1,77 +1,172 @@
-create table configs
-(
-    type integer not null unique,
-    data json    not null,
-    status boolean NOT NULL DEFAULT false
+-- -------------------------------------------------------------
+-- -------------------------------------------------------------
+-- TablePlus 1.2.0
+--
+-- https://tableplus.com/
+--
+-- Database: postgres
+-- Generation Time: 2024-08-03 22:18:58.862024
+-- -------------------------------------------------------------
+
+-- This script only contains the table creation statements and does not fully represent the table in database. It's still missing: indices, triggers. Do not use it as backup.
+
+-- Table Definition
+CREATE TABLE "public"."divisions" (
+    "id" varchar NOT NULL,
+    "name" varchar NOT NULL,
+    "created_at" timestamp NOT NULL DEFAULT now(),
+    "updated_at" timestamp,
+    "deleted_at" timestamp,
+    PRIMARY KEY ("id")
 );
 
-create table divisions
-(
-    id         varchar(50)             not null primary key,
-    name       varchar(50)             not null,
-    created_at timestamp default now() not null,
-    updated_at timestamp,
-    deleted_at timestamp
+-- This script only contains the table creation statements and does not fully represent the table in database. It's still missing: indices, triggers. Do not use it as backup.
+
+-- Table Definition
+CREATE TABLE "public"."plta" (
+    "id" varchar NOT NULL,
+    "name" varchar NOT NULL,
+    "created_at" timestamp NOT NULL DEFAULT now(),
+    "updated_at" timestamp,
+    "deleted_at" timestamp,
+    "status" bool NOT NULL DEFAULT false,
+    "long" float8 NOT NULL DEFAULT 0,
+    "lat" float8 NOT NULL DEFAULT 0,
+    "created_by" varchar NOT NULL DEFAULT ''::character varying,
+    "updated_by" varchar,
+    "deleted_by" varchar,
+    "radius_status" bool NOT NULL DEFAULT false,
+    "radius" float8,
+    "radius_type" varchar,
+    PRIMARY KEY ("id")
 );
 
-create table towers
-(
-    id          varchar                 not null primary key,
-    name        varchar(100)            not null,
-    unit_number varchar(20)             not null,
-    created_at  timestamp default now() not null,
-    updated_at  timestamp,
-    deleted_at  timestamp
+-- This script only contains the table creation statements and does not fully represent the table in database. It's still missing: indices, triggers. Do not use it as backup.
+
+-- Table Definition
+CREATE TABLE "public"."plta_units" (
+    "id" varchar NOT NULL,
+    "plta_id" varchar NOT NULL,
+    "status" bool NOT NULL,
+    "created_at" timestamp NOT NULL DEFAULT now(),
+    "updated_at" timestamp,
+    "deleted_at" timestamp,
+    "name" varchar NOT NULL,
+    "created_by" varchar NOT NULL,
+    "updated_by" varchar,
+    "deleted_by" varchar,
+    PRIMARY KEY ("id")
 );
 
-create table users
-(
-    id            varchar(50)              not null,
-    name          varchar(150)             not null,
-    username      varchar(50)              not null unique,
-    email         varchar(100)             not null unique,
-    division_id   varchar(50)              not null,
-    role          integer                  not null,
-    status        integer                  not null,
-    password_hash varchar,
-    password_salt varchar,
-    created_at    timestamp  default now() not null,
-    updated_at    timestamp default null,
-    deleted_at    timestamp  default null,
+-- This script only contains the table creation statements and does not fully represent the table in database. It's still missing: indices, triggers. Do not use it as backup.
 
-    primary key (id),
-    constraint fk_division
-        foreign key (division_id)
-            references divisions (id)
+-- Table Definition
+CREATE TABLE "public"."turbines" (
+    "id" varchar NOT NULL,
+    "plta_unit_id" varchar NOT NULL,
+    "gen_bearing_to_coupling" float8 NOT NULL,
+    "coupling_to_turbine" float8 NOT NULL,
+    "data" json NOT NULL,
+    "total_bolts" int4 NOT NULL DEFAULT 0,
+    "current_torque" float8 NOT NULL DEFAULT 0,
+    "max_torque" float8 NOT NULL DEFAULT 0,
+    "title" varchar NOT NULL DEFAULT ''::character varying,
+    "created_at" timestamp NOT NULL DEFAULT now(),
+    "created_by" varchar NOT NULL DEFAULT ''::character varying,
+    "deleted_at" timestamp,
+    "deleted_by" varchar DEFAULT ''::character varying,
+    PRIMARY KEY ("id")
 );
 
-comment on column users.role is 'super admin = 1, admin = 2, user = 3';
+-- This script only contains the table creation statements and does not fully represent the table in database. It's still missing: indices, triggers. Do not use it as backup.
 
-comment on column users.status is 'inactive = 0, active = 1, blocked by admin = 2';
+-- Table Definition
+CREATE TABLE "public"."users" (
+    "id" varchar NOT NULL,
+    "name" varchar NOT NULL,
+    "username" varchar NOT NULL,
+    "email" varchar NOT NULL,
+    "division_id" varchar NOT NULL,
+    "role" int4 NOT NULL,
+    "status" int4 NOT NULL,
+    "password_hash" varchar,
+    "password_salt" varchar,
+    "created_at" timestamp NOT NULL DEFAULT now(),
+    "updated_at" timestamp,
+    "deleted_at" timestamp,
+    "created_by" varchar,
+    "approval_by" varchar,
+    "blocked_by" varchar,
+    "radius_status" bool NOT NULL DEFAULT false,
+    PRIMARY KEY ("id")
+);
 
-CREATE TABLE
-  public.turbines (
-    id character varying(50) NOT NULL,
-    tower_id character varying(50) NOT NULL,
-    gen_bearing_to_coupling double precision NOT NULL,
-    coupling_to_turbine double precision NOT NULL,
-    data json NOT NULL,
-    created_at timestamp without time zone NOT NULL DEFAULT now(),
-    updated_at timestamp without time zone NULL,
-    deleted_at timestamp without time zone NULL,
-    created_by character varying(50) NOT NULL DEFAULT ''::character varying,
-    total_bolts integer NOT NULL DEFAULT 0,
-    current_torque double precision NOT NULL DEFAULT 0,
-    max_torque double precision NOT NULL DEFAULT 0,
-    title character varying(150) NOT NULL DEFAULT ''::character varying
-  );
+-- Column Comments
+COMMENT ON COLUMN "public"."users"."role" IS 'super admin = 1, admin = 2, user = 3';
+COMMENT ON COLUMN "public"."users"."status" IS 'inactive = 0, active = 1, blocked by admin = 2';
 
-ALTER TABLE
-  public.turbines
-ADD
-  CONSTRAINT turbines_pkey PRIMARY KEY (id);
+INSERT INTO "public"."divisions" ("id","name","created_at","updated_at","deleted_at") VALUES 
+('01J06DRG2A5DEQY8CZH7GDE2N2','Engineer','2024-06-12 21:32:06',NULL,NULL),
+('01J1WT6CJ6X460H4XNPR0MCHZF','HR','2024-07-04 00:27:36.774591',NULL,NULL),
+('01J1WT6WN5T6HWJY2SBCHX6PVK','Devops','2024-07-04 00:27:53.25379',NULL,NULL);
 
-insert into "public"."towers" ("created_at", "deleted_at", "id", "name", "unit_number", "updated_at") values ('2024-06-12 21:51:22.970089', NULL, '01J06EX7EJHFXC47Y6AE8SSPTC', 'PLTA Sutami', '0H823A1', '2024-07-19 20:43:58.224267'), ('2024-06-12 22:03:55.305042', NULL, '01J06FM651MRQZC20PKZTQVE31', 'PLTA Sutami', '2', NULL), ('2024-06-16 05:18:32.057792', '2024-06-16 05:19:25.702557', '01J0EZP4QSX439KA7M3QZA54YF', 'PLTA Sutami', '3', NULL), ('2024-07-03 16:17:51.560531', NULL, '01J1VY5M13RVJAY7142H0BWQ9P', 'PLTA Sengguruh', '1', NULL), ('2024-07-03 16:17:51.865632', NULL, '01J1VY5M13RVJAY7142JBC8KCK', 'PLTA Sengguruh', '2', NULL), ('2024-07-03 16:17:52.046493', NULL, '01J1VY5M13RVJAY7142KS4H0HK', 'PLTA Wlingi', '1', NULL), ('2024-07-03 16:17:52.267142', NULL, '01J1VY5M13RVJAY7142PC61T6G', 'PLTA Wlingi', '2', NULL), ('2024-07-03 16:17:52.429293', NULL, '01J1VY5M13RVJAY7142R8DDZR6', 'PLTA Lodoyo', '1', NULL), ('2024-07-03 16:17:52.615735', NULL, '01J1VY5M13RVJAY7142RA1NA36', 'PLTA Tulung Agung', '1', NULL), ('2024-07-03 16:17:52.83501', NULL, '01J1VY5M13RVJAY7142S4MZJHQ', 'PLTA Tulung Agung', '2', NULL), ('2024-07-03 16:17:53.003122', NULL, '01J1VY5M13RVJAY7142SJK4XDK', 'PLTA Wonorejo', '1', NULL), ('2024-07-03 16:17:53.169802', NULL, '01J1VY5M13RVJAY7142T5SVTR1', 'PLTA Siman', '1', NULL), ('2024-07-03 16:17:53.361351', NULL, '01J1VY5M13RVJAY7142XBSFDQD', 'PLTA Siman', '2', NULL), ('2024-07-03 16:17:53.57721', NULL, '01J1VY5M13RVJAY7142Y3NK5QJ', 'PLTA Siman', '3', NULL), ('2024-07-03 16:17:53.751218', NULL, '01J1VY5M13RVJAY7142Z1EDJBW', 'PLTA Selorejo', '1', NULL), ('2024-07-03 16:17:53.922042', NULL, '01J1VY5M13RVJAY714301BY7EW', 'PLTA Mendalan', '1', NULL), ('2024-07-03 16:17:54.07845', NULL, '01J1VY5M13RVJAY71433T8NPMC', 'PLTA Mendalan', '2', NULL), ('2024-07-03 16:17:54.265985', NULL, '01J1VY5M13RVJAY71434720HST', 'PLTA Mendalan', '3', NULL), ('2024-07-03 16:17:54.490414', NULL, '01J1VY5M13RVJAY7143664QVSW', 'PLTA Mendalan', '4', NULL), ('2024-07-03 16:17:54.763913', NULL, '01J1VY5M13RVJAY71438KZ4N1Y', 'PLTA Golang', '1', NULL), ('2024-07-03 16:17:54.980758', NULL, '01J1VY5M13RVJAY714392N06RR', 'PLTA Golang', '2', NULL), ('2024-07-03 16:17:55.111366', NULL, '01J1VY5M13RVJAY71439QSFNHT', 'PLTA Golang', '3', NULL), ('2024-07-03 16:17:55.459045', NULL, '01J1VY5M13RVJAY7143C5EHQ0S', 'PLTA Giringan', '1', NULL), ('2024-07-03 16:17:56.062568', NULL, '01J1VY5M13RVJAY7143CMMMH3S', 'PLTA Giringan', '2', NULL), ('2024-07-03 16:17:56.397792', NULL, '01J1VY5M13RVJAY7143G5J49SC', 'PLTA Giringan', '3', NULL), ('2024-07-03 16:17:56.661394', NULL, '01J1VY5M13RVJAY7143KB3NS46', 'PLTA Ngebel', '1', NULL), ('2024-07-03 16:17:56.879869', NULL, '01J1VY5M13RVJAY7143Q9RZW2W', 'PLTA Cirata', '1', NULL), ('2024-07-03 16:17:57.233865', NULL, '01J1VY5M13RVJAY7143RPCMPMC', 'PLTA Cirata', '2', NULL), ('2024-07-03 16:17:57.360942', NULL, '01J1VY5M13RVJAY7143S5ZMG8C', 'PLTA Cirata', '3', NULL), ('2024-07-03 16:17:57.638864', NULL, '01J1VY5M13RVJAY7143SP8EVCP', 'PLTA Cirata', '4', NULL), ('2024-07-03 16:17:57.842257', NULL, '01J1VY5M13RVJAY7143T95F140', 'PLTA Cirata', '5', NULL), ('2024-07-03 16:17:57.998811', NULL, '01J1VY5M13RVJAY7143WAMC2RS', 'PLTA Cirata', '6', NULL), ('2024-07-03 16:17:58.241484', NULL, '01J1VY5M13RVJAY7143XPQ8CDY', 'PLTA Cirata', '7', NULL), ('2024-07-03 16:17:58.433067', NULL, '01J1VY5M13RVJAY7143XZ37RG3', 'PLTA Cirata', '8', NULL);
-insert into "public"."divisions" ("created_at", "deleted_at", "id", "name", "updated_at") values ('2024-06-12 21:32:06', NULL, '01J06DRG2A5DEQY8CZH7GDE2N2', 'Engineer', NULL), ('2024-07-04 00:27:36.774591', NULL, '01J1WT6CJ6X460H4XNPR0MCHZF', 'HR', NULL), ('2024-07-04 00:27:53.25379', NULL, '01J1WT6WN5T6HWJY2SBCHX6PVK', 'Devops', NULL);
-insert into "public"."users" ("created_at", "deleted_at", "division_id", "email", "id", "name", "password_hash", "password_salt", "role", "status", "updated_at", "username") values ('2024-06-12 14:35:01.929863', NULL, '01J06DRG2A5DEQY8CZH7GDE2N2', 'aditya@gmail.com', '01J06DSG8ZTVZTBW5NZ87XRVMX', 'aditya fullname', '8f82307499f0b213ea10761fb005965581a1dfe0ca6970fbf7e5994800b5f02a5a3a18ff611fd061eda1c4863674bb3403f9e9faf10196b2993de3bd1f5ebb9a66489290de763274c5600c79cb074240c75156f5de743b84', '688a376bf02e3828a67ce51d82e093c4e5c9e6aa20db18e68ece141d382a1c29e307fb4dd99c71e7681f5941ed61cc1e65c9aa5ad5b31557ffa19f447113b54a4ab1fca59d9209dafb0ba1a6aa1a6471249eb35baea36d86688effd1b359b67e93527413', 1, 1, '2024-07-30 16:41:51.670738', 'aditya');
-insert into "public"."configs" ("data", "status", "type") values ('{"Long":-8.160927807736735,"Lat":112.44418490930914,"CoverageArea":5,"CoverageAreaType":"kilometer"}', false, 1);
+INSERT INTO "public"."plta" ("id","name","created_at","updated_at","deleted_at","status","long","lat","created_by","updated_by","deleted_by","radius_status","radius","radius_type") VALUES 
+('01J4BNVANWTPB4ZNWC07SBPN13','PLTA Radius','2024-08-03 15:31:40.228225',NULL,NULL,'TRUE',12,32,'01J06DSG8ZTVZTBW5NZ87XRVMX','','','TRUE',10,'kilometer'),
+('01J4BNXXNDPZY0DYBPRP36EZM0','PLTA Karangkates','2024-08-03 15:33:05.20569','2024-08-03 15:33:32.140874',NULL,'TRUE',12,32,'01J06DSG8ZTVZTBW5NZ87XRVMX','01J06DSG8ZTVZTBW5NZ87XRVMX','','TRUE',7,'meter'),
+('01J4BDR3BGH004EZKN2MJYCERZ','PLTA Kebumen 1','2024-08-03 13:10:05.816614',NULL,NULL,'TRUE',-6.182517934956402,106.88014922209092,'01J06DSG8ZTVZTBW5NZ87XRVMX','','','TRUE',5,'kilometer'),
+('01J4BYSMPWXQXE9B8J10DJWYY8','rest plta','2024-08-03 18:08:02.140716',NULL,NULL,'TRUE',32,13,'01J06DSG8ZTVZTBW5NZ87XRVMX','','','FALSE',NULL,NULL);
+
+INSERT INTO "public"."plta_units" ("id","plta_id","status","created_at","updated_at","deleted_at","name","created_by","updated_by","deleted_by") VALUES 
+('01J4BDR3BGH004EZKN2SA01RW9','01J4BDR3BGH004EZKN2MJYCERZ','TRUE','2024-08-03 13:10:05.834807','2024-08-03 13:14:13.516049',NULL,'2-update','01J06DSG8ZTVZTBW5NZ87XRVMX','01J06DSG8ZTVZTBW5NZ87XRVMX',''),
+('01J4BDR3BGH004EZKN2QR9QER9','01J4BDR3BGH004EZKN2MJYCERZ','TRUE','2024-08-03 13:10:05.834807',NULL,NULL,'1','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BDR3BGH004EZKN2T35P42X','01J4BDR3BGH004EZKN2MJYCERZ','TRUE','2024-08-03 13:10:05.834807',NULL,NULL,'3','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BDZN79EHRMA38VZSHSPA84','01J4BDR3BGH004EZKN2MJYCERZ','TRUE','2024-08-03 13:14:13.48199',NULL,'2024-08-03 13:15:18.129383','unit lain','01J06DSG8ZTVZTBW5NZ87XRVMX','','01J06DSG8ZTVZTBW5NZ87XRVMX'),
+('01J4BNVANWTPB4ZNWC0909XJ2B','01J4BNVANWTPB4ZNWC07SBPN13','TRUE','2024-08-03 15:31:40.250634',NULL,NULL,'1','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BNVANWTPB4ZNWC0C5BS6GA','01J4BNVANWTPB4ZNWC07SBPN13','TRUE','2024-08-03 15:31:40.250634',NULL,NULL,'2','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BNVANWTPB4ZNWC0FQAAMMQ','01J4BNVANWTPB4ZNWC07SBPN13','TRUE','2024-08-03 15:31:40.250634',NULL,NULL,'3','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BNXXNDPZY0DYBPRT0W0AWK','01J4BNXXNDPZY0DYBPRP36EZM0','TRUE','2024-08-03 15:33:05.223811',NULL,NULL,'1','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BNXXNDPZY0DYBPRX0YS371','01J4BNXXNDPZY0DYBPRP36EZM0','TRUE','2024-08-03 15:33:05.223811',NULL,NULL,'2','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BNXXNDPZY0DYBPRYJHXY2F','01J4BNXXNDPZY0DYBPRP36EZM0','TRUE','2024-08-03 15:33:05.223811',NULL,NULL,'3','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BYSMPWXQXE9B8J11TQKY2D','01J4BYSMPWXQXE9B8J10DJWYY8','FALSE','2024-08-03 18:08:02.142863',NULL,NULL,'1','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BYSMPWXQXE9B8J13P57W5Y','01J4BYSMPWXQXE9B8J10DJWYY8','FALSE','2024-08-03 18:08:02.142863',NULL,NULL,'2','01J06DSG8ZTVZTBW5NZ87XRVMX','',''),
+('01J4BYSMPWXQXE9B8J15AQKED2','01J4BYSMPWXQXE9B8J10DJWYY8','FALSE','2024-08-03 18:08:02.142863',NULL,NULL,'3','01J06DSG8ZTVZTBW5NZ87XRVMX','','');
+
+INSERT INTO "public"."turbines" ("id","plta_unit_id","gen_bearing_to_coupling","coupling_to_turbine","data","total_bolts","current_torque","max_torque","title","created_at","created_by","deleted_at","deleted_by") VALUES 
+('01J4BSXPKJ1PDQ62BH6P7EDR61','01J4BDR3BGH004EZKN2QR9QER9',440,424,'{"Clutch":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Turbine":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Upper":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}}}',8,400,500,'asdasdasd','2024-08-03 16:42:52.286316','01J06DSG8ZTVZTBW5NZ87XRVMX',NULL,''),
+('01J4BT5ZQ92T4KZA2AWGRR03GD','01J4BDR3BGH004EZKN2QR9QER9',440,424,'{"Clutch":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Turbine":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Upper":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}}}',8,400,500,'asdasdasd','2024-08-03 16:47:24.98715','01J06DSG8ZTVZTBW5NZ87XRVMX',NULL,''),
+('01J4BT7F90JQFFB9P6WXGKGKD7','01J4BDR3BGH004EZKN2QR9QER9',440,424,'{"Clutch":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Turbine":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Upper":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}}}',8,400,500,'asdasdasd','2024-08-03 16:48:13.097805','01J06DSG8ZTVZTBW5NZ87XRVMX',NULL,''),
+('01J4BT9363ACW23SANVTXQC758','01J4BDR3BGH004EZKN2QR9QER9',440,424,'{"Clutch":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Turbine":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Upper":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}}}',8,400,500,'asdasdasd','2024-08-03 16:49:06.576851','01J06DSG8ZTVZTBW5NZ87XRVMX',NULL,''),
+('01J4C0A59YH2A6BSXEZRCJY8BF','01J4BDR3BGH004EZKN2QR9QER9',440,424,'{"Clutch":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Turbine":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Upper":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}}}',8,400,500,'asdasdasd','2024-08-03 18:34:32.00881','01J06DSG8ZTVZTBW5NZ87XRVMX',NULL,''),
+('01J4C0B1D74XHGW6SSH6QQNVK4','01J4BDR3BGH004EZKN2QR9QER9',440,424,'{"Clutch":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Turbine":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}},"Upper":{"A":{"1":50,"2":50,"3":50,"4":50},"B":{"1":50,"2":50,"3":50,"4":50},"C":{"1":50,"2":50,"3":50,"4":50},"D":{"1":50,"2":50,"3":50,"4":50}}}',8,400,500,'asdasdasd','2024-08-03 18:35:00.828198','01J06DSG8ZTVZTBW5NZ87XRVMX',NULL,'');
+
+INSERT INTO "public"."users" ("id","name","username","email","division_id","role","status","password_hash","password_salt","created_at","updated_at","deleted_at","created_by","approval_by","blocked_by","radius_status") VALUES 
+('01J4203HYB7A99KQK75Q6GSY6G','cobacoba','cobacoba','cobacoba@gmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'3f284e09d34a5682e9f978eeadc801b7644c3b2076ef37b33d7a6c854a1469e33c7aee1aec97c2632f02109438dbf4a5b5410a82058fdc1161b28bb350e1efd0096650f7479d6382725f56b27ccf47097b6ffa4af93a34b3','fc3ddea92fb092bbf4b2d7092f4cd0fc5f91c2d56035b127bb75555a8ec03d56001366e9142600dc','2024-07-30 21:18:31.256835','2024-07-30 21:21:19.737257',NULL,NULL,NULL,NULL,'FALSE'),
+('01J2TM90XKSMFMCT6KAEG7KSPM','ayasi','ayasi','ayasi@yopmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',2,1,'','','2024-07-15 14:21:24.660305',NULL,'2024-07-15 14:21:34.92405',NULL,NULL,NULL,'FALSE'),
+('01J2TM7PF9K3J1MRRXYRYZYS8X','ayas','ayase','ayas@yopmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',2,1,'','','2024-07-15 14:20:41.193548',NULL,'2024-07-15 14:23:06.400978',NULL,NULL,NULL,'FALSE'),
+('01J2TB2VNEQ41B42XAJZD1B950','saya','sayauser','saya@yopmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',2,1,'','','2024-07-15 11:40:45.486966','2024-07-15 14:19:20.141029','2024-07-15 14:25:32.762671',NULL,NULL,NULL,'FALSE'),
+('01J2TMPY70PZM3RW4ZQSW2PCVS','Salam','salam','salam@yopmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',2,1,'','','2024-07-15 14:29:00.640363',NULL,'2024-07-15 14:29:10.992792',NULL,NULL,NULL,'FALSE'),
+('01J0FVY6MT7RX7T4Y4K1TSCD13','adityairfan','adityairfan','adityairfan@gmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'8f82307499f0b213ea10761fb005965581a1dfe0ca6970fbf7e5994800b5f02a5a3a18ff611fd061eda1c4863674bb3403f9e9faf10196b2993de3bd1f5ebb9a66489290de763274c5600c79cb074240c75156f5de743b84','688a376bf02e3828a67ce51d82e093c4e5c9e6aa20db18e68ece141d382a1c29e307fb4dd99c71e7681f5941ed61cc1e65c9aa5ad5b31557ffa19f447113b54a4ab1fca59d9209dafb0ba1a6aa1a6471249eb35baea36d86688effd1b359b67e93527413','2024-06-16 13:32:16.295236',NULL,NULL,NULL,NULL,NULL,'FALSE'),
+('01J1WS49F046AT1MSV124HG9Y8','name','username','email@gmail.com','01J1WT6WN5T6HWJY2SBCHX6PVK',3,1,'324f817b2a4fc4c8f5b3112a8243ce6c0d318f7e64da9dad33e3a6536cf83e82917e3061900b4b5f11e88d6245b861e493982d95c8e40b86f4b5cc1dfca296524b9c21d02064d0d41a66c214a26c95425010d607bdbc8e49','dcf674b5eb4d3da693755920f90686273cacb6e8f0b85051787dc1cc86565535401a720128233b8befa5953a46640319','2024-07-04 00:08:59.507825','2024-07-04 01:11:16.214469','2024-07-15 14:11:03.307325',NULL,NULL,NULL,'FALSE'),
+('01J2TBJWQ34CRE90YC85CJQ17Q','sayayaya','sayauserjugalo','sayajugalo@yopmail.com','01J1WT6WN5T6HWJY2SBCHX6PVK',2,1,'','','2024-07-15 11:49:30.851521','2024-07-15 14:05:37.822192','2024-07-15 14:12:44.712995',NULL,NULL,NULL,'FALSE'),
+('01J2TBGE35FE8D8J6SRWQFGNA4','sayaya','sayauserjuga','sayajuga@yopmail.com','01J1WT6CJ6X460H4XNPR0MCHZF',2,1,'','','2024-07-15 11:48:10.341612',NULL,'2024-07-15 14:14:33.186571',NULL,NULL,NULL,'FALSE'),
+('01J3ZF3KD05CX977QHYACJD2G9','Alifano','alifano','test123','01J06DRG2A5DEQY8CZH7GDE2N2',2,1,'','','2024-07-29 21:42:58.081477',NULL,'2024-07-29 21:43:06.289015',NULL,NULL,NULL,'FALSE'),
+('01J1WQEDH0SZYZWAC1Z9QDTXCK','UP Brantas','upbrantas','upbrantas@gmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',2,1,'1a34625a3243c4ea1ee133d25d8560c15676f736af9c4bd3ad096bf499b7064e594ea58d244add1e9ad75f023a767fe46472fd28e9efb7efc8ab9b822cde582eade46f90ec4826e1c711fb8fd8f075548c906bfdb1ffbf87','8e1618c9642784ced4d8410f4dd2f77c75a0eebf435ea7400ea054ab8d7d364052737d850ffe4bbb6bfbd86a','2024-07-03 23:39:34.196364','2024-07-30 20:18:07.79171',NULL,NULL,NULL,NULL,'FALSE'),
+('01J3DGKEEK3EMVMBHK0SXTCSN2','Didik Supriyanto','DK','dikskoenma@gmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'1ad22154e7b5b9823fea372d44c6357e88eac42b06bb844a1633bf9a64db2bbbbb0d2951b253217d7d68722d826376b8919062483712cba98bfa2ca8245d534c27bbfe99d7a64dd588408dea985df2ae59b1e0d35728af4a','ee91c84f55b0656889c7ccc5264653f0c9d878eefaf6fb34e28891bf930fa05241da5c2aba12105b','2024-07-22 22:22:46.113425','2024-07-29 23:38:31.596351',NULL,NULL,NULL,NULL,'FALSE'),
+('01J3DGX60AN4W4Y96F2Y4CX9D7','Didik Supriyanto','Didik','diksu@plnnusantarapower.co.id','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'931da4f859ab2897cf60200caaf4055b04322e57186fcbf884611612b6b145201652b51d516da59563c5ed37cccb4c6ade520f8c73badca8a193a5097c23821c31524c63766d51a5fb574a722a03aea4d6b6b5d59c97861a','90968057c9e898ba63623ab9abbea059675f166cdd385128e93189bd4018db8f66684411c541afc4ab1d65bb189be1ca','2024-07-22 22:28:05.143861','2024-07-29 23:39:23.633468',NULL,NULL,NULL,NULL,'FALSE'),
+('01J3ZT4M876C1RW066N4GTH1S4','Alifano','Alifano','alifanoreinanda003@gmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'d3a24e66b5f8bfee982f847f16ff702cb8354cc813fbf20228eef8e62e92a0f45d74f2f5a496e70462f4605ed3e097f32dee78b2a8cfa3ac53bc2439aaec7a65e84ada3cf24dc033dbac4d6bddf0a8e2d03217613533de91','28b5298e6bdd7e1f696dd1f59f171349b1f16dad1d88822d7d4f482af67917ff94a32811210359458f682884','2024-07-30 00:55:46.069508','2024-07-30 00:56:58.969376',NULL,NULL,NULL,NULL,'FALSE'),
+('01J3ZT5H80678MECEAE4VNVXQ7','Alifano','Alifano1234','fanorei003@mail.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'0869f85e4b7e3c1cdfb21f1e689087bd271d4a1d21fb2ea6e74e96facd78ebe8ff79e27bac83cd2f72cc84b1977700f514bae4b0880df55fc0fec1833d7333a5e7015153c86ca0486ecbe5f12381b6e16e4944b8ba391695','6c6f30ba2eb8aa8ff5dd3e4aadddf3780e855a9b490ab4bb34ca9563ab27faee10187756973419c9deda3dcfa3a52ed8','2024-07-30 00:56:15.758116','2024-07-30 12:23:20.443152','2024-07-30 21:03:52.38624',NULL,NULL,NULL,'FALSE'),
+('01J2T4ETK49EPJZV8Z1JK9KYYC','john','john','john@mailinator.com','01J06DRG2A5DEQY8CZH7GDE2N2',2,1,'0f693a5ae90f8cc9f206b42c81f472014d5b9ca47dd05da4abfd3bb8dd60d84b94f47acfe09423b0ed5e68f29d1e83f41b47162abee31b1fe6ab2c3c4ef096ce1ed0afe3b60d6c603d360179013f80a20a78f711ede92780','62fa74e801e2928dc644965a4bd43b3e6052f46e050f17996e5a4bd360e235a7de07049fdacead2d','2024-07-15 09:44:57.586504','2024-07-30 02:33:23.04008',NULL,NULL,NULL,NULL,'FALSE'),
+('01J421XM36Y2VZ8MEG5QD7CZ43','alifano','nono','alifano12','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'363374316d1cb415c3363e3573b81088c770543039a9fecfefcd56c80c665b9d8f55c2385267bd5c0529f46c2dd4bc475d2e61f3c8dc4bf33f27847402fb59d20f979bc467bc4fee95386cd557de957b66f80c3f44257455','2a0a0c8b7d735fd69a6653a8ba70a8f7330f7d669237c7fd7481ac9fa30286b6f92e9bc1fbd85b2e7a87f3b5ff831ea6','2024-07-30 21:50:14.003681','2024-07-30 21:59:39.874945',NULL,NULL,NULL,NULL,'FALSE'),
+('01J06DSG8ZTVZTBW5NZ87XRVMX','aditya fullname','aditya','aditya@gmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',1,1,'8f82307499f0b213ea10761fb005965581a1dfe0ca6970fbf7e5994800b5f02a5a3a18ff611fd061eda1c4863674bb3403f9e9faf10196b2993de3bd1f5ebb9a66489290de763274c5600c79cb074240c75156f5de743b84','688a376bf02e3828a67ce51d82e093c4e5c9e6aa20db18e68ece141d382a1c29e307fb4dd99c71e7681f5941ed61cc1e65c9aa5ad5b31557ffa19f447113b54a4ab1fca59d9209dafb0ba1a6aa1a6471249eb35baea36d86688effd1b359b67e93527413','2024-06-12 14:35:01.929863','2024-07-30 16:41:51.670738',NULL,NULL,NULL,NULL,'FALSE'),
+('01J43BFV3Z21P8JNZME45647KF','nama1','user1','nama1@mailinator.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'e732977d5909203a39a8a7cad31e9ee6034c38d913e480e0c61abf70aded10c4bf4cc1f32f52a267fad43b318d3987b887d1280341443607c70a34efcbbb6a3c5dd77769dce41c5a3d67cbdb3481d29fbf0526e6d0ace2c8','43b13089c72def95367d5d4b50b7eed871ac6b2979f7125703962edb6c779cb5439459665940a6bc16b52dfd6b92a841','2024-07-31 09:56:42.637898','2024-08-01 07:54:18.980343',NULL,NULL,NULL,NULL,'FALSE'),
+('01J421VGX1ESN7VH5R2NK78DP8','alifano','Alifano123','alifano123','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'14573c0e6b893a00da7fb96fee0b0bb153971c1c606cedebb417188d8e286acf74c7a4886cf9e13d959f9ca39604ea91a261295f7b62cd163f8e4c888461a89fbef2a92eb27539d1b8dcea87726d9b581a443e7bdbdaa565','57cf6bbb2fb1517ef7e55e06d20d5495bf74d0d632d2125b2b5a2caf2b99421c4452bd2c1f705c26ba8d6f9a55d4ae8d','2024-07-30 21:49:05.199276','2024-07-30 22:17:04.2642',NULL,NULL,NULL,NULL,'FALSE'),
+('01J43BAJM791XPF930TGYYN9HD','nama','user','nama@mailinator.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'0c85e88046174af92eb88f20762af0064b0b839f85995c5f31cd25ceab313ced1cac329fd53600f3c25031a2706dd042072af61ee64452704b65fe389efb4a7d43ec5f60cee7d1749ca477c758c936bc55cd14f0b55a0d52','4e07b723a7709aedb1933163e0b6e8ffdb89a35e0a8a1375bf8783fac4a5ac704621855fc1c60dcfd48cb495','2024-07-31 09:53:50.100746','2024-08-01 10:46:10.611695',NULL,NULL,NULL,NULL,'FALSE'),
+('01J43BVM7T54K3FNZ8Z9623EH8','nama5','nama5','nama5@mailinator.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'f2415643b1d905fe0fcdce4175b9c5693042dddffe291fb56865202e0f4e1632b6d3da397d36b7c5793ca7e65ddc9eafa129e0da0e9ed53d3a5d35c415b13073535cd057473d67b6dfe3850d0897dcc6ca74a9b4a3d04236','22295cf548c424268633d492afdfc3ac8d65b0c6a9cd8bef6838e63f2d518314f9a6a2a60074df0a691d78b13baf178d','2024-07-31 10:03:08.808022','2024-08-01 11:19:48.171537','2024-08-01 21:17:13.890988',NULL,NULL,NULL,'FALSE'),
+('01J43BRKEDAZSKN6GSE44RRS8E','nama4','nama4','nama4@mailinator.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'bb6856f1c8b9017b91f132d119f81a1351823eec81be068fea0ff06dc271073b06adec9a937469e352d9a2bafc4dea452cee4962589fc692a842d2128cc86ba2f10a4927be5b218e24ecbe431a3ddd8ead42b79b8fd0a709','8769dca52a7901e234c8d40de1b48827251c513310642463fe5b6b8c37813a0536c60d29635ac5dc3b02adf7a82a61f6','2024-07-31 10:01:29.691709','2024-08-01 11:28:01.312772','2024-08-01 21:17:29.781302',NULL,NULL,NULL,'FALSE'),
+('01J43C21T51C8ZEY1AC0CX8EET','nama7','nama7','nama7@yopmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'1b6c35d67da205450fbec44abb5e496736f9320ca6b78fb56dda948a51d0c874fb9eefcb58d137b7635e68541ef8d08b2338061927ded1b6f1bb83022ec2e2b4511810c85372541b72c1571188d587b28c0aabdf762ec8ee','076b23008a9da965e5da0635a782c4714b29dff435047e7886ad8422c810e1070cd1e158b34afc10','2024-07-31 10:06:39.314569','2024-08-03 20:01:53.415534',NULL,NULL,NULL,NULL,'TRUE'),
+('01J43BPVC6YAXKMAS2DNE1WSZB','nama3','nama3','nama3@mailinator.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'b826421d6a8a0471635647fe1f0a288345a0129446a6b0ba9dbef73bd386ca4a2c04e031fd5b44caacabfd7d6bed77b305ec4d6fbf3f7685ebf021d8ab87f62e0d9f5a3fd6eb4678b13f2d4e09871c98e54c66e82e3fe0f7','ffeb8787f0aa9436edab26cfab2d30b9820d007d4c5702cdce0b0f30aa88917620fc544272e1f8b207c80c9b','2024-07-31 10:00:32.276445','2024-08-01 07:18:46.679932',NULL,NULL,NULL,NULL,'FALSE'),
+('01J43BJWRD1CJWXNQ6ZQA9837S','nama2','user2','nama2@mailinator.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'6d866bb0978c2c0e1749949941d8a4daf896a43078511907ba747890794062558737ab7c8b0f57a93cdcb75c249570878011c0dee52ae532673de154169aa1287b63e50cc2833337fff7b7a5022f6e2cce4be65114b68994','376eca658cbc4eb18e1479abc45904ce4bd3da2baa580a2391fb3bf0b733be833f07b468d1d0e1ee3668e5ebcac87a93','2024-07-31 09:58:22.619161','2024-08-01 07:52:58.992375',NULL,NULL,NULL,NULL,'FALSE'),
+('01J422MFZ0SP7R8BP5WWMCD4AK','fano','fanofano','fano123','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'1f9a08b46035e13abacd87c19923d89635d982531296845bf31906e0df375f973dbb16649cc3de24e69e69a6592514992a2b582201eb89fbafc961cdf2f66f4b10de134f7af47b07573c5b8490ea9fd3d98a2b04ad74e9fe','52f2c88aaf5751e75aa1895166aaa1dd301e58876492a2e82f4417ca0e850e5c9aea1cacf783aea476c1e96f','2024-07-30 22:02:43.440165','2024-08-01 10:29:46.367794',NULL,NULL,NULL,NULL,'FALSE'),
+('01J4C7DR7ZK28TG23YSGX34RXH','superadmin','superadmin','superadmin@gmail.com','01J06DRG2A5DEQY8CZH7GDE2N2',1,1,'8f82307499f0b213ea10761fb005965581a1dfe0ca6970fbf7e5994800b5f02a5a3a18ff611fd061eda1c4863674bb3403f9e9faf10196b2993de3bd1f5ebb9a66489290de763274c5600c79cb074240c75156f5de743b84','688a376bf02e3828a67ce51d82e093c4e5c9e6aa20db18e68ece141d382a1c29e307fb4dd99c71e7681f5941ed61cc1e65c9aa5ad5b31557ffa19f447113b54a4ab1fca59d9209dafb0ba1a6aa1a6471249eb35baea36d86688effd1b359b67e93527413','2024-06-12 14:35:01.929863','2024-07-30 16:41:51.670738',NULL,NULL,NULL,NULL,'TRUE'),
+('01J43BYH03AVFG1382CN1Q4XNC','nama6','nama6','nama6@mailinator.com','01J06DRG2A5DEQY8CZH7GDE2N2',3,1,'edbb212f664ee1f5294eb7f11816e99a1b9be13d44e265f3edce9e4d07481f1d30e0b1d6cab5fe15892333ff49c0f0b127dfcf07f7d1c99eb9890b02e9b7ea9fa02751d813d956c9911aff175353017c94dcbb81b34825d3','fa86bb81d97a2a531087f30dd17fa62bc867307a31fbe4a9a2e01667b484c608255c02503a0b5084315adbd9f2e1fc79','2024-07-31 10:04:43.792389','2024-08-01 11:19:44.399887',NULL,NULL,NULL,NULL,'FALSE');
+

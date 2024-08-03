@@ -11,50 +11,87 @@ import (
 )
 
 type turbineService struct {
-	turbineRepo contract.ITurbineRepository
-	towerRepo   contract.ITowerRepository
+	turbineRepo  contract.ITurbineRepository
+	pltaUnitRepo contract.IPltaUnitRepository
+	userRepo     contract.IUserRepository
 }
 
 func NewTurbineService(
 	turbineRepo contract.ITurbineRepository,
-	towerRepo contract.ITowerRepository) contract.ITurbineService {
+	pltaUnitRepo contract.IPltaUnitRepository,
+	userRepo contract.IUserRepository) contract.ITurbineService {
 	return &turbineService{
-		turbineRepo: turbineRepo,
-		towerRepo:   towerRepo,
+		turbineRepo:  turbineRepo,
+		pltaUnitRepo: pltaUnitRepo,
+		userRepo:     userRepo,
 	}
 }
 
 func (t *turbineService) Create(c echo.Context, in *models.TurbineWriteRequest) error {
-	turbine := in.ToModelCreate()
-	tower, err := t.towerRepo.GetByIdWithSelectedFields(turbine.TowerId, "id, name, unit_number")
+	user, err := t.userRepo.GetByIdWithSelectedFields(in.WrittenBy, "id, name, radius_status")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
-	} else if tower.IsEmpty() {
-		return helpers.Response(c, http.StatusBadRequest, "tower tidak ditemukan")
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
 	}
 
-	turbine.Tower = tower
+	if user.IsRadiusStatusActive() {
+		pltaUnit, err := t.pltaUnitRepo.GetByIdWithPreloads(in.TowerId, "Plta")
+		if err != nil {
+			return helpers.ResponseUnprocessableEntity(c)
+		} else if pltaUnit.IsEmpty() {
+			return helpers.Response(c, http.StatusBadRequest, "plta unit tidak ditemukan")
+		} else if !pltaUnit.IsActive() {
+			return helpers.Response(c, http.StatusForbidden, "plta unit tidak aktif, tidak dapat memasukkan data")
+		} else if !pltaUnit.Plta.IsActive() {
+			return helpers.Response(c, http.StatusForbidden, "plta tidak aktif, tidak dapat memasukkan data")
+		} else if pltaUnit.Plta.IsRadiusStatusActive() {
+			withinArea, err := helpers.IsIPWithinRadius(
+				c.Get("IP").(string),
+				pltaUnit.Plta.Lat,
+				pltaUnit.Plta.Long,
+				pltaUnit.Plta.GetRadiusInKilometer())
+			if err != nil {
+				return helpers.ResponseUnprocessableEntity(c)
+			} else if !withinArea {
+				return helpers.Response(c, http.StatusForbidden, "diluar jangkauan")
+			}
+		}
+	}
 
+	turbine := in.ToModelCreate()
 	if err := t.turbineRepo.Create(turbine); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
+
+	turbine.CreatedBy = user.Name
 
 	return helpers.Response(c, http.StatusOK, "berhasil menambahkan data turbine baru", turbine.ToResponse())
 }
 
 func (t *turbineService) GetDetail(c echo.Context, id string) error {
-	turbine, err := t.turbineRepo.GetByIdWithSelectedFields(id, "*", "Tower")
+	turbine, err := t.turbineRepo.GetByIdWithSelectedFields(id, "*", "PltaUnit.Plta")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if turbine.IsEmpty() {
 		return helpers.Response(c, http.StatusNotFound, "data turbine tidak ditemukan")
 	}
 
+	// created by
+	user, err := t.userRepo.GetByIdWithSelectedFields(turbine.CreatedBy, "name")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
+	}
+
+	turbine.CreatedBy = user.Name
+
 	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan data turbine", turbine.ToResponse())
 }
 
 func (t *turbineService) GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error {
-	turbines, pagination, err := t.turbineRepo.GetAllWithPaginate(cursor, "")
+	turbines, pagination, err := t.turbineRepo.GetAllWithPaginate(cursor, "*")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
@@ -76,5 +113,31 @@ func (t *turbineService) GetLatest(c echo.Context) error {
 		return helpers.Response(c, http.StatusNotFound, "data tidak ditemukan")
 	}
 
+	// created by
+	user, err := t.userRepo.GetByIdWithSelectedFields(turbine.CreatedBy, "name")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
+	}
+
+	turbine.CreatedBy = user.Name
+
 	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan data turbine terakhir", turbine.ToResponse())
+}
+
+func (t *turbineService) Delete(c echo.Context, in *models.TurbineWriteRequest) error {
+	turbine, err := t.turbineRepo.GetByIdWithSelectedFields(in.Id, "*", "Tower")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if turbine.IsEmpty() {
+		return helpers.Response(c, http.StatusNotFound, "data turbine tidak ditemukan")
+	}
+
+	turbine.DeletedBy = in.WrittenBy
+	if err := t.turbineRepo.Delete(turbine); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil menghapus data turbine", nil)
 }

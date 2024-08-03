@@ -47,7 +47,10 @@ func (t *turbineHandler) Create(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}
 
-	payload.CreatedBy = c.Get("claims").(jwt.MapClaims)["Id"].(string)
+	// c.Set("IP", helpers.GetClientIP(c.Request()))
+	c.Set("IP", c.RealIP())
+	payload.Id = c.Param("id")
+	payload.WrittenBy = c.Get("claims").(jwt.MapClaims)["Id"].(string)
 	return t.turbineService.Create(c, payload)
 }
 
@@ -56,7 +59,7 @@ func (t *turbineHandler) GetDetail(c echo.Context) error {
 }
 
 func (t *turbineHandler) GetList(c echo.Context) error {
-	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.TurbineDefaultSortMap, models.TurbineDefaultSortFilter)
+	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.TurbineDefaultSortMap, models.TurbineDefaultFilter)
 	if err != nil {
 		if strings.Contains(err.Error(), "unavailable") {
 			return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua data turbine", []models.Turbine{}, helpers.CursorPagination{})
@@ -69,4 +72,11 @@ func (t *turbineHandler) GetList(c echo.Context) error {
 
 func (t *turbineHandler) GetLatest(c echo.Context) error {
 	return t.turbineService.GetLatest(c)
+}
+
+func (t *turbineHandler) Delete(c echo.Context) error {
+	return t.turbineService.Delete(c, &models.TurbineWriteRequest{
+		Id:        c.Param("id"),
+		WrittenBy: c.Get("claims").(jwt.MapClaims)["Id"].(string),
+	})
 }

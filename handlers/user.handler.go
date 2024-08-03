@@ -22,8 +22,8 @@ func NewUserHandler(userService contract.IUserService) contract.IUserHandler {
 	}
 }
 
-func (u *userHandler) CreateUserAdminByAdmin(c echo.Context) error {
-	payload := new(models.UserAdminCreateByAdminRequest)
+func (u *userHandler) CreateUserByAdmin(c echo.Context) error {
+	payload := new(models.UserCreateByAdminRequest)
 
 	if err := c.Bind(payload); err != nil {
 		return helpers.Response(c, http.StatusBadRequest, "payload tidak valid")
@@ -34,10 +34,10 @@ func (u *userHandler) CreateUserAdminByAdmin(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
-	return u.userService.CreateUserAdminByAdmin(c, payload)
+	return u.userService.CreateUserByAdmin(c, payload)
 }
 
-func (u *userHandler) UpdateByAdmin(c echo.Context) error {
+func (u *userHandler) UpdateUserByAdmin(c echo.Context) error {
 	payload := new(models.UserUpdateByAdminRequest)
 
 	if err := c.Bind(payload); err != nil {
@@ -50,11 +50,47 @@ func (u *userHandler) UpdateByAdmin(c echo.Context) error {
 	}
 
 	payload.Id = c.Param("id")
-
-	return u.userService.UpdateByAdmin(c, payload)
+	return u.userService.UpdateUserByAdmin(c, payload)
 }
 
-func (u *userHandler) Update(c echo.Context) error {
+func (u *userHandler) DeleteUserByAdmin(c echo.Context) error {
+	payload := &models.UserDeleteByAdminRequest{
+		Id:      c.Param("id"),
+		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
+	}
+
+	return u.userService.DeleteUserByAdmin(c, payload)
+}
+
+func (u *userHandler) GetDetailUserByAdmin(c echo.Context) error {
+	payload := &models.UserGetDetailRequest{
+		Id: c.Param("id"),
+	}
+	return u.userService.GetDetailUserByAdmin(c, payload)
+}
+
+func (u *userHandler) GetListUserWithPaginateByAdmin(c echo.Context) error {
+	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.UserDefaultSort, models.UserDefaultFilter)
+	if err != nil {
+		if strings.Contains(err.Error(), "unavailable") {
+			return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", []models.User{}, helpers.CursorPagination{})
+		}
+		return helpers.Response(c, http.StatusBadRequest, err.Error())
+	}
+
+	return u.userService.GetListUserWithPaginateByAdmin(c, cursor)
+}
+
+func (u *userHandler) GenerateUserPasswordByAdmin(c echo.Context) error {
+	payload := &models.GeneratePasswordByAdmin{
+		Id:      c.Param("id"),
+		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
+	}
+
+	return u.userService.GenerateUserPasswordByAdmin(c, payload)
+}
+
+func (u *userHandler) UpdateMyProfile(c echo.Context) error {
 	payload := new(models.UserUpdateRequest)
 
 	if err := c.Bind(payload); err != nil {
@@ -67,43 +103,14 @@ func (u *userHandler) Update(c echo.Context) error {
 	}
 
 	payload.Id = c.Get("claims").(jwt.MapClaims)["Id"].(string)
-
-	return u.userService.Update(c, payload)
-}
-
-func (u *userHandler) GetDetailByAdmin(c echo.Context) error {
-	payload := &models.UserGetDetailRequest{
-		Id: c.Param("id"),
-	}
-	return u.userService.GetDetailByAdmin(c, payload)
+	return u.userService.UpdateMyProfile(c, payload)
 }
 
 func (u *userHandler) GetMyProfile(c echo.Context) error {
 	return u.userService.GetMyProfile(c, c.Get("claims").(jwt.MapClaims)["Id"].(string))
 }
 
-func (u *userHandler) DeleteByAdmin(c echo.Context) error {
-	payload := &models.UserDeleteByAdminRequest{
-		Id:      c.Param("id"),
-		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
-	}
-
-	return u.userService.DeleteByAdmin(c, payload)
-}
-
-func (u *userHandler) GetListWithPaginateByAdmin(c echo.Context) error {
-	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.UserDefaultSort, models.UserDefaultFilter)
-	if err != nil {
-		if strings.Contains(err.Error(), "unavailable") {
-			return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", []models.User{}, helpers.CursorPagination{})
-		}
-		return helpers.Response(c, http.StatusBadRequest, err.Error())
-	}
-
-	return u.userService.GetListWithPaginateByAdmin(c, cursor)
-}
-
-func (u *userHandler) ChangePassword(c echo.Context) error {
+func (u *userHandler) ChangeMyPassword(c echo.Context) error {
 	payload := new(models.UserChangePasswordRequest)
 
 	if err := c.Bind(payload); err != nil {
@@ -121,14 +128,5 @@ func (u *userHandler) ChangePassword(c echo.Context) error {
 
 	payload.Id = c.Get("claims").(jwt.MapClaims)["Id"].(string)
 
-	return u.userService.ChangePassword(c, payload)
-}
-
-func (u *userHandler) GeneratePasswordByAdmin(c echo.Context) error {
-	payload := &models.GeneratePasswordByAdmin{
-		Id:      c.Param("id"),
-		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
-	}
-
-	return u.userService.GeneratePasswordByAdmin(c, payload)
+	return u.userService.ChangeMyPassword(c, payload)
 }

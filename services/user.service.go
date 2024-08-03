@@ -24,7 +24,7 @@ func NewUserService(userRepo contract.IUserRepository, divisionRepo contract.IDi
 	}
 }
 
-func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdminCreateByAdminRequest) error {
+func (u *userService) CreateUserByAdmin(c echo.Context, in *models.UserCreateByAdminRequest) error {
 	// check existing username
 	if exist, err := u.userRepo.IsUsernameExist(in.Username); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -55,12 +55,16 @@ func (u *userService) CreateUserAdminByAdmin(c echo.Context, in *models.UserAdmi
 	return helpers.Response(c, http.StatusOK, "berhasil membuat user baru", user.ToResponse())
 }
 
-func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdminRequest) error {
+func (u *userService) UpdateUserByAdmin(c echo.Context, in *models.UserUpdateByAdminRequest) error {
 	user, err := u.userRepo.GetById(in.Id, "Division")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
 		return helpers.Response(c, http.StatusBadRequest, "user tidak ditemukan")
+	}
+
+	if !user.IsGeneralUser() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
 	}
 
 	var anyUpdated bool
@@ -81,6 +85,11 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 
 		anyUpdated = true
 		user.Status = *in.Status
+	}
+
+	if in.RadiusStatus != nil && user.RadiusStatus != *in.RadiusStatus {
+		user.RadiusStatus = *in.RadiusStatus
+		anyUpdated = true
 	}
 
 	if in.DivisionId != nil && user.DivisionId != *in.DivisionId {
@@ -105,7 +114,85 @@ func (u *userService) UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdmin
 	return helpers.Response(c, http.StatusOK, "berhasil mengubah user", user.ToResponse())
 }
 
-func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error {
+func (u *userService) GetDetailUserByAdmin(c echo.Context, in *models.UserGetDetailRequest) error {
+	user, err := u.userRepo.GetById(in.Id, "Division")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.Response(c, http.StatusNotFound, "user tidak ditemukan")
+	}
+
+	if !user.IsGeneralUser() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan user", user.ToResponse())
+}
+
+func (u *userService) DeleteUserByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error {
+	user, err := u.userRepo.GetByIdWithSelectedFields(in.Id, "id")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
+	}
+
+	if !user.IsGeneralUser() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+	}
+
+	if err := u.userRepo.Delete(user); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil menghapus user")
+}
+
+func (u *userService) GetListUserWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error {
+	users, pagination, err := u.userRepo.GetAllWithPaginate(cursor, models.UserRole_User)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	var userRes = []*models.UserListResponse{}
+	for _, user := range users {
+		userRes = append(userRes, user.ToResponseList())
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", userRes, pagination)
+}
+
+func (u *userService) GenerateUserPasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
+	user, err := u.userRepo.GetById(in.Id)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
+	}
+
+	if !user.IsGeneralUser() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+	}
+
+	password := helpers.GenerateRandomString(10)
+	salt, hash, err := helpers.GenerateHashAndSalt(password)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	user.PasswordSalt = salt
+	user.PasswordHash = hash
+
+	if err := u.userRepo.Update(user); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil membuat password baru", map[string]interface{}{
+		"Password": password,
+	})
+}
+
+func (u *userService) UpdateMyProfile(c echo.Context, in *models.UserUpdateRequest) error {
 	user, err := u.userRepo.GetById(in.Id, "Division")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -153,17 +240,6 @@ func (u *userService) Update(c echo.Context, in *models.UserUpdateRequest) error
 	return helpers.Response(c, http.StatusOK, "berhasil mengubah user", user.ToResponse())
 }
 
-func (u *userService) GetDetailByAdmin(c echo.Context, in *models.UserGetDetailRequest) error {
-	user, err := u.userRepo.GetById(in.Id, "Division")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if user.IsEmpty() {
-		return helpers.Response(c, http.StatusNotFound, "user tidak ditemukan")
-	}
-
-	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan user", user.ToResponse())
-}
-
 func (u *userService) GetMyProfile(c echo.Context, id string) error {
 	user, err := u.userRepo.GetById(id, "Division")
 	if err != nil {
@@ -175,36 +251,7 @@ func (u *userService) GetMyProfile(c echo.Context, id string) error {
 	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan user", user.ToResponse())
 }
 
-func (u *userService) DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error {
-	user, err := u.userRepo.GetByIdWithSelectedFields(in.Id, "id")
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if user.IsEmpty() {
-		return helpers.ResponseForbiddenAccess(c)
-	}
-
-	if err := u.userRepo.Delete(user); err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	}
-
-	return helpers.Response(c, http.StatusOK, "berhasil menghapus user")
-}
-
-func (u *userService) GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error {
-	users, pagination, err := u.userRepo.GetAllWithPaginate(cursor)
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	}
-
-	var userRes = []*models.UserListResponse{}
-	for _, user := range users {
-		userRes = append(userRes, user.ToResponseList())
-	}
-
-	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", userRes, pagination)
-}
-
-func (u *userService) ChangePassword(c echo.Context, in *models.UserChangePasswordRequest) error {
+func (u *userService) ChangeMyPassword(c echo.Context, in *models.UserChangePasswordRequest) error {
 	user, err := u.userRepo.GetById(in.Id)
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -225,30 +272,4 @@ func (u *userService) ChangePassword(c echo.Context, in *models.UserChangePasswo
 	}
 
 	return helpers.Response(c, http.StatusOK, "berhasil mengubah password")
-}
-
-func (u *userService) GeneratePasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
-	user, err := u.userRepo.GetById(in.Id)
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if user.IsEmpty() {
-		return helpers.ResponseForbiddenAccess(c)
-	}
-
-	password := helpers.GenerateRandomString(10)
-	salt, hash, err := helpers.GenerateHashAndSalt(password)
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	}
-
-	user.PasswordSalt = salt
-	user.PasswordHash = hash
-
-	if err := u.userRepo.Update(user); err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	}
-
-	return helpers.Response(c, http.StatusOK, "berhasil membuat password baru", map[string]interface{}{
-		"Password": password,
-	})
 }

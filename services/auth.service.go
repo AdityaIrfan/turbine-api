@@ -119,7 +119,7 @@ func (a *authService) Login(c echo.Context, in *models.Login) error {
 	response := &models.AuthResponse{
 		Name:         user.Name,
 		Division:     string(user.Division.Name),
-		IsAdmin:      user.IsAdmin() || user.IsSuperAdmin(),
+		Source:       user.GetSource(),
 		Token:        token,
 		RefreshToken: refreshToken,
 	}
@@ -194,7 +194,7 @@ func (a *authService) RefreshToken(c echo.Context, in *models.RefreshTokenReques
 	response := &models.AuthResponse{
 		Name:         user.Name,
 		Division:     string(user.Division.Name),
-		IsAdmin:      user.IsAdmin() || user.IsSuperAdmin(),
+		Source:       user.GetSource(),
 		Token:        token,
 		RefreshToken: refreshToken,
 	}

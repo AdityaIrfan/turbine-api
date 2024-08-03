@@ -41,7 +41,7 @@ func GenerateCursorPaginationByEcho(c echo.Context, sortMap, filterMap map[strin
 
 	limitParam := c.QueryParam("PerPage")
 	sortOrderParam := strings.ToLower(c.QueryParam("SortOrder"))
-	sortByParams := strings.ToLower(c.QueryParam("SortBy"))
+	sortByParams := c.QueryParam("SortBy")
 	searchParam := c.QueryParam("Search")
 	startDate := c.QueryParam("StartDate")
 	endDate := c.QueryParam("EndDate")

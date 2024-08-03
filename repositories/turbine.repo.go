@@ -22,13 +22,11 @@ func NewTurbineRepository(db *gorm.DB) contract.ITurbineRepository {
 }
 
 func (t *turbineRepository) Create(turbine *models.Turbine) error {
-	if err := t.db.
+	if err := t.db.Debug().
 		Clauses(clause.Returning{}).
 		Create(&turbine).
-		Preload("Tower").
-		Preload("User", func(tx *gorm.DB) *gorm.DB {
-			return tx.Select("id, name")
-		}).First(&turbine).Error; err != nil {
+		Preload("PltaUnit.Plta").
+		First(&turbine).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY TURBINE CREATING : " + err.Error()))
 		return err
 	}
@@ -43,13 +41,9 @@ func (t *turbineRepository) GetByIdWithSelectedFields(id string, selectedFields 
 		db = db.Preload(p)
 	}
 
-	if err := db.
+	if err := db.Debug().
 		Select(selectedFields).
 		Where("id = ?", id).
-		Preload("Tower").
-		Preload("User", func(tx *gorm.DB) *gorm.DB {
-			return tx.Select("id, name")
-		}).
 		First(&turbine).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -63,13 +57,13 @@ func (t *turbineRepository) GetByIdWithSelectedFields(id string, selectedFields 
 }
 func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedFields string) ([]*models.Turbine, *helpers.CursorPagination, error) {
 	db := t.db
-	alreadyWithTower := false
+	alreadyWithPltaUnit := false
 
 	if cursor.Search != "" {
-		db = db.Joins("LEFT JOIN towers ON towers.id = turbines.tower_id").
-			Where("LOWER(towers.name) LIKE LOWER(?)", "%"+cursor.Search+"%").
-			Or("LOWER(towers.unit_number) LIKE LOWER(?)", "%"+cursor.Search+"%")
-		alreadyWithTower = true
+		db = db.Joins("LEFT JOIN plta_units ON plta_units.id = turbines.plta_unit_id").
+			Where("LOWER(plta_units.name) LIKE LOWER(?)", "%"+cursor.Search+"%").
+			Or("LOWER(turbines.title) LIKE LOWER(?)", "%"+cursor.Search+"%")
+		alreadyWithPltaUnit = true
 	}
 
 	if cursor.StartDate != "" {
@@ -92,12 +86,16 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 
 	var sortBy string
 	switch strings.ToLower(cursor.SortBy) {
-	case "towername":
-		if !alreadyWithTower {
-			db = db.Joins("LEFT JOIN towers ON towers.id = turbines.tower_id")
+	case "title":
+		sortBy = "title"
+	case "pltaUnitName":
+		if !alreadyWithPltaUnit {
+			db = db.Joins("LEFT JOIN plta_units ON plta_units.id = turbines.plta_unit_id")
 		}
 
-		sortBy = "towers.name"
+		db = db.Joins("LEFT JOIN plta ON plta_units.plta_id = plta.id")
+		selectedFields += ", plta.name || '- Unit ' || plta_units.name"
+		sortBy = "plta_units.name"
 	case "createdat":
 		sortBy = "created_at"
 	default:
@@ -106,9 +104,10 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 
 	var turbine []*models.Turbine
 	if err := db.Debug().
+		Select(selectedFields).
 		Offset(cursor.CurrentPage*cursor.PerPage - cursor.PerPage).
 		Limit(cursor.PerPage).
-		Preload("Tower").
+		Preload("PltaUnit.Plta").
 		Order(fmt.Sprintf("%v %v", sortBy, cursor.SortOrder)).
 		Find(&turbine).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY TURBINES LIST WITH PAGINATE : " + err.Error())).Msg("")
@@ -128,10 +127,7 @@ func (t *turbineRepository) GetLatest() (*models.Turbine, error) {
 	var turbine *models.Turbine
 
 	if err := t.db.
-		Preload("Tower").
-		Preload("User", func(tx *gorm.DB) *gorm.DB {
-			return tx.Select("id, name")
-		}).
+		Preload("PltaUnit.Plta").
 		Order("created_at desc").
 		First(&turbine).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -142,4 +138,26 @@ func (t *turbineRepository) GetLatest() (*models.Turbine, error) {
 	}
 
 	return turbine, nil
+}
+
+func (t *turbineRepository) Delete(turbine *models.Turbine) error {
+	if err := t.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.
+			Table(turbine.TableName()).
+			Where("id = ?", turbine.Id).
+			Update("deleted_by", turbine.DeletedBy).Error; err != nil {
+			log.Error().Err(errors.New("ERROR QUERY UPDATE deleted_by TURBINE: " + err.Error())).Msg("")
+			return err
+		}
+
+		if err := tx.Where("id = ?", turbine.Id).Delete(&turbine).Error; err != nil {
+			log.Error().Err(errors.New("ERROR QUERY DELETE TURBINE : " + err.Error())).Msg("")
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

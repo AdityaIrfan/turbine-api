@@ -40,13 +40,18 @@ type User struct {
 	DivisionId   string          `gorm:"column:division_id"`
 	Role         UserRole        `gorm:"column:role"`
 	Status       UserStatus      `gorm:"column:status"`
+	RadiusStatus bool            `gorm:"column:radius_status"`
+	ApprovalBy   string          `gorm:"column:approval_by"`
 	PasswordHash string          `gorm:"column:password_hash"`
 	PasswordSalt string          `gorm:"column:password_salt"`
 	CreatedAt    *time.Time      `gorm:"column:created_at"`
+	CreatedBy    string          `json:"column:created_by"`
 	UpdatedAt    *time.Time      `gorm:"column:updated_at;<-:update"`
 	DeletedAt    *gorm.DeletedAt `gorm:"column:deleted_at"`
 
-	Division *Division `gorm:"foreignKey:DivisionId;references:Id"`
+	CreatedByUser  *User     `gorm:"foreignKey:CreatedBy;references:Id"`
+	ApprovalByUser *User     `gorm:"foreignKey:ApprovalBy;references:Id"`
+	Division       *Division `gorm:"foreignKey:DivisionId;references:Id"`
 }
 
 func (u *User) IsEmpty() bool {
@@ -73,16 +78,21 @@ func (u *User) IsSuperAdmin() bool {
 	return u.Role == UserRole_SuperAdmin
 }
 
+func (u *User) IsGeneralUser() bool {
+	return u.Role == UserRole_User
+}
+
 func (u *User) ToResponse() *UserResponse {
 	res := &UserResponse{
-		Id:        u.Id,
-		Name:      u.Name,
-		Username:  u.Username,
-		Email:     u.Email,
-		Division:  string(u.Division.Name),
-		Role:      u.GetUserRoleInString(),
-		Status:    u.GetUserStatusInString(),
-		CreatedAt: u.CreatedAt.Format(helpers.DefaultTimeFormat),
+		Id:           u.Id,
+		Name:         u.Name,
+		Username:     u.Username,
+		Email:        u.Email,
+		Division:     string(u.Division.Name),
+		Role:         u.GetUserRoleInString(),
+		Status:       u.GetUserStatusInString(),
+		RadiusStatus: u.RadiusStatus,
+		CreatedAt:    u.CreatedAt.Format(helpers.DefaultTimeFormat),
 	}
 
 	if u.UpdatedAt != nil {
@@ -93,15 +103,16 @@ func (u *User) ToResponse() *UserResponse {
 }
 
 type UserResponse struct {
-	Id        string `json:"Id"`
-	Name      string `json:"Name"`
-	Username  string `json:"Username"`
-	Email     string `json:"Email"`
-	Division  string `json:"Division"`
-	Role      string `json:"Role"`
-	Status    string `json:"Status"`
-	CreatedAt string `json:"CreatedAt"`
-	UpdatedAt string `json:"UpdatedAt"`
+	Id           string `json:"Id"`
+	Name         string `json:"Name"`
+	Username     string `json:"Username"`
+	Email        string `json:"Email"`
+	Division     string `json:"Division"`
+	Role         string `json:"Role"`
+	Status       string `json:"Status"`
+	RadiusStatus bool   `json:"RadiusStatus"`
+	CreatedAt    string `json:"CreatedAt"`
+	UpdatedAt    string `json:"UpdatedAt"`
 }
 
 func (u *User) ToResponseList() *UserListResponse {
@@ -120,14 +131,14 @@ type UserListResponse struct {
 	Status   string `json:"Status"`
 }
 
-type UserAdminCreateByAdminRequest struct {
+type UserCreateByAdminRequest struct {
 	Name       string `json:"Name" form:"Name" validate:"required"`
 	Username   string `json:"useranme" form:"Username" validate:"required"`
 	Email      string `json:"Email" form:"Email" validate:"required"`
 	DivisionId string `json:"DivisionId" form:"DivisionId" validate:"required"`
 }
 
-func (u *UserAdminCreateByAdminRequest) ToModel() *User {
+func (u *UserCreateByAdminRequest) ToModel() *User {
 	id := ulid.Make().String()
 
 	return &User{
@@ -136,18 +147,20 @@ func (u *UserAdminCreateByAdminRequest) ToModel() *User {
 		Username:     u.Username,
 		Email:        u.Email,
 		DivisionId:   u.DivisionId,
-		Role:         UserRole_Admin,
+		Role:         UserRole_User,
 		Status:       UserStatus_Active,
+		RadiusStatus: true,
 		PasswordHash: "",
 		PasswordSalt: "",
 	}
 }
 
 type UserUpdateByAdminRequest struct {
-	Id         string
-	Role       *UserRole   `json:"Role" form:"Role"`
-	DivisionId *string     `json:"DivisionId" form:"DivisionId"`
-	Status     *UserStatus `json:"Status" form:"Status"`
+	Id           string
+	Role         *UserRole   `json:"Role" form:"Role"`
+	DivisionId   *string     `json:"DivisionId" form:"DivisionId"`
+	Status       *UserStatus `json:"Status" form:"Status"`
+	RadiusStatus *bool       `json:"RadiusStatus" form:"RadiusStatus"`
 }
 
 type UserUpdateRequest struct {
@@ -223,4 +236,19 @@ func (u *User) GetUserStatusInString() string {
 
 type UserGetDetailRequest struct {
 	Id string
+}
+
+func (u *User) IsRadiusStatusActive() bool {
+	return u.RadiusStatus
+}
+
+func (u *User) GetSource() string {
+	switch u.Role {
+	case 1:
+		return "main"
+	case 2:
+		return "admin"
+	default:
+		return "user"
+	}
 }

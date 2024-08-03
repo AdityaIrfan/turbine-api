@@ -38,7 +38,7 @@ type IUserRepository interface {
 	GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByUsernameWithSelectedFields(username string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByEmailWithSelectedFields(email string, selectedFields string, preloads ...string) (*models.User, error)
-	GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.User, *helpers.CursorPagination, error)
+	GetAllWithPaginate(cursor *helpers.Cursor, userRole models.UserRole) ([]*models.User, *helpers.CursorPagination, error)
 	Delete(user *models.User) error
 }
 
@@ -68,13 +68,23 @@ type ITurbineRepository interface {
 	GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.Turbine, error)
 	GetAllWithPaginate(cursor *helpers.Cursor, selectedFields string) ([]*models.Turbine, *helpers.CursorPagination, error)
 	GetLatest() (*models.Turbine, error)
+	Delete(turbine *models.Turbine) error
 }
 
-type ITowerRepository interface {
-	Create(tower *models.Tower) error
-	Update(tower *models.Tower) error
-	GetByIdWithSelectedFields(id string, selectedFields string) (*models.Tower, error)
-	GetByEqualNameAndUnitNumberWithSelectedFields(name, unitNumber string, selectedFields string) (*models.Tower, error)
-	GetAll(search string) ([]*models.Tower, error)
-	Delete(tower *models.Tower) error
+type IPltaRepository interface {
+	Create(plta *models.Plta) error
+	Update(plta *models.Plta) error
+	GetByIdWithSelectedFields(id string, selectedFields string) (*models.Plta, error)
+	GetByEqualNameWithSelectedFields(name string, selectedFields string) (*models.Plta, error)
+	GetByIdWithPreloads(id string, preloads ...string) (*models.Plta, error)
+	GetAll(search string) ([]*models.Plta, error)
+	Delete(plta *models.Plta) error
+	GetListWithPaginate(cursor *helpers.Cursor, selectedFields string) ([]*models.Plta, *helpers.CursorPagination, error)
+}
+
+type IPltaUnitRepository interface {
+	GetByIdAndSelectedFields(id, selectedFields string) (*models.PltaUnit, error)
+	CreateOrUpdate(pltaUnits []*models.PltaUnit) ([]*models.PltaUnit, error)
+	Delete(pltaUnit *models.PltaUnit) error
+	GetByIdWithPreloads(id string, preloads ...string) (*models.PltaUnit, error)
 }

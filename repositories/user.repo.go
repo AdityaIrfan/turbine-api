@@ -10,6 +10,7 @@ import (
 
 	"github.com/phuslu/log"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type userRepository struct {
@@ -38,7 +39,7 @@ func (u *userRepository) Create(user *models.User, preloads ...string) error {
 }
 
 func (u *userRepository) Update(user *models.User, preloads ...string) error {
-	db := u.db
+	db := u.db.Debug()
 
 	for _, p := range preloads {
 		db = db.Preload(p)
@@ -50,7 +51,13 @@ func (u *userRepository) Update(user *models.User, preloads ...string) error {
 			}
 		}
 
-		return tx.Updates(&user).Error
+		if !user.RadiusStatus {
+			if err := tx.Table("users").Where("id = ?", user.Id).Update("radius_status", false).Error; err != nil {
+				return err
+			}
+		}
+
+		return tx.Debug().Clauses(clause.Returning{}).Updates(&user).Error
 	}); err != nil {
 		log.Error().Err(errors.New("ERROR QUERY USER UPDATE : " + err.Error())).Msg("")
 		return err
@@ -90,7 +97,7 @@ func (u *userRepository) IsEmailExist(email string) (bool, error) {
 func (u *userRepository) GetById(id string, preloads ...string) (*models.User, error) {
 	var user *models.User
 
-	db := u.db
+	db := u.db.Debug()
 
 	for _, p := range preloads {
 		db = db.Preload(p)
@@ -167,8 +174,8 @@ func (u *userRepository) GetByEmailWithSelectedFields(email string, selectedFiel
 	return user, nil
 }
 
-func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*models.User, *helpers.CursorPagination, error) {
-	db := u.db
+func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor, userRole models.UserRole) ([]*models.User, *helpers.CursorPagination, error) {
+	db := u.db.Where("role = ?", userRole)
 
 	if cursor.Search != "" {
 		db = db.Where("LOWER(name) LIKE LOWER(?)", "%"+cursor.Search+"%")

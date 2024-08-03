@@ -19,31 +19,35 @@ import (
 )
 
 var TurbineDefaultSortMap = map[string]string{
+	"Title":     "title",
 	"TowerName": "towername",
 	"CreatedAt": "createdat",
 }
 
-var TurbineDefaultSortFilter = map[string]string{
+var TurbineDefaultFilter = map[string]string{
 	"Tower": "tower_id",
 }
 
 type Turbine struct {
 	Id                   string          `gorm:"column:id"`
 	Title                string          `gormc:"column:title"`
-	TowerId              string          `gorm:"column:tower_id"`
+	PltaUnitId           string          `gorm:"column:plta_unit_id"`
 	GenBearingToCoupling float64         `gorm:"column:gen_bearing_to_coupling"`
 	CouplingToTurbine    float64         `gorm:"column:coupling_to_turbine"`
 	Data                 datatypes.JSON  `gorm:"column:data"`
 	CreatedAt            *time.Time      `gorm:"column:created_at"`
-	UpdatedAt            *time.Time      `gorm:"column:updated_at;<-:update"`
-	DeletedAt            *gorm.DeletedAt `gorm:"column:deleted_at"`
 	CreatedBy            string          `gorm:"column:created_by"`
+	DeletedAt            *gorm.DeletedAt `gorm:"column:deleted_at"`
+	DeletedBy            string          `gorm:"deleted_by"`
 	TotalBolts           uint32          `gorm:"column:total_bolts"`
 	CurrentTorque        float64         `gorm:"column:current_torque"`
 	MaxTorque            float64         `gorm:"column:max_torque"`
 
-	Tower *Tower `gorm:"foreignKey:TowerId;references:Id"`
-	User  *User  `gorm:"foreignKey:CreatedBy;references:Id"`
+	PltaUnit *PltaUnit `gorm:"foreignKey:PltaUnitId;references:Id"`
+}
+
+func (t *Turbine) TableName() string {
+	return "turbines"
 }
 
 func (t *Turbine) IsEmpty() bool {
@@ -167,7 +171,7 @@ type TurbineWriteRequest struct {
 	TotalBolts           uint32                 `json:"TotalBolts" form:"TotalBolts" validate:"required,min=4"`
 	CurrentTorque        float64                `json:"CurrentTorque" form:"CurrentTorque" validate:"required"`
 	MaxTorque            float64                `json:"MaxTorque" form:"MaxTorque" validate:"required"`
-	CreatedBy            string
+	WrittenBy            string
 }
 
 func (t *TurbineWriteRequest) ValidateData() error {
@@ -285,11 +289,11 @@ func (t *TurbineWriteRequest) ToModelCreate() *Turbine {
 	return &Turbine{
 		Id:                   ulid.Make().String(),
 		Title:                t.Title,
-		TowerId:              t.TowerId,
+		PltaUnitId:           t.TowerId,
 		GenBearingToCoupling: t.GenBearingToCoupling,
 		CouplingToTurbine:    t.CouplingToTurbine,
 		Data:                 data,
-		CreatedBy:            t.CreatedBy,
+		CreatedBy:            t.WrittenBy,
 		TotalBolts:           t.TotalBolts,
 		CurrentTorque:        t.CurrentTorque,
 		MaxTorque:            t.MaxTorque,
@@ -632,7 +636,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 	return &TurbineResponse{
 		Id:        t.Id,
 		Title:     t.Title,
-		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
+		TowerName: fmt.Sprintf("%v - Unit %v", t.PltaUnit.Plta.Name, t.PltaUnit.Name),
 		Shaft: TurbineShaft{
 			GenBearingToKopling: t.GenBearingToCoupling,
 			CouplingToTurbine:   t.CouplingToTurbine,
@@ -645,7 +649,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 		BDCrockedness:     crockednessBD,
 		TotalCrockedness:  totalCrockedness,
 		CreatedAt:         t.CreatedAt.Format(helpers.DefaultTimeFormat),
-		CreatedBy:         t.User.Name,
+		CreatedBy:         t.CreatedBy,
 		Status:            totalCrockedness <= 3,
 		TotalBolts:        t.TotalBolts,
 		CurrentTorque:     t.CurrentTorque,
@@ -666,7 +670,7 @@ func (t *Turbine) ToResponseList() *TurbineResponseList {
 	return &TurbineResponseList{
 		Id:        t.Id,
 		Title:     t.Title,
-		TowerName: fmt.Sprintf("%v - %v", t.Tower.Name, t.Tower.UnitNumber),
+		TowerName: fmt.Sprintf("%v - Unit %v", t.PltaUnit.Plta.Name, t.PltaUnit.Name),
 		CreatedAt: t.CreatedAt.Format(helpers.DefaultTimeFormat),
 	}
 }
@@ -762,8 +766,6 @@ func GetScale(data ...float64) float64 {
 			}
 		}
 	}
-
-	fmt.Println(data[len(data)-1] + 1)
 
 	return data[len(data)-1] + 1
 }

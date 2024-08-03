@@ -23,15 +23,21 @@ type IDivisionService interface {
 }
 
 type IUserService interface {
-	CreateUserAdminByAdmin(c echo.Context, in *models.UserAdminCreateByAdminRequest) error
-	UpdateByAdmin(c echo.Context, in *models.UserUpdateByAdminRequest) error
-	Update(c echo.Context, in *models.UserUpdateRequest) error
-	GetDetailByAdmin(c echo.Context, in *models.UserGetDetailRequest) error
+	// ADMIN BY SUPER ADMIN
+	// UpdateUserAdminBySuperAdmin(c echo.Context, in )
+
+	// USER BY ADMIN
+	CreateUserByAdmin(c echo.Context, in *models.UserCreateByAdminRequest) error
+	UpdateUserByAdmin(c echo.Context, in *models.UserUpdateByAdminRequest) error
+	GetDetailUserByAdmin(c echo.Context, in *models.UserGetDetailRequest) error
+	DeleteUserByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error
+	GetListUserWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error
+	GenerateUserPasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error
+
+	// USER ITSELF
+	UpdateMyProfile(c echo.Context, in *models.UserUpdateRequest) error
 	GetMyProfile(c echo.Context, id string) error
-	DeleteByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error
-	GetListWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error
-	ChangePassword(c echo.Context, in *models.UserChangePasswordRequest) error
-	GeneratePasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error
+	ChangeMyPassword(c echo.Context, in *models.UserChangePasswordRequest) error
 }
 
 type IAuthService interface {
@@ -51,11 +57,19 @@ type ITurbineService interface {
 	GetDetail(c echo.Context, id string) error
 	GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error
 	GetLatest(c echo.Context) error
+	Delete(c echo.Context, in *models.TurbineWriteRequest) error
 }
 
-type ITowerService interface {
-	Create(c echo.Context, in *models.TowerWriteRequest) error
-	Update(c echo.Context, in *models.TowerWriteRequest) error
-	GetListMaster(c echo.Context, search string) error
-	Delete(c echo.Context, id string) error
+type IPltaService interface {
+	Create(c echo.Context, in *models.PltaCreateRequest) error
+	Update(c echo.Context, in *models.PltaUpdateRequest) error
+	Detail(c echo.Context, id string) error
+	GetListMaster(c echo.Context, in *models.PltaGetListMasterRequest) error
+	Delete(c echo.Context, in *models.PltaDeleteRequest) error
+	GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error
+}
+
+type IPltaUnitService interface {
+	CreateOrUpdate(c echo.Context, in *models.PltaUnitCreateOrUpdate) error
+	Delete(c echo.Context, in *models.PltaUnitWriteRequest) error
 }
