@@ -54,6 +54,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	pltaService := services.NewPltaService(pltaRepository, userRepository)
 	turbineService := services.NewTurbineService(turbineRepository, pltaUnitRepository, userRepository)
 	pltaUnitService := services.NewPltaUnitService(pltaUnitRepository, pltaRepository)
+	dashboardService := services.NewDashboardService(userRepository, turbineRepository, pltaRepository)
 
 	// Handlers
 	// roleHandler := handlers.NewRoleHandler(roleService)
@@ -64,6 +65,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	turbineHandler := handlers.NewTurbineHandler(turbineService)
 	pltaHandler := handlers.NewPltaHandler(pltaService)
 	pltaUnitHandler := handlers.NewPltaUnitHandler(pltaUnitService)
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 
 	// Middleware
 	middleware := middleware.NewMiddleware(authRedisRepository, userRepository)
@@ -146,6 +148,10 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	v1_PltaUnitRouting := v1.Group("/plta-unit")
 	v1_PltaUnitRouting.PUT("/:id", pltaUnitHandler.CreateOrUpdate, authAdmin)
 	v1_PltaUnitRouting.DELETE("/:id", pltaUnitHandler.Delete, authAdmin)
+
+	// DASHBOARD
+	v1_DashboardRouting := v1.Group("/dashboard")
+	v1_DashboardRouting.GET("", dashboardHandler.GetDashboardData, authAdmin)
 
 	return route
 }

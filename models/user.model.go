@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"pln/AdityaIrfan/turbine-api/helpers"
@@ -37,7 +38,7 @@ type User struct {
 	Name         string          `gorm:"column:name"`
 	Username     string          `gorm:"column:username"`
 	Email        string          `gorm:"column:email"`
-	Phone        string          `gorm:"column:Phone"`
+	Phone        string          `gorm:"column:phone"`
 	DivisionId   string          `gorm:"column:division_id"`
 	Role         UserRole        `gorm:"column:role"`
 	Status       UserStatus      `gorm:"column:status"`
@@ -54,6 +55,10 @@ type User struct {
 
 	CreatedByUser *User     `gorm:"foreignKey:CreatedBy;references:Id"`
 	Division      *Division `gorm:"foreignKey:DivisionId;references:Id"`
+}
+
+func (u *User) TableName() string {
+	return "users"
 }
 
 func (u *User) IsEmpty() bool {
@@ -101,6 +106,10 @@ func (u *User) ToResponse() *UserResponse {
 		res.UpdatedAt = u.UpdatedAt.Format(helpers.DefaultTimeFormat)
 	}
 
+	if strings.Index(u.Phone, "62") == 0 {
+		res.Phone = "+" + u.Phone
+	}
+
 	return res
 }
 
@@ -109,6 +118,7 @@ type UserResponse struct {
 	Name         string `json:"Name"`
 	Username     string `json:"Username"`
 	Email        string `json:"Email"`
+	Phone        string `json:"Phone"`
 	Division     string `json:"Division"`
 	Role         string `json:"Role"`
 	Status       string `json:"Status"`
@@ -153,9 +163,9 @@ func (u *UserCreateByAdminRequest) ToModel() *User {
 		Role:         UserRole_User,
 		Status:       UserStatus_Active,
 		RadiusStatus: true,
-		// PasswordHash: "",
-		// PasswordSalt: "",
-		CreatedBy: u.CreatedBy,
+		PasswordHash: "",
+		PasswordSalt: "",
+		CreatedBy:    u.CreatedBy,
 	}
 }
 
@@ -173,6 +183,7 @@ type UserUpdateRequest struct {
 	Name     *string `json:"Name" form:"Name"`
 	Username *string `json:"Username" form:"Username"`
 	Email    *string `json:"Email" form:"Email"`
+	Phone    *string `json:"Phone" form:"Phone"`
 }
 
 type UserChangePasswordRequest struct {

@@ -69,3 +69,7 @@ type IPltaUnitHandler interface {
 	CreateOrUpdate(c echo.Context) error
 	Delete(c echo.Context) error
 }
+
+type IDashboardHandler interface {
+	GetDashboardData(c echo.Context) error
+}

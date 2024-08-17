@@ -169,3 +169,17 @@ func (t *turbineRepository) Delete(turbine *models.Turbine) error {
 
 	return nil
 }
+
+func (t *turbineRepository) GetTotal() (int64, error) {
+	var counter int64
+
+	if err := t.db.
+		Table("turbines").
+		Where("deleted_at IS NULL").
+		Count(&counter).Error; err != nil {
+		log.Error().Err(errors.New("ERROR QUERY TOTAL USER : " + err.Error()))
+		return 0, err
+	}
+
+	return counter, nil
+}

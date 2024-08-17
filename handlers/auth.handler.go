@@ -42,6 +42,10 @@ func (a *authHandler) Register(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
+	if err := helpers.ValidatePhone(payload.Phone); err != nil {
+		return helpers.Response(c, http.StatusBadRequest, err.Error())
+	}
+
 	return a.authService.Register(c, payload)
 }
 

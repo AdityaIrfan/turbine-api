@@ -39,8 +39,10 @@ type IUserRepository interface {
 	GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByUsernameWithSelectedFields(username string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByEmailWithSelectedFields(email string, selectedFields string, preloads ...string) (*models.User, error)
+	GetByPhoneWithSelectedFields(phone string, selectedFields string, preloads ...string) (*models.User, error)
 	GetAllWithPaginate(cursor *helpers.Cursor, userRole models.UserRole) ([]*models.User, *helpers.CursorPagination, error)
 	Delete(user *models.User) error
+	GetTotalByStatus(status models.UserStatus) (int64, error)
 }
 
 type IAuthRedisRepository interface {
@@ -70,6 +72,7 @@ type ITurbineRepository interface {
 	GetAllWithPaginate(cursor *helpers.Cursor, selectedFields string) ([]*models.Turbine, *helpers.CursorPagination, error)
 	GetLatest() (*models.Turbine, error)
 	Delete(turbine *models.Turbine) error
+	GetTotal() (int64, error)
 }
 
 type IPltaRepository interface {
@@ -81,6 +84,7 @@ type IPltaRepository interface {
 	GetAll(search string) ([]*models.Plta, error)
 	Delete(plta *models.Plta) error
 	GetListWithPaginate(cursor *helpers.Cursor, selectedFields string) ([]*models.Plta, *helpers.CursorPagination, error)
+	GetTotal() (int64, error)
 }
 
 type IPltaUnitRepository interface {

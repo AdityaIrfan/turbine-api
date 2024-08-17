@@ -3,6 +3,7 @@ package services
 import (
 	"net/http"
 	"net/mail"
+	"strings"
 
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/helpers"
@@ -170,35 +171,35 @@ func (u *userService) GetListUserWithPaginateByAdmin(c echo.Context, cursor *hel
 	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", userRes, pagination)
 }
 
-// func (u *userService) GenerateUserPasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
-// 	user, err := u.userRepo.GetById(in.Id)
-// 	if err != nil {
-// 		return helpers.ResponseUnprocessableEntity(c)
-// 	} else if user.IsEmpty() {
-// 		return helpers.ResponseForbiddenAccess(c)
-// 	}
+func (u *userService) GenerateUserPasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
+	user, err := u.userRepo.GetById(in.Id)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
+	}
 
-// 	if !user.IsGeneralUser() {
-// 		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
-// 	}
+	if !user.IsGeneralUser() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+	}
 
-// 	password := helpers.GenerateRandomString(10)
-// 	salt, hash, err := helpers.GenerateHashAndSalt(password)
-// 	if err != nil {
-// 		return helpers.ResponseUnprocessableEntity(c)
-// 	}
+	password := helpers.GenerateRandomString(10)
+	salt, hash, err := helpers.GenerateHashAndSalt(password)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
 
-// 	user.PasswordSalt = salt
-// 	user.PasswordHash = hash
+	user.PasswordSalt = salt
+	user.PasswordHash = hash
 
-// 	if err := u.userRepo.Update(user); err != nil {
-// 		return helpers.ResponseUnprocessableEntity(c)
-// 	}
+	if err := u.userRepo.Update(user); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
 
-// 	return helpers.Response(c, http.StatusOK, "berhasil membuat password baru", map[string]interface{}{
-// 		"Password": password,
-// 	})
-// }
+	return helpers.Response(c, http.StatusOK, "berhasil membuat password baru", map[string]interface{}{
+		"Password": password,
+	})
+}
 
 func (u *userService) UpdateMyProfile(c echo.Context, in *models.UserUpdateRequest) error {
 	user, err := u.userRepo.GetById(in.Id, "Division")
@@ -243,6 +244,24 @@ func (u *userService) UpdateMyProfile(c echo.Context, in *models.UserUpdateReque
 		user.Name = *in.Name
 	}
 
+	if in.Phone != nil && *in.Phone != "" && user.Phone != *in.Phone {
+		phone := *in.Phone
+		if strings.Index(phone, "0") == 0 {
+			phone = "62" + phone[1:]
+		}
+		in.Phone = &phone
+
+		// check phone
+		userByPhone, err := u.userRepo.GetByPhoneWithSelectedFields(*in.Phone, "id")
+		if err != nil {
+			return helpers.ResponseUnprocessableEntity(c)
+		} else if !userByPhone.IsEmpty() && userByPhone.Id != user.Id {
+			return helpers.Response(c, http.StatusBadRequest, "nomor telefon sudah digunakan")
+		}
+		user.Phone = *in.Phone
+		anyUpdated = true
+	}
+
 	if !anyUpdated {
 		if err := u.userRepo.Update(user, "Division"); err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
@@ -271,23 +290,13 @@ func (u *userService) ChangeMyPassword(c echo.Context, in *models.UserChangePass
 		return helpers.ResponseForbiddenAccess(c)
 	}
 
-	// salt, hash, err := helpers.GenerateHashAndSalt(in.Password)
-	// if err != nil {
-	// 	return helpers.ResponseUnprocessableEntity(c)
-	// }
-
-	// user.PasswordSalt = salt
-	// user.PasswordHash = hash
-
-	if err := user.GeneratePassword(in.Password); err != nil {
+	salt, hash, err := helpers.GenerateHashAndSalt(in.Password)
+	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
-	if err := u.userRepo.Update(user); err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	}
+	user.PasswordSalt = salt
+	user.PasswordHash = hash
 
 	return helpers.Response(c, http.StatusOK, "berhasil mengubah password")
 }
-
-

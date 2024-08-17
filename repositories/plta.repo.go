@@ -229,3 +229,17 @@ func (u *pltaRepository) GetListWithPaginate(cursor *helpers.Cursor, selectedFie
 
 	return pltas, cursorPagination, nil
 }
+
+func (u *pltaRepository) GetTotal() (int64, error) {
+	var counter int64
+
+	if err := u.db.
+		Table("plta").
+		Where("deleted_at IS NULL").
+		Count(&counter).Error; err != nil {
+		log.Error().Err(errors.New("ERROR QUERY TOTAL USER : " + err.Error()))
+		return 0, err
+	}
+
+	return counter, nil
+}

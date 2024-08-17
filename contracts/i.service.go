@@ -32,7 +32,7 @@ type IUserService interface {
 	GetDetailUserByAdmin(c echo.Context, in *models.UserGetDetailRequest) error
 	DeleteUserByAdmin(c echo.Context, in *models.UserDeleteByAdminRequest) error
 	GetListUserWithPaginateByAdmin(c echo.Context, cursor *helpers.Cursor) error
-	// GenerateUserPasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error
+	GenerateUserPasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error
 
 	// USER ITSELF
 	UpdateMyProfile(c echo.Context, in *models.UserUpdateRequest) error
@@ -72,4 +72,8 @@ type IPltaService interface {
 type IPltaUnitService interface {
 	CreateOrUpdate(c echo.Context, in *models.PltaUnitCreateOrUpdate) error
 	Delete(c echo.Context, in *models.PltaUnitWriteRequest) error
+}
+
+type IDashboardService interface {
+	GetDashboardData(c echo.Context) error
 }

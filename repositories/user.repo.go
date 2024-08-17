@@ -137,7 +137,7 @@ func (u *userRepository) GetByIdWithSelectedFields(id string, selectedFields str
 		db = db.Preload(p)
 	}
 
-	if err := db.Where("id = ?", id).First(&user).Error; err != nil {
+	if err := db.Where("id = ?", id).Select(selectedFields).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -178,6 +178,26 @@ func (u *userRepository) GetByEmailWithSelectedFields(email string, selectedFiel
 	}
 
 	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		log.Error().Err(errors.New("ERROR QUERY USER BY EMAIL WITH SELECTED FIELDS : " + err.Error())).Msg("")
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (u *userRepository) GetByPhoneWithSelectedFields(phone string, selectedFields string, preloads ...string) (*models.User, error) {
+	var user *models.User
+
+	db := u.db
+
+	for _, p := range preloads {
+		db = db.Preload(p)
+	}
+
+	if err := db.Where("phone = ?", phone).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -244,4 +264,25 @@ func (u *userRepository) Delete(user *models.User) error {
 	}
 
 	return nil
+}
+
+func (u *userRepository) GetTotalByStatus(status models.UserStatus) (int64, error) {
+	db := u.db.Where("deleted_at IS NULL")
+	user := models.User{}
+	var counter int64
+
+	if status == models.UserStatus_Active {
+		db = db.Where("status", 1)
+	} else if status == models.UserStatus_InActive {
+		db = db.Where("status", 0)
+	}
+
+	if err := db.
+		Table(user.TableName()).
+		Count(&counter).Error; err != nil {
+		log.Error().Err(errors.New("ERROR QUERY TOTAL USER : " + err.Error()))
+		return 0, err
+	}
+
+	return counter, nil
 }

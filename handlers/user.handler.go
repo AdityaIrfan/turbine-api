@@ -83,14 +83,14 @@ func (u *userHandler) GetListUserWithPaginateByAdmin(c echo.Context) error {
 	return u.userService.GetListUserWithPaginateByAdmin(c, cursor)
 }
 
-// func (u *userHandler) GenerateUserPasswordByAdmin(c echo.Context) error {
-// 	payload := &models.GeneratePasswordByAdmin{
-// 		Id:      c.Param("id"),
-// 		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
-// 	}
+func (u *userHandler) GenerateUserPasswordByAdmin(c echo.Context) error {
+	payload := &models.GeneratePasswordByAdmin{
+		Id:      c.Param("id"),
+		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
+	}
 
-// 	return u.userService.GenerateUserPasswordByAdmin(c, payload)
-// }
+	return u.userService.GenerateUserPasswordByAdmin(c, payload)
+}
 
 func (u *userHandler) UpdateMyProfile(c echo.Context) error {
 	payload := new(models.UserUpdateRequest)
@@ -102,6 +102,12 @@ func (u *userHandler) UpdateMyProfile(c echo.Context) error {
 	if err := c.Validate(payload); err != nil {
 		errMessage := helpers.GenerateValidationErrorMessage(err)
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
+	}
+
+	if payload.Phone != nil && *payload.Phone != "" {
+		if err := helpers.ValidatePhone(*payload.Phone); err != nil {
+			return helpers.Response(c, http.StatusBadRequest, err.Error())
+		}
 	}
 
 	payload.Id = c.Get("claims").(jwt.MapClaims)["Id"].(string)

@@ -136,3 +136,19 @@ func IsIPWithinRadius(ip string, lat, long, radius float64) (bool, error) {
 		return false, nil
 	}
 }
+
+func ValidatePhone(phone string) error {
+	if strings.Index(phone, "0") == 0 {
+		if len(phone) < 10 || len(phone) > 12 {
+			return errors.New("Jika memakai awalan 0, nomor telefon tidak boleh lebih dari 12 dan kurang dari 10 karakter")
+		}
+	} else if strings.Index(phone, "62") == 0 {
+		if len(phone) < 11 || len(phone) > 13 {
+			return errors.New("Jika memakai awalan 62, nomor telefon tidak boleh lebih dari 13 dan kurang dari 11 karakter")
+		}
+	} else {
+		return errors.New("Format nomor telefon harus diawali 62 atau 0")
+	}
+
+	return nil
+}
