@@ -111,3 +111,8 @@ func GetClientIP(r *http.Request) string {
 	}
 	return strings.TrimSpace(ip)
 }
+
+func IsValidIP(ip string) bool {
+	parsedIP := net.ParseIP(ip)
+	return parsedIP != nil
+}

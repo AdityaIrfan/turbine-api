@@ -3,39 +3,41 @@ package models
 import (
 	"time"
 
-	"pln/AdityaIrfan/turbine-api/helpers"
-
 	"github.com/oklog/ulid/v2"
 )
 
 type Register struct {
 	Name                 string `json:"Name" form:"Name" validate:"required"`
 	Username             string `json:"Username" form:"Username" validate:"required"`
-	Email                string `json:"Email" form:"Email" validate:"required"`
+	Email                string `json:"Email" form:"Email" validate:"required,email"`
 	DivisionId           string `json:"DivisionId" form:"DivisionId" validate:"required"`
 	Password             string `json:"Password" form:"Password" validation:"required"`
 	PasswordConfirmation string `json:"PasswordConfirmation" form:"PasswordConfirmation" validate:"required,eqfield=Password"`
+	Phone                string `json:"Phone" form:"Phone" validate:"required,e164"`
 }
 
 func (r *Register) ToModel() (*User, error) {
 	id := ulid.Make().String()
 
-	salt, hash, err := helpers.GenerateHashAndSalt(r.Password)
-	if err != nil {
-		return nil, err
-	}
+	// salt, hash, err := helpers.GenerateHashAndSalt(r.Password)
+	// if err != nil {
+	// return nil, err
+	// }
 
 	return &User{
-		Id:           id,
-		Name:         r.Name,
-		Username:     r.Username,
-		Email:        r.Email,
-		DivisionId:   r.DivisionId,
-		Role:         UserRole_User,
-		Status:       UserStatus_InActive,
-		PasswordHash: hash,
-		PasswordSalt: salt,
+		Id:         id,
+		Name:       r.Name,
+		Username:   r.Username,
+		Email:      r.Email,
+		Phone:      r.Phone,
+		DivisionId: r.DivisionId,
+		Role:       UserRole_User,
+		Status:     UserStatus_InActive,
+		// PasswordHash: hash,
+		// PasswordSalt: salt,
+		Password:     r.Password,
 		RadiusStatus: true,
+		CreatedBy:    id,
 	}, nil
 }
 

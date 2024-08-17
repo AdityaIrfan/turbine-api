@@ -60,6 +60,8 @@ func GenerateValidationErrorMessage(err error) string {
 			messageSlice = append(messageSlice, fmt.Sprintf("%s harus berupa format base64url string", err.Field()))
 		case "longitude", "latitude":
 			messageSlice = append(messageSlice, fmt.Sprintf("%s tidak valid", err.Tag()))
+		case "email":
+			messageSlice = append(messageSlice, "Email is not valid")
 		}
 		mp[err.Field()] = true
 	}

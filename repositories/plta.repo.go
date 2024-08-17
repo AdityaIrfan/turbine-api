@@ -213,7 +213,7 @@ func (u *pltaRepository) GetListWithPaginate(cursor *helpers.Cursor, selectedFie
 
 	var pltas []*models.Plta
 	if err := db.Debug().
-		Offset(cursor.CurrentPage - 1).
+		Offset((cursor.CurrentPage - 1) * cursor.PerPage).
 		Limit(cursor.PerPage).
 		Order(fmt.Sprintf("%v %v", sortBy, cursor.SortOrder)).
 		Find(&pltas).Error; err != nil {

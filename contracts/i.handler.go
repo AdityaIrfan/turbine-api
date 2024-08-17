@@ -28,7 +28,7 @@ type IUserHandler interface {
 	GetDetailUserByAdmin(c echo.Context) error
 	DeleteUserByAdmin(c echo.Context) error
 	GetListUserWithPaginateByAdmin(c echo.Context) error
-	GenerateUserPasswordByAdmin(c echo.Context) error
+	// GenerateUserPasswordByAdmin(c echo.Context) error
 
 	// USER ITSELF
 	UpdateMyProfile(c echo.Context) error

@@ -1,0 +1,2 @@
+- penambahan nomor telefon di user
+- admin bisa melihat password user, jadi password user tidak ada hashing

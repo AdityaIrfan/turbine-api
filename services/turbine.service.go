@@ -35,29 +35,31 @@ func (t *turbineService) Create(c echo.Context, in *models.TurbineWriteRequest) 
 		return helpers.ResponseForbiddenAccess(c)
 	}
 
-	if user.IsRadiusStatusActive() {
-		pltaUnit, err := t.pltaUnitRepo.GetByIdWithPreloads(in.TowerId, "Plta")
-		if err != nil {
-			return helpers.ResponseUnprocessableEntity(c)
-		} else if pltaUnit.IsEmpty() {
-			return helpers.Response(c, http.StatusBadRequest, "plta unit tidak ditemukan")
-		} else if !pltaUnit.IsActive() {
-			return helpers.Response(c, http.StatusForbidden, "plta unit tidak aktif, tidak dapat memasukkan data")
-		} else if !pltaUnit.Plta.IsActive() {
-			return helpers.Response(c, http.StatusForbidden, "plta tidak aktif, tidak dapat memasukkan data")
-		} else if pltaUnit.Plta.IsRadiusStatusActive() {
-			withinArea, err := helpers.IsIPWithinRadius(
-				c.Get("IP").(string),
-				pltaUnit.Plta.Lat,
-				pltaUnit.Plta.Long,
-				pltaUnit.Plta.GetRadiusInKilometer())
-			if err != nil {
-				return helpers.ResponseUnprocessableEntity(c)
-			} else if !withinArea {
-				return helpers.Response(c, http.StatusForbidden, "diluar jangkauan")
-			}
-		}
+	pltaUnit, err := t.pltaUnitRepo.GetByIdWithPreloads(in.TowerId, "Plta")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if pltaUnit.IsEmpty() {
+		return helpers.Response(c, http.StatusBadRequest, "plta unit tidak ditemukan")
+	} else if !pltaUnit.IsActive() {
+		return helpers.Response(c, http.StatusForbidden, "plta unit tidak aktif, tidak dapat memasukkan data")
+	} else if !pltaUnit.Plta.IsActive() {
+		return helpers.Response(c, http.StatusForbidden, "plta tidak aktif, tidak dapat memasukkan data")
 	}
+
+	// if user.IsRadiusStatusActive() {
+	// 	if pltaUnit.Plta.IsRadiusStatusActive() {
+	// 		withinArea, err := helpers.IsIPWithinRadius(
+	// 			c.Get("IP").(string),
+	// 			pltaUnit.Plta.Lat,
+	// 			pltaUnit.Plta.Long,
+	// 			pltaUnit.Plta.GetRadiusInKilometer())
+	// 		if err != nil {
+	// 			return helpers.ResponseUnprocessableEntity(c)
+	// 		} else if !withinArea {
+	// 			return helpers.Response(c, http.StatusForbidden, "diluar jangkauan")
+	// 		}
+	// 	}
+	// }
 
 	turbine := in.ToModelCreate()
 	if err := t.turbineRepo.Create(turbine); err != nil {
@@ -82,7 +84,7 @@ func (t *turbineService) GetDetail(c echo.Context, id string) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.ResponseForbiddenAccess(c)
+		user = &models.User{}
 	}
 
 	turbine.CreatedBy = user.Name
@@ -118,7 +120,7 @@ func (t *turbineService) GetLatest(c echo.Context) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
-		return helpers.ResponseForbiddenAccess(c)
+		user = &models.User{}
 	}
 
 	turbine.CreatedBy = user.Name
@@ -127,7 +129,7 @@ func (t *turbineService) GetLatest(c echo.Context) error {
 }
 
 func (t *turbineService) Delete(c echo.Context, in *models.TurbineWriteRequest) error {
-	turbine, err := t.turbineRepo.GetByIdWithSelectedFields(in.Id, "*", "Tower")
+	turbine, err := t.turbineRepo.GetByIdWithSelectedFields(in.Id, "id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if turbine.IsEmpty() {

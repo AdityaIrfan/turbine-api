@@ -69,7 +69,7 @@ func (u *userRepository) Update(user *models.User, preloads ...string) error {
 func (u *userRepository) IsUsernameExist(username string) (bool, error) {
 	var user *models.User
 
-	if err := u.db.Select("username").Where("username = ?", username).First(&user).Error; err != nil {
+	if err := u.db.Debug().Select("username").Where("username = ?", username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
@@ -88,6 +88,20 @@ func (u *userRepository) IsEmailExist(email string) (bool, error) {
 			return false, nil
 		}
 		log.Error().Err(errors.New("ERROR QUERY IsEmailExist : " + err.Error())).Msg("")
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (u *userRepository) IsPhoneExist(phone string) (bool, error) {
+	var user *models.User
+
+	if err := u.db.Select("phone").Where("phone = ?", phone).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		log.Error().Err(errors.New("ERROR QUERY IsPhoneExist : " + err.Error())).Msg("")
 		return false, err
 	}
 
@@ -206,7 +220,7 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor, userRole mod
 	var users []*models.User
 	if err := db.Debug().
 		Preload("Division").
-		Offset(cursor.CurrentPage - 1).
+		Offset((cursor.CurrentPage - 1) * cursor.PerPage).
 		Limit(cursor.PerPage).
 		Order(fmt.Sprintf("%v %v", sortBy, cursor.SortOrder)).
 		Find(&users).Error; err != nil {

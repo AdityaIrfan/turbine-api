@@ -168,7 +168,7 @@ type TurbineWriteRequest struct {
 	GenBearingToCoupling float64                `json:"GenBearingToCoupling" form:"GenBearingToCoupling" validate:"required"`
 	CouplingToTurbine    float64                `json:"CouplingToTurbine" form:"CouplingToTurbine" validate:"required"`
 	Data                 map[string]interface{} `json:"Data" form:"Data" validate:"required"`
-	TotalBolts           uint32                 `json:"TotalBolts" form:"TotalBolts" validate:"required,min=4"`
+	TotalBolts           uint32                 `json:"TotalBolts" form:"TotalBolts" validate:"required,min=4,max=24"`
 	CurrentTorque        float64                `json:"CurrentTorque" form:"CurrentTorque" validate:"required"`
 	MaxTorque            float64                `json:"MaxTorque" form:"MaxTorque" validate:"required"`
 	WrittenBy            string

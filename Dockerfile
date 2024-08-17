@@ -16,10 +16,10 @@ RUN mkdir -p /go/src/turbine-app
 WORKDIR /go/src/turbine-api
 
 # Copy the GeoLite2-City.mmdb file into the container
-COPY GeoLite2-City.mmdb /go/src/turbine-api/GeoLite2-City.mmdb
+# COPY GeoLite2-City.mmdb /go/src/turbine-api/GeoLite2-City.mmdb
 
 # Remove the GeoLite2-City.mmdb file
-RUN rm GeoLite2-City.mmdb
+# RUN rm GeoLite2-City.mmdb
 
 # COPY go.mod and go.sum files to the workspace
 COPY go.mod . 
@@ -64,7 +64,7 @@ echo "${TIMEZONE}" > /etc/timezone && apk del tzdata
 EXPOSE ${PORT}
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/turbine-api .
-COPY --from=builder /go/src/turbine-api/GeoLite2-City.mmdb .
+# COPY --from=builder /go/src/turbine-api/GeoLite2-City.mmdb .
 
 RUN printf "#!/bin/sh\n\nwhile true; do\n\techo \"[INFO] Starting Service at \$(date)\"\n\t(./turbine-api >> ./history.log || echo \"[ERROR] Restarting Service at \$(date)\")\ndone" > run.sh
 RUN printf "#!/bin/sh\n./run.sh & tail -F ./history.log" > up.sh

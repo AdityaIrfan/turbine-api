@@ -110,7 +110,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	v1_UserRoutingByAdmin.GET("/:id", userHandler.GetDetailUserByAdmin, authAdmin)
 	v1_UserRoutingByAdmin.DELETE("/:id", userHandler.DeleteUserByAdmin, authAdmin)
 	v1_UserRoutingByAdmin.GET("", userHandler.GetListUserWithPaginateByAdmin, authAdmin)
-	v1_UserRoutingByAdmin.POST("/generate-password/:id", userHandler.GenerateUserPasswordByAdmin, authAdmin /*, applicationJson*/)
+	// v1_UserRoutingByAdmin.POST("/generate-password/:id", userHandler.GenerateUserPasswordByAdmin, authAdmin /*, applicationJson*/)
 
 	// USER ITSELF
 	v1_UserRouting := v1.Group("/my")

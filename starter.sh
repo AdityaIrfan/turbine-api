@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo
-echo $"NEEDS 1 ARGUMENT, './starter.sh develop' OR './starter.sh production'"
+echo $"NEEDS 1 ARGUMENT, './starter.sh dev' OR './starter.sh production'"
 echo
 
 # Arguments
@@ -10,11 +10,11 @@ server=$1
 docker_compose_yml=""
 env=""
 # Set variable based on server
-if [ "$server" = "develop" ]; then
+if [ "$server" = "dev" ]; then
   docker_compose_yml="docker-compose-develop.yml"
-  env=".env.develop"
+  env=".env.dev"
 elif [ "$server" = "production" ]; then
-  docker_compose_yml="docker-compose-develop.yml"
+  docker_compose_yml="docker-compose-production.yml"
   env=".env.production"
 else
   echo $'\xE2\x9C\x98' " UNAVAILABLE SERVER TYPE"
@@ -95,9 +95,9 @@ execute_sql_file() {
 export $(grep -v '^#' $env | xargs)
 DB_USER=${POSTGRES_USER}
 DB_NAME=${POSTGRES_DATABASE}
-POSTGRES_CONTAINER_NAME=$(yq e '.services.postgres.container_name' $docker_compose_yml)
-REDIS_CONTAINER_NAME=$(yq e '.services.redis.container_name' $docker_compose_yml)
-MAIN_APP=$(yq e '.services.app.container_name' $docker_compose_yml)
+POSTGRES_CONTAINER_NAME=$(yq e '.services.postgres-'$server'.container_name' $docker_compose_yml)
+REDIS_CONTAINER_NAME=$(yq e '.services.redis-'$server'.container_name' $docker_compose_yml)
+MAIN_APP=$(yq e '.services.app-'$server'.container_name' $docker_compose_yml)
 SQL_FILE="starter.sql"
 
 echo
@@ -144,7 +144,7 @@ echo "READY TO COOK :" $REDIS_CONTAINER_NAME
 if container_exists "$REDIS_CONTAINER_NAME"; then
   echo "-- Container $REDIS_CONTAINER_NAME already exists. Skipping Redis service."
 else
-  docker-compose -f $docker_compose_yml up --build -d redis
+  docker compose -f $docker_compose_yml up --build -d redis-$server
   wait_for_redis "$REDIS_CONTAINER_NAME" "$REDIS_PASSWORD"
 fi
 echo $'\xE2\x9C\x93' " COOKING" $REDIS_CONTAINER_NAME "SUCCESSFULLY !!!!"
@@ -155,7 +155,7 @@ echo "READY TO COOK :" $POSTGRES_CONTAINER_NAME
 if container_exists "$POSTGRES_CONTAINER_NAME"; then
   echo "-- Container $POSTGRES_CONTAINER_NAME already exists. Skipping PostgreSQL service."
 else
-  docker-compose -f $docker_compose_yml up --build -d postgres
+  docker compose -f $docker_compose_yml up --build -d postgres-$server
   wait_for_postgres "$POSTGRES_CONTAINER_NAME" "$DB_USER" "$DB_NAME"
   create_database "$POSTGRES_CONTAINER_NAME" "$DB_USER" "$DB_NAME"
   execute_sql_file "$POSTGRES_CONTAINER_NAME" "$DB_USER" "$DB_NAME" "$SQL_FILE"
@@ -165,5 +165,5 @@ echo
 
 # Start the golang_api service
 echo "READY TO COOK THE MAIN KING"
-docker-compose -f $docker_compose_yml up --build -d app
+docker compose -f $docker_compose_yml up --build -d app-$server
 echo $'\xE2\x9C\x93' " COOKING THE MAIN KING SUCCESSFULLY !!!!"

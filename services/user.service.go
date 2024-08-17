@@ -2,6 +2,7 @@ package services
 
 import (
 	"net/http"
+	"net/mail"
 
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/helpers"
@@ -83,6 +84,13 @@ func (u *userService) UpdateUserByAdmin(c echo.Context, in *models.UserUpdateByA
 			return helpers.Response(c, http.StatusBadRequest, "status user tidak tersedia")
 		}
 
+		switch *in.Status {
+		case models.UserStatus_Active:
+			user.ActivatedBy = in.UpdatedBy
+		case models.UserStatus_BlockedByAdmin:
+			user.BlockedBy = in.UpdatedBy
+		}
+
 		anyUpdated = true
 		user.Status = *in.Status
 	}
@@ -162,35 +170,35 @@ func (u *userService) GetListUserWithPaginateByAdmin(c echo.Context, cursor *hel
 	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", userRes, pagination)
 }
 
-func (u *userService) GenerateUserPasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
-	user, err := u.userRepo.GetById(in.Id)
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	} else if user.IsEmpty() {
-		return helpers.ResponseForbiddenAccess(c)
-	}
+// func (u *userService) GenerateUserPasswordByAdmin(c echo.Context, in *models.GeneratePasswordByAdmin) error {
+// 	user, err := u.userRepo.GetById(in.Id)
+// 	if err != nil {
+// 		return helpers.ResponseUnprocessableEntity(c)
+// 	} else if user.IsEmpty() {
+// 		return helpers.ResponseForbiddenAccess(c)
+// 	}
 
-	if !user.IsGeneralUser() {
-		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
-	}
+// 	if !user.IsGeneralUser() {
+// 		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+// 	}
 
-	password := helpers.GenerateRandomString(10)
-	salt, hash, err := helpers.GenerateHashAndSalt(password)
-	if err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	}
+// 	password := helpers.GenerateRandomString(10)
+// 	salt, hash, err := helpers.GenerateHashAndSalt(password)
+// 	if err != nil {
+// 		return helpers.ResponseUnprocessableEntity(c)
+// 	}
 
-	user.PasswordSalt = salt
-	user.PasswordHash = hash
+// 	user.PasswordSalt = salt
+// 	user.PasswordHash = hash
 
-	if err := u.userRepo.Update(user); err != nil {
-		return helpers.ResponseUnprocessableEntity(c)
-	}
+// 	if err := u.userRepo.Update(user); err != nil {
+// 		return helpers.ResponseUnprocessableEntity(c)
+// 	}
 
-	return helpers.Response(c, http.StatusOK, "berhasil membuat password baru", map[string]interface{}{
-		"Password": password,
-	})
-}
+// 	return helpers.Response(c, http.StatusOK, "berhasil membuat password baru", map[string]interface{}{
+// 		"Password": password,
+// 	})
+// }
 
 func (u *userService) UpdateMyProfile(c echo.Context, in *models.UserUpdateRequest) error {
 	user, err := u.userRepo.GetById(in.Id, "Division")
@@ -215,6 +223,10 @@ func (u *userService) UpdateMyProfile(c echo.Context, in *models.UserUpdateReque
 	}
 
 	if in.Email != nil && *in.Email != "" && user.Email != *in.Email {
+		if _, err := mail.ParseAddress(*in.Email); err != nil {
+			return helpers.Response(c, http.StatusBadRequest, "Email is not valid")
+		}
+
 		userByEmail, err := u.userRepo.GetByEmailWithSelectedFields(*in.Email, "id")
 		if err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
@@ -259,13 +271,17 @@ func (u *userService) ChangeMyPassword(c echo.Context, in *models.UserChangePass
 		return helpers.ResponseForbiddenAccess(c)
 	}
 
-	salt, hash, err := helpers.GenerateHashAndSalt(in.Password)
-	if err != nil {
+	// salt, hash, err := helpers.GenerateHashAndSalt(in.Password)
+	// if err != nil {
+	// 	return helpers.ResponseUnprocessableEntity(c)
+	// }
+
+	// user.PasswordSalt = salt
+	// user.PasswordHash = hash
+
+	if err := user.GeneratePassword(in.Password); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
-
-	user.PasswordSalt = salt
-	user.PasswordHash = hash
 
 	if err := u.userRepo.Update(user); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
@@ -273,3 +289,5 @@ func (u *userService) ChangeMyPassword(c echo.Context, in *models.UserChangePass
 
 	return helpers.Response(c, http.StatusOK, "berhasil mengubah password")
 }
+
+

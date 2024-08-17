@@ -37,21 +37,23 @@ type User struct {
 	Name         string          `gorm:"column:name"`
 	Username     string          `gorm:"column:username"`
 	Email        string          `gorm:"column:email"`
+	Phone        string          `gorm:"column:Phone"`
 	DivisionId   string          `gorm:"column:division_id"`
 	Role         UserRole        `gorm:"column:role"`
 	Status       UserStatus      `gorm:"column:status"`
 	RadiusStatus bool            `gorm:"column:radius_status"`
-	ApprovalBy   string          `gorm:"column:approval_by"`
+	ActivatedBy  string          `gorm:"column:activated_by"`
+	BlockedBy    string          `gorm:"column:blocked_by"`
 	PasswordHash string          `gorm:"column:password_hash"`
 	PasswordSalt string          `gorm:"column:password_salt"`
 	CreatedAt    *time.Time      `gorm:"column:created_at"`
-	CreatedBy    string          `json:"column:created_by"`
+	CreatedBy    string          `gorm:"column:created_by"`
 	UpdatedAt    *time.Time      `gorm:"column:updated_at;<-:update"`
 	DeletedAt    *gorm.DeletedAt `gorm:"column:deleted_at"`
+	DeletedBy    string          `gorm:"column:deleted_by"`
 
-	CreatedByUser  *User     `gorm:"foreignKey:CreatedBy;references:Id"`
-	ApprovalByUser *User     `gorm:"foreignKey:ApprovalBy;references:Id"`
-	Division       *Division `gorm:"foreignKey:DivisionId;references:Id"`
+	CreatedByUser *User     `gorm:"foreignKey:CreatedBy;references:Id"`
+	Division      *Division `gorm:"foreignKey:DivisionId;references:Id"`
 }
 
 func (u *User) IsEmpty() bool {
@@ -134,8 +136,9 @@ type UserListResponse struct {
 type UserCreateByAdminRequest struct {
 	Name       string `json:"Name" form:"Name" validate:"required"`
 	Username   string `json:"useranme" form:"Username" validate:"required"`
-	Email      string `json:"Email" form:"Email" validate:"required"`
+	Email      string `json:"Email" form:"Email" validate:"required,email"`
 	DivisionId string `json:"DivisionId" form:"DivisionId" validate:"required"`
+	CreatedBy  string
 }
 
 func (u *UserCreateByAdminRequest) ToModel() *User {
@@ -150,8 +153,9 @@ func (u *UserCreateByAdminRequest) ToModel() *User {
 		Role:         UserRole_User,
 		Status:       UserStatus_Active,
 		RadiusStatus: true,
-		PasswordHash: "",
-		PasswordSalt: "",
+		// PasswordHash: "",
+		// PasswordSalt: "",
+		CreatedBy: u.CreatedBy,
 	}
 }
 
@@ -161,6 +165,7 @@ type UserUpdateByAdminRequest struct {
 	DivisionId   *string     `json:"DivisionId" form:"DivisionId"`
 	Status       *UserStatus `json:"Status" form:"Status"`
 	RadiusStatus *bool       `json:"RadiusStatus" form:"RadiusStatus"`
+	UpdatedBy    string
 }
 
 type UserUpdateRequest struct {
@@ -202,6 +207,8 @@ func IsUserStatusExist(userStatus UserStatus) bool {
 	case UserStatus_Active:
 		return true
 	case UserStatus_InActive:
+		return true
+	case UserStatus_BlockedByAdmin:
 		return true
 	default:
 		return false
@@ -252,3 +259,35 @@ func (u *User) GetSource() string {
 		return "user"
 	}
 }
+
+// func (u *User) GeneratePassword(password string) error {
+// 	// Generate a 32-byte key for AES-256
+// 	key, err := helpers.GenerateKey(32)
+// 	if err != nil {
+// 		log.Error().Err(errors.New("ERROR GENERATING KEY : " + err.Error())).Msg("")
+// 		return err
+// 	}
+
+// 	// Encrypt the plaintext
+// 	cipherText, iv, err := helpers.Encrypt([]byte(password), key)
+// 	if err != nil {
+// 		log.Error().Err(errors.New("ERROR PASSWORD ENCRYPTION : " + err.Error())).Msg("")
+// 		return err
+// 	}
+
+// 	u.Password = string(cipherText)
+// 	u.Key = string(key)
+// 	u.Iv = string(iv)
+// 	return nil
+// }
+
+// func (u *User) GetPassword() string {
+// 	// Decrypt the ciphertext
+// 	decryptedText, err := helpers.Decrypt([]byte(u.Password), []byte(u.Key), []byte(u.Iv))
+// 	if err != nil {
+// 		log.Error().Err(errors.New("ERROR DECRYPTING PASSWORD : " + err.Error()))
+// 		return ""
+// 	}
+
+// 	return string(decryptedText)
+// }

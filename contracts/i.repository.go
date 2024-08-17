@@ -34,6 +34,7 @@ type IUserRepository interface {
 	Update(user *models.User, preloads ...string) error
 	IsUsernameExist(username string) (bool, error)
 	IsEmailExist(email string) (bool, error)
+	IsPhoneExist(phone string) (bool, error)
 	GetById(id string, preloads ...string) (*models.User, error)
 	GetByIdWithSelectedFields(id string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByUsernameWithSelectedFields(username string, selectedFields string, preloads ...string) (*models.User, error)

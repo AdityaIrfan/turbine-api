@@ -49,6 +49,14 @@ func (a *authService) Register(c echo.Context, in *models.Register) error {
 		return helpers.Response(c, http.StatusBadRequest, "email sudah digunakan")
 	}
 
+	// check phone
+	exist, err = a.userRepo.IsPhoneExist(in.Phone)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if exist {
+		return helpers.Response(c, http.StatusBadRequest, "nomor telefon sudah digunakan")
+	}
+
 	// check division
 	division, err := a.divisionRepo.GetByIdWithSelectedFields(in.DivisionId, "id")
 	if err != nil {
@@ -61,6 +69,7 @@ func (a *authService) Register(c echo.Context, in *models.Register) error {
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
+
 	if err := a.userRepo.Create(user); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}

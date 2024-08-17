@@ -1,10 +1,10 @@
 services:
-  redis:
+  redis-dev:
     image: redis
     container_name: turbine-redis-dev
     restart: always
     env_file:
-      - .env.develop
+      - .env.dev
     command: ["redis-server", "--requirepass", "Snjsd8&*&S7d6sy7sdHSUd7872913hSK"]  # Use the password in the Redis command
     volumes:
       - ~/.encrypted/docker-volumes/data-persistence/redis-dev:/data  # Named volume for Redis data persistence
@@ -14,12 +14,12 @@ services:
     networks:
       - turbine-network
 
-  postgres:
+  postgres-dev:
     image: postgres
     container_name: turbine-postgres-dev
     restart: always
     env_file:
-      - .env.develop
+      - .env.dev
     volumes:
       - ~/.encrypted/docker-volumes/data-persistence/postgres-dev:/var/lib/postgresql/data  # Named volume for data persistence
       # - ./postgres.conf:/etc/postgresql/postgresql.conf  # Bind mount for custom configuration (optional)
@@ -28,13 +28,13 @@ services:
     networks:
       - turbine-network
 
-  app:
-    image: turbine-api-dev:v1.0.0
+  app-dev:
+    image: turbine-api-dev:v1.0.1
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_ENV: develop
+        APP_ENV: dev
     container_name: turbine-api-dev
     ports:
       - 8081:8081

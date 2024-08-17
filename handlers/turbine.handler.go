@@ -24,6 +24,17 @@ func NewTurbineHandler(turbineService contract.ITurbineService) contract.ITurbin
 }
 
 func (t *turbineHandler) Create(c echo.Context) error {
+	// ip := c.RealIP()
+	// if strings.Contains(ip, ", ") {
+	// 	ip = strings.ReplaceAll(ip, ", ", "")
+	// }
+	// if !helpers.IsValidIP(ip) {
+	// 	log.Error().Err(fmt.Errorf("THIS IP %s IS NOT VALID", ip)).Msg("")
+	// 	log.Error().Err(fmt.Errorf("IP : %s", ip)).Msg("")
+	// 	log.Error().Err(fmt.Errorf("LEN IP CHAR : %d", len(ip))).Msg("")
+	// 	return helpers.ResponseForbiddenAccess(c)
+	// }
+
 	payload := new(models.TurbineWriteRequest)
 
 	if c.FormValue("Data") != "" {
@@ -48,7 +59,7 @@ func (t *turbineHandler) Create(c echo.Context) error {
 	}
 
 	// c.Set("IP", helpers.GetClientIP(c.Request()))
-	c.Set("IP", c.RealIP())
+	// c.Set("IP", ip)
 	payload.Id = c.Param("id")
 	payload.WrittenBy = c.Get("claims").(jwt.MapClaims)["Id"].(string)
 	return t.turbineService.Create(c, payload)

@@ -149,7 +149,7 @@ func (u *divisionRepository) GetAllWithPaginate(cursor *helpers.Cursor) ([]*mode
 	var divisions []*models.Division
 	if err := db.Debug().
 		Select("id, type, created_at, updated_at").
-		Offset(cursor.CurrentPage - 1).
+		Offset((cursor.CurrentPage - 1) * cursor.PerPage).
 		Limit(cursor.PerPage).
 		Order(fmt.Sprintf("%v %v", sortBy, cursor.SortOrder)).
 		Find(&divisions).Error; err != nil {

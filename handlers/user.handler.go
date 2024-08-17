@@ -34,6 +34,7 @@ func (u *userHandler) CreateUserByAdmin(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
+	payload.CreatedBy = c.Get("claims").(jwt.MapClaims)["Id"].(string)
 	return u.userService.CreateUserByAdmin(c, payload)
 }
 
@@ -50,6 +51,7 @@ func (u *userHandler) UpdateUserByAdmin(c echo.Context) error {
 	}
 
 	payload.Id = c.Param("id")
+	payload.UpdatedBy = c.Get("claims").(jwt.MapClaims)["Id"].(string)
 	return u.userService.UpdateUserByAdmin(c, payload)
 }
 
@@ -81,14 +83,14 @@ func (u *userHandler) GetListUserWithPaginateByAdmin(c echo.Context) error {
 	return u.userService.GetListUserWithPaginateByAdmin(c, cursor)
 }
 
-func (u *userHandler) GenerateUserPasswordByAdmin(c echo.Context) error {
-	payload := &models.GeneratePasswordByAdmin{
-		Id:      c.Param("id"),
-		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
-	}
+// func (u *userHandler) GenerateUserPasswordByAdmin(c echo.Context) error {
+// 	payload := &models.GeneratePasswordByAdmin{
+// 		Id:      c.Param("id"),
+// 		AdminId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
+// 	}
 
-	return u.userService.GenerateUserPasswordByAdmin(c, payload)
-}
+// 	return u.userService.GenerateUserPasswordByAdmin(c, payload)
+// }
 
 func (u *userHandler) UpdateMyProfile(c echo.Context) error {
 	payload := new(models.UserUpdateRequest)

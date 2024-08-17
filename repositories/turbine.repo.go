@@ -60,18 +60,26 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 	alreadyWithPltaUnit := false
 
 	if cursor.Search != "" {
+		if strings.Contains(strings.ToLower(cursor.Search), "unit") {
+			cursor.Search = strings.ReplaceAll(cursor.Search, "unit", "")
+		} else if strings.Contains(strings.ToLower(cursor.Search), "unit ") {
+			cursor.Search = strings.ReplaceAll(cursor.Search, "unit ", "")
+		}
+
 		db = db.Joins("LEFT JOIN plta_units ON plta_units.id = turbines.plta_unit_id").
+			Joins("LEFT JOIN plta ON plta.id = plta_units.plta_id").
 			Where("LOWER(plta_units.name) LIKE LOWER(?)", "%"+cursor.Search+"%").
-			Or("LOWER(turbines.title) LIKE LOWER(?)", "%"+cursor.Search+"%")
+			Or("LOWER(turbines.title) LIKE LOWER(?)", "%"+cursor.Search+"%").
+			Or("LOWER(plta.name) LIKE LOWER(?)", "%"+cursor.Search+"%")
 		alreadyWithPltaUnit = true
 	}
 
 	if cursor.StartDate != "" {
-		db = db.Where("created_at >= ?", cursor.StartDate)
+		db = db.Where("turbines.created_at >= ?", cursor.StartDate)
 	}
 
 	if cursor.EndDate != "" {
-		db = db.Where("created_at <= ?", cursor.EndDate)
+		db = db.Where("turbines.created_at <= ?", cursor.EndDate)
 	}
 
 	if cursor.Filter != "" {
@@ -87,19 +95,19 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 	var sortBy string
 	switch strings.ToLower(cursor.SortBy) {
 	case "title":
-		sortBy = "title"
+		sortBy = "turbines.title"
 	case "pltaUnitName":
 		if !alreadyWithPltaUnit {
-			db = db.Joins("LEFT JOIN plta_units ON plta_units.id = turbines.plta_unit_id")
+			db = db.Joins("LEFT JOIN plta_units ON plta_units.id = turbines.plta_unit_id").
+				Joins("LEFT JOIN plta ON plta_units.plta_id = plta.id")
 		}
 
-		db = db.Joins("LEFT JOIN plta ON plta_units.plta_id = plta.id")
 		selectedFields += ", plta.name || '- Unit ' || plta_units.name"
 		sortBy = "plta_units.name"
 	case "createdat":
-		sortBy = "created_at"
+		sortBy = "turbines.created_at"
 	default:
-		sortBy = "created_at"
+		sortBy = "turbines.created_at"
 	}
 
 	var turbine []*models.Turbine
