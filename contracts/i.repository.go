@@ -40,7 +40,7 @@ type IUserRepository interface {
 	GetByUsernameWithSelectedFields(username string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByEmailWithSelectedFields(email string, selectedFields string, preloads ...string) (*models.User, error)
 	GetByPhoneWithSelectedFields(phone string, selectedFields string, preloads ...string) (*models.User, error)
-	GetAllWithPaginate(cursor *helpers.Cursor, userRole models.UserRole) ([]*models.User, *helpers.CursorPagination, error)
+	GetAllWithPaginate(cursor *helpers.Cursor, userRoles ...models.UserRole) ([]*models.User, *helpers.CursorPagination, error)
 	Delete(user *models.User) error
 	GetTotalByStatus(status models.UserStatus) (int64, error)
 }

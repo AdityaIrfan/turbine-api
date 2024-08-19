@@ -99,11 +99,12 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	v1_AuthRouting.POST("/logout", authHandler.Logout, allAuth)
 
 	// ADMIN BY SUPER ADMIN
-	// v1_adminRoutingBySuperAdmin := v1.Group("/super/users")
-	// v1_adminRoutingBySuperAdmin.PUT("/:id", userHandler.UpdateUserByAdmin, authAdmin /*, applicationJson*/)
-	// v1_adminRoutingBySuperAdmin.DELETE("/:id", userHandler.DeleteUserByAdmin, authAdmin)
-	// v1_adminRoutingBySuperAdmin.GET("", userHandler.GetListUserWithPaginateByAdmin, authAdmin)
-	// v1_adminRoutingBySuperAdmin.GET("/:id", userHandler.GetDetailUserByAdmin, authAdmin)
+	v1_adminRoutingBySuperAdmin := v1.Group("/super/users")
+	v1_adminRoutingBySuperAdmin.PUT("/:id", userHandler.UpdateUserBySuperAdmin, authAdmin /*, applicationJson*/)
+	v1_adminRoutingBySuperAdmin.DELETE("/:id", userHandler.DeleteUserBySuperAdmin, authAdmin)
+	v1_adminRoutingBySuperAdmin.GET("", userHandler.GetListUserWithPaginateBySuperAdmin, authAdmin)
+	v1_adminRoutingBySuperAdmin.GET("/:id", userHandler.GetDetailUserBySuperAdmin, authAdmin)
+	v1_adminRoutingBySuperAdmin.POST("/generate-password/:id", userHandler.GenerateUserPasswordBySuperAdmin, authAdmin /*, applicationJson*/)
 
 	// USER BY ADMIN
 	v1_UserRoutingByAdmin := v1.Group("/admin/users")
@@ -112,7 +113,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	v1_UserRoutingByAdmin.GET("/:id", userHandler.GetDetailUserByAdmin, authAdmin)
 	v1_UserRoutingByAdmin.DELETE("/:id", userHandler.DeleteUserByAdmin, authAdmin)
 	v1_UserRoutingByAdmin.GET("", userHandler.GetListUserWithPaginateByAdmin, authAdmin)
-	// v1_UserRoutingByAdmin.POST("/generate-password/:id", userHandler.GenerateUserPasswordByAdmin, authAdmin /*, applicationJson*/)
+	v1_UserRoutingByAdmin.POST("/generate-password/:id", userHandler.GenerateUserPasswordByAdmin, authAdmin /*, applicationJson*/)
 
 	// USER ITSELF
 	v1_UserRouting := v1.Group("/my")
@@ -144,6 +145,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	v1_TurbineRouting.GET("", turbineHandler.GetList, allAuth)
 	v1_TurbineRouting.GET("/latest", turbineHandler.GetLatest, allAuth)
 	v1_TurbineRouting.DELETE("/:id", turbineHandler.Delete, allAuth)
+	v1_TurbineRouting.GET("/:id/report", turbineHandler.DownloadReport, allAuth)
 
 	v1_PltaUnitRouting := v1.Group("/plta-unit")
 	v1_PltaUnitRouting.PUT("/:id", pltaUnitHandler.CreateOrUpdate, authAdmin)

@@ -91,3 +91,7 @@ func (t *turbineHandler) Delete(c echo.Context) error {
 		WrittenBy: c.Get("claims").(jwt.MapClaims)["Id"].(string),
 	})
 }
+
+func (t *turbineHandler) DownloadReport(c echo.Context) error {
+	return t.turbineService.DownloadReport(c, c.Param("id"))
+}

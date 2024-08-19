@@ -1,7 +1,9 @@
 package services
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/helpers"
@@ -142,4 +144,35 @@ func (t *turbineService) Delete(c echo.Context, in *models.TurbineWriteRequest) 
 	}
 
 	return helpers.Response(c, http.StatusOK, "berhasil menghapus data turbine", nil)
+}
+
+func (t *turbineService) DownloadReport(c echo.Context, id string) error {
+	turbine, err := t.turbineRepo.GetByIdWithSelectedFields(id, "*", "PltaUnit.Plta")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if turbine.IsEmpty() {
+		return helpers.Response(c, http.StatusNotFound, "data turbine tidak ditemukan")
+	}
+
+	// created by
+	user, err := t.userRepo.GetByIdWithSelectedFields(turbine.CreatedBy, "name")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		user = &models.User{}
+	}
+
+	turbine.CreatedBy = user.Name
+
+	reportBytes, err := turbine.GenerateReport()
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	// Set headers
+	c.Response().Header().Set("Content-Type", "application/pdf")
+	c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s [%s].pdf", turbine.Title, turbine.CreatedAt.Format("2006-01-02")))
+	c.Response().Header().Set("Content-Length", strconv.Itoa(len(reportBytes)))
+
+	return c.Blob(http.StatusOK, "application/pdf", reportBytes)
 }

@@ -302,3 +302,49 @@ func (u *User) GetSource() string {
 
 // 	return string(decryptedText)
 // }
+
+type UserCreateBySuperAdminRequest struct {
+	Name       string   `json:"Name" form:"Name" validate:"required"`
+	Username   string   `json:"useranme" form:"Username" validate:"required"`
+	Email      string   `json:"Email" form:"Email" validate:"required,email"`
+	DivisionId string   `json:"DivisionId" form:"DivisionId" validate:"required"`
+	Role       UserRole `json:"RoleId" form:"DivisionId" validate:"required"`
+	CreatedBy  string
+}
+
+func (u *UserCreateBySuperAdminRequest) ToModel() *User {
+	id := ulid.Make().String()
+
+	return &User{
+		Id:           id,
+		Name:         u.Name,
+		Username:     u.Username,
+		Email:        u.Email,
+		DivisionId:   u.DivisionId,
+		Role:         u.Role,
+		Status:       UserStatus_Active,
+		RadiusStatus: true,
+		PasswordHash: "",
+		PasswordSalt: "",
+		CreatedBy:    u.CreatedBy,
+	}
+}
+
+type UserUpdateBySuperAdminRequest struct {
+	Id           string
+	Role         *UserRole   `json:"Role" form:"Role"`
+	DivisionId   *string     `json:"DivisionId" form:"DivisionId"`
+	Status       *UserStatus `json:"Status" form:"Status"`
+	RadiusStatus *bool       `json:"RadiusStatus" form:"RadiusStatus"`
+	UpdatedBy    string
+}
+
+type UserDeleteBySuperAdminRequest struct {
+	Id      string
+	AdminId string
+}
+
+type GeneratePasswordBySuperAdmin struct {
+	Id      string
+	AdminId string
+}

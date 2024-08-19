@@ -26,6 +26,186 @@ func NewUserService(userRepo contract.IUserRepository, divisionRepo contract.IDi
 	}
 }
 
+func (u *userService) CreateUserBySuperAdmin(c echo.Context, in *models.UserCreateBySuperAdminRequest) error {
+	// check role
+	if in.Role != models.UserRole_User && in.Role != models.UserRole_Admin {
+		return helpers.Response(c, http.StatusBadRequest, "role tidak tersedia")
+	}
+
+	// check existing username
+	if exist, err := u.userRepo.IsUsernameExist(in.Username); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if exist {
+		return helpers.Response(c, http.StatusBadRequest, "username sudah digunakan")
+	}
+
+	// check existing email
+	if exist, err := u.userRepo.IsEmailExist(in.Email); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if exist {
+		return helpers.Response(c, http.StatusBadRequest, "email sudah digunakan")
+	}
+
+	// check division by id
+	division, err := u.divisionRepo.GetByIdWithSelectedFields(in.DivisionId, "id")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if division.IsEmpty() {
+		return helpers.Response(c, http.StatusBadRequest, "divisi tidak ditemukan")
+	}
+
+	user := in.ToModel()
+	if err := u.userRepo.Create(user, "Division"); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil membuat user baru", user.ToResponse())
+}
+
+func (u *userService) UpdateUserBySuperAdmin(c echo.Context, in *models.UserUpdateBySuperAdminRequest) error {
+	user, err := u.userRepo.GetById(in.Id, "Division")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.Response(c, http.StatusBadRequest, "user tidak ditemukan")
+	}
+
+	if user.IsSuperAdmin() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+	}
+
+	var anyUpdated bool
+
+	if in.Role != nil && user.Role != *in.Role {
+		if !models.IsUserRoleAvailable(*in.Role) {
+			return helpers.Response(c, http.StatusBadRequest, "role tidak tersedia")
+		}
+
+		anyUpdated = true
+		user.Role = *in.Role
+	}
+
+	if in.Status != nil && user.Status != *in.Status {
+		if !models.IsUserStatusExist(*in.Status) {
+			return helpers.Response(c, http.StatusBadRequest, "status user tidak tersedia")
+		}
+
+		switch *in.Status {
+		case models.UserStatus_Active:
+			user.ActivatedBy = in.UpdatedBy
+		case models.UserStatus_BlockedByAdmin:
+			user.BlockedBy = in.UpdatedBy
+		}
+
+		anyUpdated = true
+		user.Status = *in.Status
+	}
+
+	if in.RadiusStatus != nil && user.RadiusStatus != *in.RadiusStatus {
+		user.RadiusStatus = *in.RadiusStatus
+		anyUpdated = true
+	}
+
+	if in.DivisionId != nil && user.DivisionId != *in.DivisionId {
+		division, err := u.divisionRepo.GetByIdWithSelectedFields(*in.DivisionId, "*")
+		if err != nil {
+			return helpers.ResponseUnprocessableEntity(c)
+		} else if division.IsEmpty() {
+			return helpers.Response(c, http.StatusBadRequest, "divisi tidak ditemukan")
+		}
+
+		anyUpdated = true
+		user.DivisionId = *in.DivisionId
+		user.Division = division
+	}
+
+	if anyUpdated {
+		if err := u.userRepo.Update(user, "Division"); err != nil {
+			return helpers.ResponseUnprocessableEntity(c)
+		}
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil mengubah user", user.ToResponse())
+}
+
+func (u *userService) GetDetailUserBySuperAdmin(c echo.Context, in *models.UserGetDetailRequest) error {
+	user, err := u.userRepo.GetById(in.Id, "Division")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.Response(c, http.StatusNotFound, "user tidak ditemukan")
+	}
+
+	if user.IsSuperAdmin() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan user", user.ToResponse())
+}
+
+func (u *userService) DeleteUserBySuperAdmin(c echo.Context, in *models.UserDeleteBySuperAdminRequest) error {
+	user, err := u.userRepo.GetByIdWithSelectedFields(in.Id, "id")
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
+	}
+
+	if user.IsSuperAdmin() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+	}
+
+	if err := u.userRepo.Delete(user); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil menghapus user")
+}
+
+func (u *userService) GetListUserWithPaginateBySuperAdmin(c echo.Context, cursor *helpers.Cursor) error {
+	users, pagination, err := u.userRepo.GetAllWithPaginate(cursor, models.UserRole_User, models.UserRole_Admin)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	var userRes = []*models.UserListResponse{}
+	for _, user := range users {
+		userRes = append(userRes, user.ToResponseList())
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", userRes, pagination)
+}
+
+func (u *userService) GenerateUserPasswordBySuperAdmin(c echo.Context, in *models.GeneratePasswordBySuperAdmin) error {
+	user, err := u.userRepo.GetById(in.Id)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	} else if user.IsEmpty() {
+		return helpers.ResponseForbiddenAccess(c)
+	}
+
+	if user.IsSuperAdmin() {
+		return helpers.Response(c, http.StatusBadRequest, "kamu tidak memliki izin untuk mengakses fitur ini")
+	}
+
+	password := helpers.GenerateRandomString(10)
+	salt, hash, err := helpers.GenerateHashAndSalt(password)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	user.PasswordSalt = salt
+	user.PasswordHash = hash
+
+	if err := u.userRepo.Update(user); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
+	return helpers.Response(c, http.StatusOK, "berhasil membuat password baru", map[string]interface{}{
+		"Password": password,
+	})
+}
+
 func (u *userService) CreateUserByAdmin(c echo.Context, in *models.UserCreateByAdminRequest) error {
 	// check existing username
 	if exist, err := u.userRepo.IsUsernameExist(in.Username); err != nil {

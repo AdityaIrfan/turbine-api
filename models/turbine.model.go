@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 
 	"pln/AdityaIrfan/turbine-api/helpers"
 
+	"github.com/jung-kurt/gofpdf/v2"
 	"github.com/oklog/ulid/v2"
 	"github.com/phuslu/log"
 	"gorm.io/datatypes"
@@ -27,6 +29,8 @@ var TurbineDefaultSortMap = map[string]string{
 var TurbineDefaultFilter = map[string]string{
 	"Tower": "tower_id",
 }
+
+const TotalCrockednessToleration = 3
 
 type Turbine struct {
 	Id                   string          `gorm:"column:id"`
@@ -650,7 +654,7 @@ func (t *Turbine) ToResponse() *TurbineResponse {
 		TotalCrockedness:  totalCrockedness,
 		CreatedAt:         t.CreatedAt.Format(helpers.DefaultTimeFormat),
 		CreatedBy:         t.CreatedBy,
-		Status:            totalCrockedness <= 3,
+		Status:            totalCrockedness <= TotalCrockednessToleration,
 		TotalBolts:        t.TotalBolts,
 		CurrentTorque:     t.CurrentTorque,
 		MaxTorque:         t.MaxTorque,
@@ -768,4 +772,382 @@ func GetScale(data ...float64) float64 {
 	}
 
 	return data[len(data)-1] + 1
+}
+
+func (t *Turbine) GenerateReport() ([]byte, error) {
+	turbineResponse := t.ToResponse()
+
+	// upper
+	upper := [][]string{}
+	upperInit := false
+	for _, u := range turbineResponse.DetailData["Upper"].(map[string]interface{}) {
+		indexColumn := 0
+		for _, data := range u.(map[string]interface{}) {
+			if !upperInit {
+				upper = append(upper, []string{})
+			}
+
+			upper[indexColumn] = append(upper[indexColumn], fmt.Sprintf("%v", data))
+			indexColumn++
+		}
+
+		upperInit = true
+	}
+
+	// clutch
+	clutch := [][]string{}
+	clutchInit := false
+	for _, u := range turbineResponse.DetailData["Clutch"].(map[string]interface{}) {
+		indexColumn := 0
+		for _, data := range u.(map[string]interface{}) {
+			if !clutchInit {
+				clutch = append(clutch, []string{})
+			}
+
+			clutch[indexColumn] = append(clutch[indexColumn], fmt.Sprintf("%v", data))
+			indexColumn++
+		}
+
+		clutchInit = true
+	}
+
+	// turbine
+	turbine := [][]string{}
+	turbineInit := false
+	for _, u := range turbineResponse.DetailData["Turbine"].(map[string]interface{}) {
+		indexColumn := 0
+		for _, data := range u.(map[string]interface{}) {
+			if !turbineInit {
+				turbine = append(turbine, []string{})
+			}
+
+			turbine[indexColumn] = append(turbine[indexColumn], fmt.Sprintf("%v", data))
+			indexColumn++
+		}
+
+		turbineInit = true
+	}
+
+	dataTurbine := map[string][][]string{
+		"Upper":   upper,
+		"Clutch":  clutch,
+		"Turbine": turbine,
+	}
+
+	return t.makePDF(
+		dataTurbine,
+		t.CreatedAt,
+		turbineResponse.CreatedBy,
+		turbineResponse.TotalBolts,
+		turbineResponse.CurrentTorque,
+		turbineResponse.MaxTorque,
+		turbineResponse.Shaft.GenBearingToKopling,
+		turbineResponse.Shaft.GenBearingToKopling,
+		turbineResponse.Shaft.Ratio,
+		turbineResponse.TotalCrockedness,
+		turbineResponse.TotalCrockedness <= TotalCrockednessToleration,
+	)
+}
+
+func (t *Turbine) makePDF(
+	dataTurbine map[string][][]string,
+	createdAt *time.Time,
+	createdBy string,
+	totalBolts uint32,
+	currentTorque float64,
+	maxTorque float64,
+	genBearingToKoping float64,
+	koplingToTurbine float64,
+	ratio float64,
+	totalRounOut float64,
+	isTotalCrockednessSave bool) ([]byte, error) {
+	pdf := gofpdf.New("P", "mm", "legal", "")
+
+	// Set font for titles
+	pdf.SetFont("Arial", "B", 12)
+
+	// Add a page
+	pdf.AddPage()
+
+	// Set position for the first table (below the image)
+	pdf.Ln(5) // Move 60mm down from the top
+
+	// Add titletitle
+	pdf.CellFormat(0, 7, "LAPORAN DATA TURBINE", "", 1, "C", false, 0, "")
+
+	pdf.Ln(5) // Move 60mm down from the top
+
+	details(pdf, createdBy, createdAt.Format("02/01/2006 - 15.04"), t.Title)
+
+	// Create the first table with a title
+	tableData(pdf, "Tabel Data Upper", dataTurbine["Upper"])
+
+	// Create the second table with a title
+	tableData(pdf, "Tabel Data Kopling", dataTurbine["Clutch"])
+
+	// Create the third table with a title
+	tableData(pdf, "Tabel Data Turbin", dataTurbine["Turbine"])
+
+	// Conclussion
+	conclussion(pdf,
+		createdBy,
+		totalBolts,
+		currentTorque,
+		maxTorque,
+		genBearingToKoping,
+		koplingToTurbine,
+		ratio,
+		totalRounOut,
+		isTotalCrockednessSave)
+
+	// Output the PDF to a buffer
+	var buf bytes.Buffer
+	err := pdf.Output(&buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func details(pdf *gofpdf.Fpdf, createdBy, createdAt, title string) {
+	// set font to be bold
+	pdf.SetFont("Arial", "B", 12)
+
+	// Define column widths
+	colWidths := []float64{35, 5, 132}
+	tableWidth := 0.0
+	for _, w := range colWidths {
+		tableWidth += w
+	}
+
+	// Center the table by setting the X position
+	pdf.SetX((210 - tableWidth) / 2) // 210 is the width of A4 paper in mm
+
+	pdf.Ln(-1) // Move to the next linemain
+
+	// Set font for the table content
+	pdf.SetFont("Arial", "", 12)
+
+	columns := [][]string{
+		{"Penginput", ":", createdBy},
+		{"Tanggal & Jam", ":", createdAt},
+		{"Acara", ":", title},
+	}
+	// Add rows to the table with alternating row colors
+	for _, column := range columns {
+		// Center each row
+		pdf.SetX((210 - tableWidth) / 2)
+		for indexRow, w := range colWidths {
+			// pdf.SetTextColor(255, 255, 255)
+			pdf.CellFormat(w, 6.5, column[indexRow], "", 0, "L", false, 0, "")
+		}
+		pdf.Ln(-1)
+	}
+
+	// Add space after the table
+	pdf.Ln(5)
+}
+
+func tableData(pdf *gofpdf.Fpdf, title string, data [][]string) {
+	// // Calculate table height (assuming each row height is 10mm)
+	// tableHeight := calculateTableHeight(0, float64(len(columns))*8)
+
+	// // If the table height exceeds the remaining space on the page, add a new page
+	// _, pageHeight := pdf.GetPageSize()
+	// bottomMargin := 2.0 // Set your bottom margin here
+	// if pdf.GetY()+tableHeight > pageHeight-bottomMargin {
+	// 	pdf.AddPage()
+	// }
+
+	// set font to be bold
+	pdf.SetFont("Arial", "B", 12)
+
+	// Add title
+	// pdf.CellFormat(0, 10, title, "", 1, "C", false, 0, "")
+	pdf.SetX(210 / 11.5) // 210 is the width of A4 paper in mm
+	pdf.CellFormat(0, 5, title, "", 1, "", false, 0, "")
+	pdf.Ln(2) // Space after the title
+
+	// Define column widths
+	colWidths := []float64{10, 40, 40, 40, 40}
+	tableWidth := 0.0
+	for _, w := range colWidths {
+		tableWidth += w
+	}
+
+	// Center the table by setting the X position
+	pdf.SetX((210 - tableWidth) / 2) // 210 is the width of A4 paper in mm
+
+	// Set fill color for the header (e.g., light gray)
+	pdf.SetFillColor(255, 255, 255)
+
+	// Set header for the table
+	rows := []string{"No.", "A", "B", "C", "D"}
+	pdf.SetFont("Arial", "B", 11)
+	for index, w := range colWidths {
+		pdf.CellFormat(w, 8, rows[index], "1", 0, "C", true, 0, "")
+	}
+	pdf.Ln(-1) // Move to the next line
+
+	// Set font for the table content
+	pdf.SetFont("Arial", "", 12)
+
+	// Add rows to the table with alternating row colors
+	for index, column := range data {
+		if index%2 == 0 {
+			pdf.SetFillColor(240, 240, 240) // Light gray for even rows
+		} else {
+			pdf.SetFillColor(255, 255, 255) // White for odd rows
+		}
+
+		// Center each row
+		pdf.SetX((210 - tableWidth) / 2)
+		for indexRow, w := range colWidths {
+			if indexRow == 0 {
+				// pdf.SetFillColor(255, 255, 255)
+				pdf.SetFont("Arial", "B", 11)
+				pdf.CellFormat(w, 8, strconv.Itoa(int(index+1)), "1", 0, "C", true, 0, "")
+			} else {
+				pdf.SetFont("Arial", "", 11)
+				// if indexRow%2 == 0 {
+				// 	pdf.SetFillColor(240, 128, 128)
+				// } else {
+				// 	pdf.SetFillColor(135, 206, 235)
+				// }
+
+				pdf.CellFormat(w, 8, column[indexRow-1], "1", 0, "C", true, 0, "")
+			}
+		}
+		pdf.Ln(-1)
+	}
+
+	// Add space after the table
+	pdf.Ln(5)
+}
+
+func conclussion(
+	pdf *gofpdf.Fpdf,
+	createdBy string,
+	totalBolts uint32,
+	currentTorque float64,
+	maxTorque float64,
+	genBearingToKoping float64,
+	koplingToTurbine float64,
+	ratio float64,
+	totalRounOut float64,
+	isTotalCrockednessSave bool) {
+	details := [][]string{
+		{"Total Baut", fmt.Sprintf("%v", totalBolts)},
+		{"Torsi Terkini", fmt.Sprintf("%v", currentTorque)},
+		{"Max Torsi", fmt.Sprintf("%v", maxTorque)},
+		{"Selisih Torsi", fmt.Sprintf("%v", maxTorque-currentTorque)},
+		{"Gen.Bearing - Kopling", fmt.Sprintf("%v", genBearingToKoping)},
+		{"Kopling - Turbine", fmt.Sprintf("%v", koplingToTurbine)},
+		{"Total", fmt.Sprintf("%v", genBearingToKoping+koplingToTurbine)},
+		{"Rasio", fmt.Sprintf("%v", ratio)},
+		{"Total Run Out", fmt.Sprintf("%v", totalRounOut)},
+	}
+
+	signature := [][]string{
+		{"", ""},
+		{"", ""},
+		{"", ""},
+		{"", ""},
+		{"", ""},
+		{"", fmt.Sprintf("( %s )", createdBy)},
+	}
+
+	details = append(details, signature...)
+
+	// // Calculate table height (assuming each row height is 10mm)
+	// tableHeight := calculateTableHeight(len(details), float64(len(details))*8)
+
+	// // If the table height exceeds the remaining space on the page, add a new page
+	// _, pageHeight := pdf.GetPageSize()
+	// bottomMargin := 2.0 // Set your bottom margin here
+	// if pdf.GetY()+tableHeight > pageHeight-bottomMargin {
+	// 	pdf.AddPage()
+	// }
+
+	// set font to be bold
+	pdf.SetFont("Arial", "B", 11)
+
+	// Define column widths
+	colWidths := []float64{85, 85}
+	tableWidth := 0.0
+	for _, w := range colWidths {
+		tableWidth += w
+	}
+
+	// Center the table by setting the X position
+	pdf.SetX((210 - tableWidth) / 2) // 210 is the width of A4 paper in mm
+
+	// Set fill color for the header (e.g., light gray)
+	pdf.SetFillColor(255, 255, 255)
+
+	// Set font for the table content
+	pdf.SetFont("Arial", "", 12)
+
+	// Add rows to the table with alternating row colors
+	for index, column := range details {
+		if index <= len(details)-len(signature)-1 {
+			if index%2 == 0 {
+				pdf.SetFillColor(240, 240, 240) // Light gray for even rows
+			} else {
+				pdf.SetFillColor(255, 255, 255) // White for odd rows
+			}
+
+			// Center each row
+			pdf.SetX((210 - tableWidth) / 2)
+			for indexRow, w := range colWidths {
+				if indexRow == 0 {
+					if index == len(details)-len(signature)-1 {
+						pdf.SetFont("Arial", "B", 13)
+						pdf.SetTextColor(255, 255, 255)
+						if isTotalCrockednessSave {
+							pdf.SetFillColor(0, 128, 0) // GREEN
+						} else {
+							pdf.SetFillColor(255, 0, 0) // RED
+						}
+						pdf.CellFormat(w, 8, " "+column[indexRow], "1", 0, "L", true, 0, "")
+						pdf.SetTextColor(0, 0, 0)
+					} else {
+						pdf.SetFont("Arial", "", 13)
+						pdf.CellFormat(w, 8, " "+column[indexRow], "1", 0, "L", true, 0, "")
+					}
+				} else {
+					if index == len(details)-len(signature)-1 {
+						pdf.SetFont("Arial", "B", 13)
+						pdf.SetTextColor(255, 255, 255)
+						if isTotalCrockednessSave {
+							pdf.SetFillColor(0, 128, 0) // GREEN
+						} else {
+							pdf.SetFillColor(255, 0, 0) // RED
+						}
+						pdf.CellFormat(w, 8, column[indexRow], "1", 0, "C", true, 0, "")
+						pdf.SetTextColor(0, 0, 0)
+					} else {
+						pdf.SetFont("Arial", "B", 13)
+						pdf.CellFormat(w, 8, column[indexRow], "1", 0, "C", true, 0, "")
+					}
+				}
+			}
+		} else {
+			// Center each row
+			pdf.SetX((210 - tableWidth) / 2)
+			for indexRow, w := range colWidths {
+				pdf.CellFormat(w, 8, column[indexRow], "", 0, "C", false, 0, "")
+			}
+		}
+
+		pdf.Ln(-1)
+	}
+	pdf.Ln(10)
+}
+
+// Function to calculate the height of the table
+func calculateTableHeight(rowCount int, rowHeight float64) float64 {
+	// Header height + row heights
+	return 10 + (float64(rowCount) * rowHeight)
 }

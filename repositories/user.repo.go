@@ -208,8 +208,12 @@ func (u *userRepository) GetByPhoneWithSelectedFields(phone string, selectedFiel
 	return user, nil
 }
 
-func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor, userRole models.UserRole) ([]*models.User, *helpers.CursorPagination, error) {
-	db := u.db.Where("role = ?", userRole)
+func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor, userRoles ...models.UserRole) ([]*models.User, *helpers.CursorPagination, error) {
+	db := u.db
+
+	for _, role := range userRoles {
+		db = u.db.Where("role = ?", role)
+	}
 
 	if cursor.Search != "" {
 		db = db.Where("LOWER(name) LIKE LOWER(?)", "%"+cursor.Search+"%")

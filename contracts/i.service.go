@@ -24,7 +24,12 @@ type IDivisionService interface {
 
 type IUserService interface {
 	// ADMIN BY SUPER ADMIN
-	// UpdateUserAdminBySuperAdmin(c echo.Context, in )
+	CreateUserBySuperAdmin(c echo.Context, in *models.UserCreateBySuperAdminRequest) error
+	UpdateUserBySuperAdmin(c echo.Context, in *models.UserUpdateBySuperAdminRequest) error
+	GetDetailUserBySuperAdmin(c echo.Context, in *models.UserGetDetailRequest) error
+	DeleteUserBySuperAdmin(c echo.Context, in *models.UserDeleteBySuperAdminRequest) error
+	GetListUserWithPaginateBySuperAdmin(c echo.Context, cursor *helpers.Cursor) error
+	GenerateUserPasswordBySuperAdmin(c echo.Context, in *models.GeneratePasswordBySuperAdmin) error
 
 	// USER BY ADMIN
 	CreateUserByAdmin(c echo.Context, in *models.UserCreateByAdminRequest) error
@@ -58,6 +63,7 @@ type ITurbineService interface {
 	GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error
 	GetLatest(c echo.Context) error
 	Delete(c echo.Context, in *models.TurbineWriteRequest) error
+	DownloadReport(c echo.Context, id string) error
 }
 
 type IPltaService interface {

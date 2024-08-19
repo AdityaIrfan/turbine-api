@@ -21,6 +21,12 @@ type IDivisionHandler interface {
 
 type IUserHandler interface {
 	// ADMIN BY SUPER ADMIN
+	CreateUserBySuperAdmin(c echo.Context) error
+	UpdateUserBySuperAdmin(c echo.Context) error
+	GetDetailUserBySuperAdmin(c echo.Context) error
+	DeleteUserBySuperAdmin(c echo.Context) error
+	GetListUserWithPaginateBySuperAdmin(c echo.Context) error
+	GenerateUserPasswordBySuperAdmin(c echo.Context) error
 
 	// USER BY ADMIN
 	CreateUserByAdmin(c echo.Context) error
@@ -28,7 +34,7 @@ type IUserHandler interface {
 	GetDetailUserByAdmin(c echo.Context) error
 	DeleteUserByAdmin(c echo.Context) error
 	GetListUserWithPaginateByAdmin(c echo.Context) error
-	// GenerateUserPasswordByAdmin(c echo.Context) error
+	GenerateUserPasswordByAdmin(c echo.Context) error
 
 	// USER ITSELF
 	UpdateMyProfile(c echo.Context) error
@@ -54,6 +60,7 @@ type ITurbineHandler interface {
 	GetList(c echo.Context) error
 	GetLatest(c echo.Context) error
 	Delete(c echo.Context) error
+	DownloadReport(c echo.Context) error
 }
 
 type IPltaHandler interface {
