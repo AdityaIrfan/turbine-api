@@ -34,6 +34,10 @@ func (u *userHandler) CreateUserBySuperAdmin(c echo.Context) error {
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
 	}
 
+	if err := helpers.ValidatePhone(payload.Phone); err != nil {
+		return helpers.Response(c, http.StatusBadRequest, err.Error())
+	}
+
 	payload.CreatedBy = c.Get("claims").(jwt.MapClaims)["Id"].(string)
 	return u.userService.CreateUserBySuperAdmin(c, payload)
 }
@@ -102,6 +106,10 @@ func (u *userHandler) CreateUserByAdmin(c echo.Context) error {
 	if err := c.Validate(payload); err != nil {
 		errMessage := helpers.GenerateValidationErrorMessage(err)
 		return helpers.Response(c, http.StatusBadRequest, errMessage)
+	}
+
+	if err := helpers.ValidatePhone(payload.Phone); err != nil {
+		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}
 
 	payload.CreatedBy = c.Get("claims").(jwt.MapClaims)["Id"].(string)
