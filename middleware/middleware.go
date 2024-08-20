@@ -165,11 +165,17 @@ func (m *middleware) checkToken(c echo.Context, roles ...models.UserRole) (*jwt.
 	for _, role := range roles {
 		switch role {
 		case models.UserRole_SuperAdmin:
-			return token, nil
+			if user.Role == role {
+				return token, nil
+			}
 		case models.UserRole_Admin:
-			return token, nil
+			if user.Role == role {
+				return token, nil
+			}
 		case models.UserRole_User:
-			return token, nil
+			if user.Role == role {
+				return token, nil
+			}
 		}
 	}
 
