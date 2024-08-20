@@ -74,6 +74,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	authAdmin := middleware.AuthAdmin
 	authUser := middleware.AuthUser
 	allAuth := middleware.Auth
+	authAdminAndSuperAdmin := middleware.AuthAdminAndSuperAdmin
 	// signature := middleware.Signature
 
 	route.GET("/", func(c echo.Context) error {
@@ -154,7 +155,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 
 	// DASHBOARD
 	v1_DashboardRouting := v1.Group("/dashboard")
-	v1_DashboardRouting.GET("", dashboardHandler.GetDashboardData, authAdmin)
+	v1_DashboardRouting.GET("", dashboardHandler.GetDashboardData, authAdminAndSuperAdmin)
 
 	return route
 }

@@ -55,6 +55,20 @@ func (m *middleware) AuthSuperAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func (m *middleware) AuthAdminAndSuperAdmin(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		token, err := m.checkToken(c, models.UserRole_SuperAdmin, models.UserRole_Admin)
+		if err != nil {
+			return middlewareErrorResponse(c, err)
+		}
+
+		claims := token.Claims.(jwt.MapClaims)
+		c.Set("claims", claims)
+
+		return next(c)
+	}
+}
+
 func (m *middleware) AuthAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, err := m.checkToken(c, models.UserRole_Admin)
