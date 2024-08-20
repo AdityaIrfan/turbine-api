@@ -20,6 +20,11 @@ var UserDefaultFilter = map[string]string{
 	"Status": "status",
 }
 
+var UserDefaultFilterBySuperAdmin = map[string]string{
+	"Status": "status",
+	"Role":   "role",
+}
+
 type UserStatus uint8
 type UserRole uint8
 

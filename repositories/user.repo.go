@@ -211,8 +211,14 @@ func (u *userRepository) GetByPhoneWithSelectedFields(phone string, selectedFiel
 func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor, userRoles ...models.UserRole) ([]*models.User, *helpers.CursorPagination, error) {
 	db := u.db
 
-	for _, role := range userRoles {
-		db = u.db.Where("role = ?", role)
+	if cursor.Filter != "role" {
+		for index, role := range userRoles {
+			if index == 0 {
+				db = db.Where("role = ?", role)
+			} else {
+				db = db.Or("role = ?", role)
+			}
+		}
 	}
 
 	if cursor.Search != "" {
@@ -220,7 +226,11 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor, userRoles ..
 	}
 
 	if cursor.Filter != "" {
-		db = db.Where(fmt.Sprintf("%v = ?", cursor.Filter), cursor.FilterValue)
+		if cursor.Filter == "role" {
+			db = u.db.Where("role = ?", cursor.FilterValue)
+		} else {
+			db = db.Where(fmt.Sprintf("%v = ?", cursor.Filter), cursor.FilterValue)
+		}
 	}
 
 	var total int64

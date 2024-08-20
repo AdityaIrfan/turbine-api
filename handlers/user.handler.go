@@ -76,7 +76,7 @@ func (u *userHandler) GetDetailUserBySuperAdmin(c echo.Context) error {
 }
 
 func (u *userHandler) GetListUserWithPaginateBySuperAdmin(c echo.Context) error {
-	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.UserDefaultSort, models.UserDefaultFilter)
+	cursor, err := helpers.GenerateCursorPaginationByEcho(c, models.UserDefaultSort, models.UserDefaultFilterBySuperAdmin)
 	if err != nil {
 		if strings.Contains(err.Error(), "unavailable") {
 			return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", []models.User{}, helpers.CursorPagination{})
