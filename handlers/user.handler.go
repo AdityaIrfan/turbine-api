@@ -84,6 +84,10 @@ func (u *userHandler) GetListUserWithPaginateBySuperAdmin(c echo.Context) error 
 		return helpers.Response(c, http.StatusBadRequest, err.Error())
 	}
 
+	if cursor.Filter == "role" && cursor.FilterValue == "1" {
+		return helpers.Response(c, http.StatusOK, "berhasil mendapatkan semua user", []models.User{}, helpers.CursorPagination{})
+	}
+
 	return u.userService.GetListUserWithPaginateBySuperAdmin(c, cursor)
 }
 
