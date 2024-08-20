@@ -148,6 +148,7 @@ type UserCreateByAdminRequest struct {
 	Username   string `json:"useranme" form:"Username" validate:"required"`
 	Email      string `json:"Email" form:"Email" validate:"required,email"`
 	DivisionId string `json:"DivisionId" form:"DivisionId" validate:"required"`
+	Phone      string `json:"Phone" form:"Phone" validate:"required"`
 	CreatedBy  string
 }
 
@@ -308,7 +309,8 @@ type UserCreateBySuperAdminRequest struct {
 	Username   string   `json:"useranme" form:"Username" validate:"required"`
 	Email      string   `json:"Email" form:"Email" validate:"required,email"`
 	DivisionId string   `json:"DivisionId" form:"DivisionId" validate:"required"`
-	Role       UserRole `json:"RoleId" form:"DivisionId" validate:"required"`
+	Role       UserRole `json:"Role" form:"Role" validate:"required"`
+	Phone      string   `json:"Phone" form:"Phone" validate:"required"`
 	CreatedBy  string
 }
 
