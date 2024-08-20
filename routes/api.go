@@ -100,11 +100,12 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 
 	// ADMIN BY SUPER ADMIN
 	v1_adminRoutingBySuperAdmin := v1.Group("/super/users")
-	v1_adminRoutingBySuperAdmin.PUT("/:id", userHandler.UpdateUserBySuperAdmin, authAdmin /*, applicationJson*/)
-	v1_adminRoutingBySuperAdmin.DELETE("/:id", userHandler.DeleteUserBySuperAdmin, authAdmin)
-	v1_adminRoutingBySuperAdmin.GET("", userHandler.GetListUserWithPaginateBySuperAdmin, authAdmin)
-	v1_adminRoutingBySuperAdmin.GET("/:id", userHandler.GetDetailUserBySuperAdmin, authAdmin)
-	v1_adminRoutingBySuperAdmin.POST("/generate-password/:id", userHandler.GenerateUserPasswordBySuperAdmin, authAdmin /*, applicationJson*/)
+	v1_adminRoutingBySuperAdmin.POST("", userHandler.CreateUserBySuperAdmin, superAdmin /*, applicationJson*/)
+	v1_adminRoutingBySuperAdmin.PUT("/:id", userHandler.UpdateUserBySuperAdmin, superAdmin /*, applicationJson*/)
+	v1_adminRoutingBySuperAdmin.DELETE("/:id", userHandler.DeleteUserBySuperAdmin, superAdmin)
+	v1_adminRoutingBySuperAdmin.GET("", userHandler.GetListUserWithPaginateBySuperAdmin, superAdmin)
+	v1_adminRoutingBySuperAdmin.GET("/:id", userHandler.GetDetailUserBySuperAdmin, superAdmin)
+	v1_adminRoutingBySuperAdmin.POST("/generate-password/:id", userHandler.GenerateUserPasswordBySuperAdmin, superAdmin /*, applicationJson*/)
 
 	// USER BY ADMIN
 	v1_UserRoutingByAdmin := v1.Group("/admin/users")
