@@ -54,7 +54,14 @@ func (u *userService) CreateUserBySuperAdmin(c echo.Context, in *models.UserCrea
 		return helpers.Response(c, http.StatusBadRequest, "divisi tidak ditemukan")
 	}
 
+	salt, hash, err := helpers.GenerateHashAndSalt(in.Password)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
 	user := in.ToModel()
+	user.PasswordHash = hash
+	user.PasswordSalt = salt
 	if err := u.userRepo.Create(user, "Division"); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
@@ -229,7 +236,14 @@ func (u *userService) CreateUserByAdmin(c echo.Context, in *models.UserCreateByA
 		return helpers.Response(c, http.StatusBadRequest, "divisi tidak ditemukan")
 	}
 
+	salt, hash, err := helpers.GenerateHashAndSalt(in.Password)
+	if err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
 	user := in.ToModel()
+	user.PasswordSalt = salt
+	user.PasswordHash = hash
 	if err := u.userRepo.Create(user, "Division"); err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}

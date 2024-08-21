@@ -98,8 +98,20 @@ func (a *authService) Login(c echo.Context, in *models.Login) error {
 		return helpers.Response(c, http.StatusForbidden, "akun anda diblokir, silahkan hubungi admin untuk informasi lebih lanjut")
 	}
 
-	hash, _ := helpers.Decrypt(user.PasswordHash)
-	salt, _ := helpers.Decrypt(user.PasswordSalt)
+	if user.PasswordHash == "" || user.PasswordSalt == "" {
+		return helpers.Response(c, http.StatusBadRequest, "akun anda tidak memiliki password, silahkan hubungi admin")
+	}
+
+	hash, err := helpers.Decrypt(user.PasswordHash)
+	if err != nil {
+		log.Error().Err(errors.New("ERROR DECRYPT PASSWORD HASH : " + err.Error()))
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+	salt, err := helpers.Decrypt(user.PasswordSalt)
+	if err != nil {
+		log.Error().Err(errors.New("ERROR DECRYPT PASSWORD SALT : " + err.Error()))
+		return helpers.ResponseUnprocessableEntity(c)
+	}
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(in.Password+salt)); err != nil {
 		go a.authRedisRepo.IncLoginFailedCounter(user.Id)
 		return helpers.Response(c, http.StatusBadRequest, "username atau password salah")

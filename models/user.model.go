@@ -154,6 +154,7 @@ type UserCreateByAdminRequest struct {
 	Email      string `json:"Email" form:"Email" validate:"required,email"`
 	DivisionId string `json:"DivisionId" form:"DivisionId" validate:"required"`
 	Phone      string `json:"Phone" form:"Phone" validate:"required"`
+	Password   string `json:"Password" form:"Password" validate:"required"`
 	CreatedBy  string
 }
 
@@ -164,6 +165,7 @@ func (u *UserCreateByAdminRequest) ToModel() *User {
 		Id:           id,
 		Name:         u.Name,
 		Username:     u.Username,
+		Phone:        u.Phone,
 		Email:        u.Email,
 		DivisionId:   u.DivisionId,
 		Role:         UserRole_User,
@@ -316,6 +318,7 @@ type UserCreateBySuperAdminRequest struct {
 	DivisionId string   `json:"DivisionId" form:"DivisionId" validate:"required"`
 	Role       UserRole `json:"Role" form:"Role" validate:"required"`
 	Phone      string   `json:"Phone" form:"Phone" validate:"required"`
+	Password   string   `json:"Password" form:"Password" validate:"required"`
 	CreatedBy  string
 }
 
@@ -326,6 +329,7 @@ func (u *UserCreateBySuperAdminRequest) ToModel() *User {
 		Id:           id,
 		Name:         u.Name,
 		Username:     u.Username,
+		Phone:        u.Phone,
 		Email:        u.Email,
 		DivisionId:   u.DivisionId,
 		Role:         u.Role,
