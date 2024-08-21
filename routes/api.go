@@ -88,10 +88,10 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 
 	v1_DivisionRouting := v1.Group("/divisions")
 	v1_DivisionRouting.GET("/master", divisionHandler.GetListMaster)
-	v1_DivisionRouting.GET("", divisionHandler.GetListWithPaginate, authAdmin)
-	v1_DivisionRouting.POST("", divisionHandler.Create /*, applicationJson*/, authAdmin)
-	v1_DivisionRouting.PUT("/:id", divisionHandler.Update /*, applicationJson*/, authAdmin)
-	v1_DivisionRouting.DELETE("/:id", divisionHandler.Delete, authAdmin)
+	v1_DivisionRouting.GET("", divisionHandler.GetListWithPaginate, authAdminAndSuperAdmin)
+	v1_DivisionRouting.POST("", divisionHandler.Create /*, applicationJson*/, authAdminAndSuperAdmin)
+	v1_DivisionRouting.PUT("/:id", divisionHandler.Update /*, applicationJson*/, authAdminAndSuperAdmin)
+	v1_DivisionRouting.DELETE("/:id", divisionHandler.Delete, authAdminAndSuperAdmin)
 
 	v1_AuthRouting := v1.Group("/auth")
 	v1_AuthRouting.POST("/register", authHandler.Register /*, applicationJson*/)
@@ -134,12 +134,12 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	// v1_ConfigRouting.GET("/root-location", configHandler.GetRootLocation, authAdmin)
 
 	v1_PltaRouting := v1.Group("/plta")
-	v1_PltaRouting.POST("", pltaHandler.Create, superAdmin /*, applicationJson*/)
-	v1_PltaRouting.PUT("/:id", pltaHandler.Update, superAdmin /*, applicationJson*/)
-	v1_PltaRouting.GET("/:id", pltaHandler.Detail, authAdmin /*, applicationJson*/)
+	v1_PltaRouting.POST("", pltaHandler.Create, authAdminAndSuperAdmin /*, applicationJson*/)
+	v1_PltaRouting.PUT("/:id", pltaHandler.Update, authAdminAndSuperAdmin /*, applicationJson*/)
+	v1_PltaRouting.GET("/:id", pltaHandler.Detail, authAdminAndSuperAdmin /*, applicationJson*/)
 	v1_PltaRouting.GET("/master", pltaHandler.GetListMaster, allAuth)
-	v1_PltaRouting.DELETE("/:id", pltaHandler.Delete, allAuth)
-	v1_PltaRouting.GET("", pltaHandler.GetListWithPaginate, authAdmin)
+	v1_PltaRouting.DELETE("/:id", pltaHandler.Delete, authAdminAndSuperAdmin)
+	v1_PltaRouting.GET("", pltaHandler.GetListWithPaginate, authAdminAndSuperAdmin)
 
 	v1_TurbineRouting := v1.Group("/turbines")
 	v1_TurbineRouting.POST("", turbineHandler.Create, allAuth /*, applicationJson*/)
@@ -150,8 +150,8 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	v1_TurbineRouting.GET("/:id/report", turbineHandler.DownloadReport, allAuth)
 
 	v1_PltaUnitRouting := v1.Group("/plta-unit")
-	v1_PltaUnitRouting.PUT("/:id", pltaUnitHandler.CreateOrUpdate, authAdmin)
-	v1_PltaUnitRouting.DELETE("/:id", pltaUnitHandler.Delete, authAdmin)
+	v1_PltaUnitRouting.PUT("/:id", pltaUnitHandler.CreateOrUpdate, authAdminAndSuperAdmin)
+	v1_PltaUnitRouting.DELETE("/:id", pltaUnitHandler.Delete, authAdminAndSuperAdmin)
 
 	// DASHBOARD
 	v1_DashboardRouting := v1.Group("/dashboard")
