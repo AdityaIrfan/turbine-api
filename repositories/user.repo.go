@@ -212,13 +212,15 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor, userRoles ..
 	db := u.db
 
 	if cursor.Filter != "role" {
+		orCondition := u.db
 		for index, role := range userRoles {
 			if index == 0 {
-				db = db.Where("role = ?", role)
+				orCondition = orCondition.Where("role = ?", role)
 			} else {
-				db = db.Or("role = ?", role)
+				orCondition = orCondition.Or("role = ?", role)
 			}
 		}
+		db = db.Where(orCondition)
 	}
 
 	if cursor.Search != "" {
@@ -227,7 +229,7 @@ func (u *userRepository) GetAllWithPaginate(cursor *helpers.Cursor, userRoles ..
 
 	if cursor.Filter != "" {
 		if cursor.Filter == "role" {
-			db = u.db.Where("role = ?", cursor.FilterValue)
+			db = db.Where("role = ?", cursor.FilterValue)
 		} else {
 			db = db.Where(fmt.Sprintf("%v = ?", cursor.Filter), cursor.FilterValue)
 		}
