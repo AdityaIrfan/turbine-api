@@ -128,7 +128,7 @@ func (t *pltaService) Detail(c echo.Context, id string) error {
 }
 
 func (t *pltaService) GetListMaster(c echo.Context, in *models.PltaGetListMasterRequest) error {
-	user, err := t.userRepo.GetByIdWithSelectedFields(in.UserId, "id, location_radius_status")
+	user, err := t.userRepo.GetByIdWithSelectedFields(in.UserId, "id, radius_status")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	} else if user.IsEmpty() {
