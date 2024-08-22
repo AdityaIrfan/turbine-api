@@ -72,7 +72,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	// applicationJson := middleware.ApplicationJson
 	superAdmin := middleware.AuthSuperAdmin
 	authAdmin := middleware.AuthAdmin
-	authUser := middleware.AuthUser
+	// authUser := middleware.AuthUser
 	allAuth := middleware.Auth
 	authAdminAndSuperAdmin := middleware.AuthAdminAndSuperAdmin
 	// signature := middleware.Signature
@@ -119,9 +119,9 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 
 	// USER ITSELF
 	v1_UserRouting := v1.Group("/my")
-	v1_UserRouting.PUT("", userHandler.UpdateMyProfile, authUser)
+	v1_UserRouting.PUT("", userHandler.UpdateMyProfile, allAuth)
 	v1_UserRouting.GET("", userHandler.GetMyProfile, allAuth)
-	v1_UserRouting.POST("/change-password", userHandler.ChangeMyPassword, authUser /*, applicationJson*/)
+	v1_UserRouting.POST("/change-password", userHandler.ChangeMyPassword, allAuth /*, applicationJson*/)
 
 	// roleRouting := v1.Group("/roles", authAdmin)
 	// roleRouting.POST("/", roleHandler.Create/*, applicationJson*/)
@@ -147,7 +147,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	v1_TurbineRouting.GET("", turbineHandler.GetList, allAuth)
 	v1_TurbineRouting.GET("/latest", turbineHandler.GetLatest, allAuth)
 	v1_TurbineRouting.DELETE("/:id", turbineHandler.Delete, allAuth)
-	v1_TurbineRouting.GET("/:id/report", turbineHandler.DownloadReport, allAuth)
+	v1_TurbineRouting.GET("/:id/report", turbineHandler.DownloadReport /*, allAuth*/)
 
 	v1_PltaUnitRouting := v1.Group("/plta-unit")
 	v1_PltaUnitRouting.PUT("/:id", pltaUnitHandler.CreateOrUpdate, authAdminAndSuperAdmin)
