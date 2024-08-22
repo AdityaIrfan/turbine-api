@@ -456,7 +456,7 @@ func (u *userService) UpdateMyProfile(c echo.Context, in *models.UserUpdateReque
 		anyUpdated = true
 	}
 
-	if !anyUpdated {
+	if anyUpdated {
 		if err := u.userRepo.Update(user, "Division"); err != nil {
 			return helpers.ResponseUnprocessableEntity(c)
 		}
