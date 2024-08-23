@@ -492,5 +492,9 @@ func (u *userService) ChangeMyPassword(c echo.Context, in *models.UserChangePass
 	user.PasswordSalt = salt
 	user.PasswordHash = hash
 
+	if err := u.userRepo.Update(user); err != nil {
+		return helpers.ResponseUnprocessableEntity(c)
+	}
+
 	return helpers.Response(c, http.StatusOK, "berhasil mengubah password")
 }
