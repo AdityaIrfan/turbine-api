@@ -55,3 +55,10 @@ func (p *pltaUnitHandler) Delete(c echo.Context) error {
 
 	return p.pltaUnitService.Delete(c, payload)
 }
+
+func (p *pltaUnitHandler) GetListMaster(c echo.Context) error {
+	return p.pltaUnitService.GetListMaster(c, &models.PltaGetListMasterRequest{
+		UserId: c.Get("claims").(jwt.MapClaims)["Id"].(string),
+		Search: c.QueryParam("Search"),
+	})
+}

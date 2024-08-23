@@ -53,7 +53,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	// configService := services.NewConfigService(configRepository, configRedisRepository, userRepository)
 	pltaService := services.NewPltaService(pltaRepository, userRepository)
 	turbineService := services.NewTurbineService(turbineRepository, pltaUnitRepository, userRepository)
-	pltaUnitService := services.NewPltaUnitService(pltaUnitRepository, pltaRepository)
+	pltaUnitService := services.NewPltaUnitService(pltaUnitRepository, pltaRepository, userRepository)
 	dashboardService := services.NewDashboardService(userRepository, turbineRepository, pltaRepository)
 
 	// Handlers
@@ -137,7 +137,7 @@ func (api) Init(db *gorm.DB, client *redis.Client) *echo.Echo {
 	v1_PltaRouting.POST("", pltaHandler.Create, authAdminAndSuperAdmin /*, applicationJson*/)
 	v1_PltaRouting.PUT("/:id", pltaHandler.Update, authAdminAndSuperAdmin /*, applicationJson*/)
 	v1_PltaRouting.GET("/:id", pltaHandler.Detail, authAdminAndSuperAdmin /*, applicationJson*/)
-	v1_PltaRouting.GET("/master", pltaHandler.GetListMaster, allAuth)
+	v1_PltaRouting.GET("/master", pltaUnitHandler.GetListMaster, allAuth)
 	v1_PltaRouting.DELETE("/:id", pltaHandler.Delete, authAdminAndSuperAdmin)
 	v1_PltaRouting.GET("", pltaHandler.GetListWithPaginate, authAdminAndSuperAdmin)
 

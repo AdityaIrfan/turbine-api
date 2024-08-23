@@ -113,29 +113,10 @@ func (t *pltaRepository) GetByEqualNameWithSelectedFields(name, selectedFields s
 func (t *pltaRepository) GetAll(search string) ([]*models.Plta, error) {
 	var pltas []*models.Plta
 
-	if strings.Contains(strings.ToLower(search), "unit") {
-		search = strings.ReplaceAll(strings.ToLower(search), "unit", "")
-		search = strings.Trim(search, " ")
-	}
-
 	if err := t.db.Select("plta.*").Debug().
 		Joins("LEFT JOIN plta_units ON plta_units.plta_id = plta.id").
-		Where(
-			t.db.Where("LOWER(plta.name) LIKE LOWER(?)", "%"+search+"%").
-				Or("LOWER(plta_units.name) LIKE LOWER(?)", "%"+search+"%"),
-		).
+		Where("LOWER(plta.name) LIKE LOWER(?)", "%"+search+"%").
 		Where("plta.status = true").
-		Preload("PltaUnits", func(db *gorm.DB) *gorm.DB {
-			db = db.
-				Where("status = true").
-				Select("id, plta_id, name")
-
-			if search != "" {
-				db = db.Where("LOWER(name) LIKE ?", "%"+search+"%")
-			}
-
-			return db
-		}).
 		Find(&pltas).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY GET ALL PLTA : " + err.Error())).Msg("")
 		return nil, err

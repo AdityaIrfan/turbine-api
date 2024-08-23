@@ -92,4 +92,5 @@ type IPltaUnitRepository interface {
 	CreateOrUpdate(pltaUnits []*models.PltaUnit) ([]*models.PltaUnit, error)
 	Delete(pltaUnit *models.PltaUnit) error
 	GetByIdWithPreloads(id string, preloads ...string) (*models.PltaUnit, error)
+	GetAll(search string) ([]*models.PltaUnit, error)
 }

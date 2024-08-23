@@ -78,6 +78,7 @@ type IPltaService interface {
 type IPltaUnitService interface {
 	CreateOrUpdate(c echo.Context, in *models.PltaUnitCreateOrUpdate) error
 	Delete(c echo.Context, in *models.PltaUnitWriteRequest) error
+	GetListMaster(c echo.Context, in *models.PltaGetListMasterRequest) error
 }
 
 type IDashboardService interface {

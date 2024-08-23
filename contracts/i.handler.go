@@ -75,6 +75,7 @@ type IPltaHandler interface {
 type IPltaUnitHandler interface {
 	CreateOrUpdate(c echo.Context) error
 	Delete(c echo.Context) error
+	GetListMaster(c echo.Context) error
 }
 
 type IDashboardHandler interface {

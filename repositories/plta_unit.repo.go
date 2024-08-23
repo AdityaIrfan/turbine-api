@@ -5,6 +5,7 @@ import (
 	"fmt"
 	contract "pln/AdityaIrfan/turbine-api/contracts"
 	"pln/AdityaIrfan/turbine-api/models"
+	"strings"
 
 	"github.com/oklog/ulid/v2"
 	"github.com/phuslu/log"
@@ -148,4 +149,30 @@ func (p *pltaUnitRepo) GetByIdWithPreloads(id string, preloads ...string) (*mode
 	}
 
 	return pltaUnit, nil
+}
+
+func (p *pltaUnitRepo) GetAll(search string) ([]*models.PltaUnit, error) {
+	db := p.db
+
+	if strings.Contains(strings.ToLower(search), "unit") {
+		search = strings.ReplaceAll(strings.ToLower(search), "unit", "")
+		search = strings.Trim(search, " ")
+	}
+
+	var units []*models.PltaUnit
+
+	if err := db.
+		Joins("LEFT JOIN plta on plta.id = plta_units.plta_id").
+		Where("plta_units.status", true).
+		Where("plta.status", true).
+		Where(
+			p.db.Where("LOWER(plta_units.name) LIKE LOWER(?)", "%"+search+"%").
+				Or("LOWER(plta.name) LIKE LOWER(?)", "%"+search+"%"),
+		).
+		Find(&units).Error; err != nil {
+		log.Error().Err(errors.New("ERROR QUERY GET ALL PLTA UNITS : " + err.Error())).Msg("")
+		return nil, err
+	}
+
+	return units, nil
 }
