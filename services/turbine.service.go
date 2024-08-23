@@ -95,13 +95,22 @@ func (t *turbineService) GetDetail(c echo.Context, id string) error {
 }
 
 func (t *turbineService) GetListWithPaginate(c echo.Context, cursor *helpers.Cursor) error {
-	turbines, pagination, err := t.turbineRepo.GetAllWithPaginate(cursor, "*")
+	turbines, pagination, err := t.turbineRepo.GetAllWithPaginate(cursor, "turbines.id, turbines.title, turbines.created_at, turbines.plta_unit_id")
 	if err != nil {
 		return helpers.ResponseUnprocessableEntity(c)
 	}
 
 	var turbineResponse = []*models.TurbineResponseList{}
+	var pltaUnitsMap = make(map[string]*models.PltaUnit)
 	for _, turbine := range turbines {
+		if pltaUnit, ok := pltaUnitsMap[turbine.PltaUnitId]; ok {
+			turbine.PltaUnit = pltaUnit
+		} else {
+			pltaUnit, _ := t.pltaUnitRepo.GetByIdWithPreloads(turbine.PltaUnitId, "Plta")
+			turbine.PltaUnit = pltaUnit
+			pltaUnitsMap[pltaUnit.Id] = pltaUnit
+		}
+
 		turbineResponse = append(turbineResponse, turbine.ToResponseList())
 	}
 

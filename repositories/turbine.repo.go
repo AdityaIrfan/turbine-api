@@ -62,15 +62,21 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 	if cursor.Search != "" {
 		if strings.Contains(strings.ToLower(cursor.Search), "unit") {
 			cursor.Search = strings.ReplaceAll(cursor.Search, "unit", "")
-		} else if strings.Contains(strings.ToLower(cursor.Search), "unit ") {
-			cursor.Search = strings.ReplaceAll(cursor.Search, "unit ", "")
+			cursor.Search = strings.Trim(cursor.Search, " ")
+
+			db = db.Joins("LEFT JOIN plta_units ON plta_units.id = turbines.plta_unit_id").
+				Joins("LEFT JOIN plta ON plta.id = plta_units.plta_id").
+				Where(t.db.Where("LOWER(plta_units.name) LIKE LOWER(?)", "%"+cursor.Search+"%"))
+		} else {
+			where := t.db.Where("LOWER(plta_units.name) LIKE LOWER(?)", "%"+cursor.Search+"%").
+				Or("LOWER(turbines.title) LIKE LOWER(?)", "%"+cursor.Search+"%").
+				Or("LOWER(plta.name) LIKE LOWER(?)", "%"+cursor.Search+"%")
+
+			db = db.Joins("LEFT JOIN plta_units ON plta_units.id = turbines.plta_unit_id").
+				Joins("LEFT JOIN plta ON plta.id = plta_units.plta_id").
+				Where(where)
 		}
 
-		db = db.Joins("LEFT JOIN plta_units ON plta_units.id = turbines.plta_unit_id").
-			Joins("LEFT JOIN plta ON plta.id = plta_units.plta_id").
-			Where("LOWER(plta_units.name) LIKE LOWER(?)", "%"+cursor.Search+"%").
-			Or("LOWER(turbines.title) LIKE LOWER(?)", "%"+cursor.Search+"%").
-			Or("LOWER(plta.name) LIKE LOWER(?)", "%"+cursor.Search+"%")
 		alreadyWithPltaUnit = true
 	}
 
@@ -115,7 +121,6 @@ func (t *turbineRepository) GetAllWithPaginate(cursor *helpers.Cursor, selectedF
 		Select(selectedFields).
 		Offset(cursor.CurrentPage*cursor.PerPage - cursor.PerPage).
 		Limit(cursor.PerPage).
-		Preload("PltaUnit.Plta").
 		Order(fmt.Sprintf("%v %v", sortBy, cursor.SortOrder)).
 		Find(&turbine).Error; err != nil {
 		log.Error().Err(errors.New("ERROR QUERY TURBINES LIST WITH PAGINATE : " + err.Error())).Msg("")
